@@ -31,20 +31,6 @@ options(digits = 12,
           borderWidth = "1.5px"
         )
 )
-# 
-# parameters <- list(stats_period = stats_period, md_input="24th May 2026 - MD 5 vs Calgary (A)")
-# 
-# RendermyREPORT <- function(parameters = list()){
-#   rmarkdown::render(input = here("TidesMatchReport.Rmd"),
-#                     output_file = here(paste0("TidesMatchReport_",max(stats_period$date), ".pdf")),
-#                     output_format = "all",
-#                     params = parameters,
-#                     encoding = "UTF-8", clean = T)}
-# 
-# 
-# 
-# RendermyREPORT(parameters = parameters)
-# 
 
 
 
