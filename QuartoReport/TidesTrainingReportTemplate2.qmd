@@ -1,0 +1,1222 @@
+---
+format:
+  typst:
+    mainfont: 'Oswald'
+    fig-format: svg
+    fig-dpi: 600
+params:
+  training_date:
+  data_path: 
+knitr:
+  opts_chunk:
+    dev: svg
+---
+
+```{r setup, include=FALSE}
+
+# Configured default plotting dimensions for landscape letter size
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(ggimage)
+library(tinytable)
+
+```
+
+```{r}
+load("stats.RData")
+load("stats_period.RData")
+training_date <- as.Date("2026-06-24")
+session_name <- stats_period %>% filter(date==training_date) %>% pull(activity_name) %>% unique
+# session_duration <- stats %>% filter(date==training_date & position_name != "Goal Keeper") %>% mutate(duration=end_time-start_time, duration = as_hms(max(duration, na.rm=T))) %>% pull(duration) %>% unique`
+session_duration <- stats %>% filter(date==training_date & position_name != "Goal Keeper") %>% mutate(duration = hms::as_hms(max(field_time, na.rm=T))) %>% pull(duration) %>% unique
+
+```
+
+```{r, eval=F}
+data_path <- params$data_path
+
+stats_period <- readRDS(data_path)
+
+md_input <- params$md_input
+
+image1 <- params$image1
+
+image2 <- params$image2
+
+image3 <- params$image3
+
+if (is.null(image1)) {
+  image1 <- 'TidesFCImage5.jpg'
+}
+if (is.null(image2)) {
+  image2 <- 'TidesFCImage6.jpg'
+}
+if (is.null(image3)) {
+  image3 <- 'TidesFCImage7.jgp'
+}
+
+md_date <- stats_period %>% filter(activity_name==md_input) %>% mutate(date = paste0(weekdays(date), ', ', format(date, '%B %d, %Y'))) %>% pull(date) %>% unique
+md_num <- str_extract(md_input, '(?<=MD\\s)\\d{1}')
+md_year <- str_extract(md_date, '\\d{4}')
+
+team_logo <- case_when(str_detect(md_input, "Montreal") ~ "Montreal.png",
+                       str_detect(md_input, "Ottawa") ~ "Ottawa.png",
+                       str_detect(md_input, "Toronto") ~ "Toronto.png",
+                       str_detect(md_input, "Calgary") ~ "Calgary.png",
+                       str_detect(md_input, "Vancouver") ~ "Vancouver.png",
+                       str_detect(md_input, "Portsmouth") ~ "Portsmouth.png",
+                       str_detect(md_input, "Everton") ~ "Everton.png",
+                       str_detect(md_input, "West Ham") ~ "West Ham.png",
+                       str_detect(md_input, "AUS") ~ "AUS.png")
+```
+
+
+```{=typst}
+
+ // #align(left)[
+        //  #grid(
+        //    columns: (auto, auto), // Adjust spacing as needed
+        //    gutter: 10pt,         // Space between logo and text
+         //   image("Halifax.png", width: 0.5in), 
+        //    align(horizon,text(fill: rgb("#221C35"), size: 12pt)[`r session_name`])
+        //    )
+        // // #image("Halifax.png", width: 0.5in)
+        // // #text(fill: rgb("#221C35"), size: 12pt)[`r session_name`]
+        //  ]
+
+  
+#set page(
+  width: 8.5in,
+  height: 11in,
+  fill: rgb("#FFFFFF"),
+  margin: (top: 1in, bottom: 0.75in, left: 0.5in, right: 0.5in),
+  header: context {
+   // pad(left: -0.65in, y: -0.1in)[
+      grid(
+          columns: (1fr, auto), // Left column takes available space, right column shrinks to fit
+           align(left + bottom)[
+            #grid(
+              columns: (auto, auto), // Adjust spacing as needed
+              gutter: 10pt,         // Space between logo and text
+              pad(y: -0.05in)[#image("Halifax.png", height: 0.45in)], 
+              box(
+                stack(
+                  dir: ttb,
+                  spacing: 0.6em, // Space between the two text rows
+                  text(size: 11pt, weight: "bold", fill: rgb("#221C35"))[#upper("Training Report")],
+                  text(size: 9pt, fill: rgb("#221C35"))[#upper("`r session_name`")]
+                )
+              )
+            )
+        // #box(image("Halifax.png", width: 0.4in)) 
+        //  #h(0.8em)
+       //   #box(
+        //   height: 0.493125in, 
+       //   align(horizon)[    
+       //  #stack(
+       //     dir: ttb,
+      //    spacing: 0.6em, // Space between the two text rows
+        //    text(size: 11pt, weight: "bold", fill: rgb("#221C35"))[#upper("Training Report")],
+        //    text(size: 9pt, fill: rgb("#221C35"))[#upper("`r session_name`")]
+        //  )
+       //  ]
+       //   )
+        
+            ],
+            align(right + bottom)[
+              #text(size: 9pt, fill: rgb("#221C35"))[TOTAL DURATION: `r session_duration`]
+            ]
+          )
+    //    ]
+        line(length: 100%, stroke: 0.5pt + rgb("#221C35"))
+    },
+  footer: context {
+    let page_num = counter(page).display("1/1", both: true)
+    align(right + horizon, text(fill: rgb("#221C35"), size: 9pt)[Page #page_num])
+  }
+)
+
+#set text(fill: rgb("#221C35"), font: "Oswald", size: 9pt)
+
+
+#set par(justify: false)
+
+
+#show heading: set align(center)
+
+
+#set table(inset: (x, y) => (
+  x: 2pt,
+  y: if y == 0 { 5pt } else { 3pt }
+))
+
+
+#let valuebox(title, value, color: rgb("0073e6")) = {
+  block(
+    fill: color.lighten(80%),
+    stroke: 0.5pt + color,
+    inset: 12pt,
+    radius: 4pt,
+    width: 100%,
+    [
+      #set text(fill: color.darken(20%), weight: "bold", size: 9pt)
+      #upper(title)
+      #v(-4pt)
+      #set text(fill: rgb("#221C35"), weight: "bold", size: 12pt)
+      #value
+    ]
+  )
+}
+
+```
+
+```{r}
+value_box_data <- stats_period %>%
+  mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
+  dplyr::filter(position_name != "Goal Keeper" & date == training_date) %>%
+  group_by(athlete_name) %>%
+  summarize(across(where(is.numeric) & !max_vel_kph, ~sum(.x, na.rm=T)), max_vel_kph=max(max_vel_kph,na.rm=T)) %>% 
+  ungroup %>% 
+  summarize(across(where(is.numeric), ~mean(.x, na.rm=T)))
+
+total_distance <- value_box_data %>% pull(total_distance)
+
+hsr_distance <- value_box_data %>% pull(high_speed_distance)
+
+sprint_distance <- value_box_data %>% pull(sprint_distance)
+
+accel_efforts <- value_box_data %>% pull(accel_efforts)
+
+decel_efforts <- value_box_data %>% pull(decel_efforts)
+
+max_vel <- value_box_data %>% pull(max_vel_kph)
+
+```
+
+
+
+```{r}
+distance_group_avg_stats <- stats_period %>%
+      mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>%
+      # drop_na(field_time) %>%
+      select(athlete_name | date | tag_name | position_name | period_name | total_distance | high_speed_distance | sprint_distance) %>%
+      dplyr::filter(position_name != "Goal Keeper" &  date <= training_date & date >= (training_date-days(6))) %>%
+  mutate(tag_name=if_else(is.na(tag_name),"OFF", tag_name)) %>%
+        # drop_na(tag_name) %>%
+     group_by(date, tag_name, athlete_name) %>%
+     summarize(across(where(is.numeric),  ~sum(.x, na.rm=T))) %>%
+      group_by(date,tag_name) %>%
+      summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>%
+      ungroup %>%
+    mutate(across(c(high_speed_distance, sprint_distance), ~.x*20)) %>%
+  pivot_longer(cols=contains("distance"), names_to = "Type", values_to = "Distance") %>%
+  mutate(Type=factor(Type, levels=c("total_distance", "high_speed_distance", "sprint_distance")),
+         Distance_labels = if_else(Type != "total_distance", round(Distance/20), round(Distance)),
+         MD_label_y = max(Distance, na.rm=T))
+
+
+
+distance_group_avg_plot <- distance_group_avg_stats %>% 
+      ggplot() +
+      geom_col(aes(x=date, y=Distance,fill=Type), position=position_dodge2(width=0.9,preserve = "single")) +
+       geom_text(aes(x=date, y=Distance,group =Type, label =Distance_labels),size=4, vjust = -0.5, color="#221C35", position=position_dodge2(width=0.9,preserve = "single")) +
+  geom_text(aes(x=date, y=MD_label_y, group =Type, label =tag_name),size=4, vjust = -2.5, color="#221C35") +
+      labs(x=NULL, y ="Total Distance (m)",fill=NULL)+
+  theme_bw()+
+      scale_x_date(date_breaks = "1 day",date_labels = "%a")+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.2)), sec.axis = sec_axis(~./20, name="HSR / Sprint Distance (m)"))+
+  scale_fill_manual(values=c("#00B0B9","#572C5F","#B2C9D4"),labels = c("Total Distance", "HSR Distance", "Sprint Distance"))+ 
+  theme(legend.position = "bottom",legend.direction = "horizontal",panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
+    panel.background = element_rect(fill = "transparent", colour = NA),
+    plot.background = element_rect(fill = "transparent", colour = NA),
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.box.background = element_rect(fill = "transparent", colour = NA),
+    legend.text  = element_text(colour = "#221C35", size=12),
+    axis.title = element_text(colour = "#221C35", size=14),
+    axis.text = element_text(colour = "#221C35", size=12),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.border = element_rect(colour = "#221C35", fill = "transparent"),
+    axis.line = element_line(colour = "#221C35"),
+    axis.ticks.x = element_line(colour = "#221C35"),
+    axis.ticks.y = element_line(colour = "#221C35")
+ )
+  
+      
+ ggsave("plot.svg",distance_group_avg_plot, dpi = 600, width = 6, height = 4)
+    
+```
+
+
+```{=typst}
+
+
+
+
+// Master Layout Grid: 2 Columns
+// Left column takes 50% of width, right column takes remaining space (1fr)
+#grid(
+  columns: (55%, 1fr),
+  column-gutter: 10pt,
+  
+  // LEFT COLUMN: Nested 3x2 Grid of Value Boxes
+  grid(
+    columns: (1fr, 1fr, 1fr), // 3 equal columns inside the left section
+    gutter: 10pt,        // Space between the boxes
+    
+  valuebox("Total Distance", "`r paste(round(total_distance), 'm')`", color: rgb("#00B0B9")),
+  valuebox("HSR Distance",  "`r paste(round(hsr_distance), 'm')`", color: rgb("#572C5F")),
+  valuebox("Sprint Distance",  "`r paste(round(sprint_distance), 'm')`", color: rgb("#00B0B9")),
+  valuebox("Accel Efforts", "`r round(accel_efforts)`", color: rgb("#572C5F")),
+  valuebox("Decel Efforts",  "`r round(decel_efforts)`", color: rgb("#00B0B9")),
+  valuebox("Max Speed",  "`r paste(round(max_vel,1), 'km/h')`", color: rgb("#572C5F"))
+  ),
+  
+  // RIGHT COLUMN: ggplot placeholder or image
+  // Replace "plot.svg" with the path to your actual exported ggplot image
+  place(top + center)[
+    #rect(width: 100%, height: 22%, fill: none, stroke: none)[
+      #set align(center + horizon)
+      #image("plot.svg", height: 100%)
+    ]
+  ]
+)
+
+#v(12pt)
+```
+
+```{r}
+
+
+player_daily_summary <- stats_period %>% 
+      dplyr::filter(position_name != "Goal Keeper" & date == training_date) %>%
+      select(position_name, athlete_name, period_name, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,meterage_per_minute,max_vel_kph, percentage_max_velocity, field_time) %>% 
+      mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
+             field_time=field_time/60,
+             percentage_max_velocity=percentage_max_velocity/100
+             ) %>% 
+  group_by(athlete_name, position_name) %>% 
+  summarize(across(where(is.numeric) & !max_vel_kph & !percentage_max_velocity, ~sum(.x,na.rm=T)), 
+            across(max_vel_kph | percentage_max_velocity, ~ max(.x, na.rm=T))) %>% 
+  ungroup %>% 
+  mutate(meterage_per_minute= total_distance/field_time) %>% 
+  rename(Position=position_name, Player = athlete_name, `Total Distance (m)` = total_distance, `HSR Distance (m)` = high_speed_distance, `Sprint Distance (m)` = sprint_distance, `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Avg Speed (m/min)` = meterage_per_minute, `Max Speed (km/h)` = max_vel_kph, `Max Speed (%max)` = percentage_max_velocity) %>% 
+  mutate(
+    `Max Speed (%max)` = scales::percent(`Max Speed (%max)`, accuracy =0.1),
+    across(where(is.numeric) & ! `Max Speed (km/h)`, round), 
+    `Max Speed (km/h)`=round(`Max Speed (km/h)`,1)
+  ) %>%
+      drop_na(Position) %>% 
+  select(!Position & !field_time)
+    
+    
+
+names(player_daily_summary)[names(player_daily_summary) == "Total Distance (m)"] <- format_tt("Total Distance (m)", escape = "typst")
+names(player_daily_summary)[names(player_daily_summary) == "HSR Distance (m)"] <- format_tt("HSR Distance (m)", escape = "typst")
+names(player_daily_summary)[names(player_daily_summary) == "Sprint Distance (m)"] <- format_tt("Sprint Distance (m)", escape = "typst")
+names(player_daily_summary)[names(player_daily_summary) == "Avg Speed (m\\/min)"] <- format_tt("Avg Speed (m\\/min)", escape = "typst")
+names(player_daily_summary)[names(player_daily_summary) == "Max Speed (km\\/h)"] <- format_tt("Max Speed (km\\/h)", escape = "typst")
+names(player_daily_summary)[names(player_daily_summary) == "Max Speed (%max)"] <- format_tt("Max Speed (%max)", escape = "typst")
+
+# Custom function with dynamic color arguments
+ggplot_progress_bar <- function(x, data_column, bar_fill = "#00B0B9", bar_outline = "#FFFFFF", text_color = "#FFFFFF", ...) {
+  min_limit <- min(data_column, na.rm=T)
+  max_limit <- max(data_column, na.rm=T)
+  scaled <- (x-min_limit)/(max_limit-min_limit)
+  # scaled <- x/max_limit
+
+  df <- data.frame(val = x, scaled = scaled, max_val = 1)
+  
+  p <- ggplot(df) +
+    #Background bar
+    geom_col(aes(x = max_val, y = 1), fill = "transparent", linewidth =1, color = bar_outline, width = 0.2) +
+    #Foreground bar 
+    geom_col(aes(x = scaled, y = 1), fill = bar_fill, linewidth =1,color = bar_outline, width = 0.2) +
+    geom_text(aes(x = max_val/2, y = 1, label = val), color=text_color, hjust = "middle",fontface="bold", size = 16) +
+    scale_x_continuous(expand = c(0.05, 0.05)) +
+    scale_y_discrete(expand = c(0.01,0.01)) +
+    theme_void()
+
+}
+
+player_daily_summary_table <- player_daily_summary %>%
+  tt(width=c(0.15,0.125,0.125,0.125,0.125,0.125,0.125,0.125,0.1)) %>% 
+  theme_empty() %>% # Clear out the default black theme lines
+  style_tt(i = 0, line = "tb", line_color = "#221C35", line_width = 0.05) %>%
+  style_tt(i = nrow(player_daily_summary), line = "b", line_color = "#221C35", line_width = 0.05) %>% 
+  format_tt(escape=T) %>% 
+  # theme_tt("spacing", "compact")  %>%
+  # style_tt(background = "#FFFFFF", color = "#221C35") %>% 
+  style_tt(align = "lcccccccc", alignv = "m",line_color = "#221C35") %>% 
+  style_tt(i = "colnames", bold = TRUE, alignv = "t") %>%
+  plot_tt(j = 2, fun = ggplot_progress_bar,height=2, data = as.list(player_daily_summary$`Total Distance (m)`), data_column=player_daily_summary$`Total Distance (m)`, bar_fill = rgb(0, 176, 185,alpha=(0.2*255), maxColorValue = 255), bar_outline  = "#00B0B9", text_color= "#221C35")  %>% 
+  plot_tt(j = 3, fun = ggplot_progress_bar,height=2, data = as.list(player_daily_summary$`HSR Distance (m)`), data_column=player_daily_summary$`HSR Distance (m)`, bar_fill =  rgb(87, 44, 95,alpha=(0.2*255), maxColorValue = 255), bar_outline  = "#572C5F", text_color= "#221C35") %>% 
+  plot_tt(j = 4, fun = ggplot_progress_bar,height=2, data = as.list(player_daily_summary$`Sprint Distance (m)`), data_column=player_daily_summary$`Sprint Distance (m)`, bar_fill = rgb(0, 176, 185,alpha=(0.2*255), maxColorValue = 255), bar_outline  = "#00B0B9", text_color= "#221C35") %>% 
+  plot_tt(j =5, fun = ggplot_progress_bar,height=2, data = as.list(player_daily_summary$`Accel Efforts`), data_column=player_daily_summary$`Accel Efforts`, bar_fill = rgb(87, 44, 95,alpha=(0.2*255), maxColorValue = 255), bar_outline  = "#572C5F", text_color= "#221C35") %>% 
+  plot_tt(j = 6, fun = ggplot_progress_bar,height=2, data = as.list(player_daily_summary$`Decel Efforts`), data_column=player_daily_summary$`Decel Efforts`, bar_fill = rgb(0, 176, 185,alpha=(0.2*255), maxColorValue = 255), bar_outline  = "#00B0B9", text_color= "#221C35") %>% 
+    plot_tt(j =7, fun = ggplot_progress_bar,height=2, data = as.list(player_daily_summary$`Avg Speed (m/min)`), data_column=player_daily_summary$`Avg Speed (m/min)`, bar_fill = rgb(87, 44, 95,alpha=(0.2*255), maxColorValue = 255), bar_outline  = "#572C5F", text_color= "#221C35") %>% 
+  plot_tt(j =8, fun = ggplot_progress_bar,height=2, data = as.list(player_daily_summary$`Max Speed (km/h)`), data_column=player_daily_summary$`Max Speed (km/h)`, bar_fill = rgb(0, 176, 185,alpha=(0.2*255),  maxColorValue = 255), bar_outline  = "#00B0B9", text_color= "#221C35")
+
+player_daily_summary_table
+      
+```
+
+{{< pagebreak >}}
+
+```{r}
+player_daily_summary_table
+```
+
+
+{{< pagebreak >}}
+
+
+
+
+```{=typst}
+
+#let progressive-gauge(
+  percentage, 
+  label: none, 
+  size: 120pt, 
+  stroke-width: 10pt,
+  // NEW: Threshold configuration parameter (must be 3 ascending values)
+  thresholds: (40, 85, 100),
+  // NEW: Colors array matching Low, Medium, High, and Overdrive tiers
+  colors: (rgb("#22c55e"), rgb("#eab308"), rgb("#ef4444"), rgb("#a855f7"))
+) = {
+  let max-val = calc.max(percentage, 100)
+  let val = calc.max(percentage, 0)
+  
+  // NEW: Dynamic color assignment based on custom thresholds parameter
+  let gauge-color = if val <= thresholds.at(0) { colors.at(0) }
+    else if val <= thresholds.at(1) { colors.at(1) }
+    else if val <= thresholds.at(2) { colors.at(2) }
+    else { colors.at(3) }
+
+  let center-pt = size / 2
+  let radius = (size - stroke-width) / 2
+  
+  let start-angle = 135deg
+  let total-sweep = 270deg
+  
+  let target-100-sweep = (100 / max-val) * total-sweep
+  let steps = 60
+
+  block(
+    width: size,
+    height: size,
+    {
+      // 1. Gray Background Track
+      for i in range(0, steps) {
+        let angle1 = start-angle + (i / steps) * total-sweep
+        let angle2 = start-angle + ((i + 1) / steps) * total-sweep
+        let x1 = center-pt + radius * calc.cos(angle1)
+        let y1 = center-pt + radius * calc.sin(angle1)
+        let x2 = center-pt + radius * calc.cos(angle2)
+        let y2 = center-pt + radius * calc.sin(angle2)
+        place(line(start: (x1, y1), end: (x2, y2), stroke: (paint: rgb("#e2e8f0"), thickness: stroke-width, cap: "round")))
+      }
+      
+      // 2. Active Progress Track
+      if val > 0 {
+        let fg-steps = calc.ceil((val / max-val) * steps)
+        for i in range(0, fg-steps) {
+          let t1 = i / steps
+          let t2 = calc.min((i + 1) / steps, val / max-val)
+          let angle1 = start-angle + t1 * total-sweep
+          let angle2 = start-angle + t2 * total-sweep
+          let x1 = center-pt + radius * calc.cos(angle1)
+          let y1 = center-pt + radius * calc.sin(angle1)
+          let x2 = center-pt + radius * calc.cos(angle2)
+          let y2 = center-pt + radius * calc.sin(angle2)
+          place(line(start: (x1, y1), end: (x2, y2), stroke: (paint: gauge-color, thickness: stroke-width, cap: "round")))
+        }
+      }
+      
+      // 3. 100% Marker Line & Text Label (Only if range shifted > 100)
+      if percentage > 100 {
+        let target-angle = start-angle + target-100-sweep
+        let inner-r = radius - (stroke-width * 0.8)
+        let outer-r = radius + (stroke-width * 0.8)
+        
+        let tx1 = center-pt + inner-r * calc.cos(target-angle)
+        let ty1 = center-pt + inner-r * calc.sin(target-angle)
+        let tx2 = center-pt + outer-r * calc.cos(target-angle)
+        let ty2 = center-pt + outer-r * calc.sin(target-angle)
+        
+        place(line(start: (tx1, ty1), end: (tx2, ty2), stroke: (paint: rgb("#1e293b"), thickness: 2pt, cap: "round")))
+        
+        let text-r = outer-r + 6pt
+        let text-x = center-pt + text-r * calc.cos(target-angle)
+        let text-y = center-pt + text-r * calc.sin(target-angle)
+        
+        place(
+          top + left,
+          dx: text-x,
+          dy: text-y - 4pt,
+          text(size: size * 0.07, fill: rgb("#1e293b"), weight: "bold", "100%")
+        )
+      }
+      
+      // 4. Centered Text Stack
+      place(
+        top + left,
+        dx: center-pt,
+        dy: center-pt - (size * 0.1), 
+        block(
+          width: 0pt,
+          height: 0pt,
+          {
+            align(center + horizon)[
+              #block(width: size)[
+                #if label != none {
+                  text(size: size * 0.08, fill: rgb("#64748b"), weight: "bold", upper(label))
+                  v(-12pt) 
+                }
+                #text(size: size * 0.20, weight: "bold", str(val) + "%")
+              ]
+            ]
+          }
+        )
+      )
+      
+      // 5. Endcaps
+      place(bottom + left, dx: size * 0.05, dy: size * 0.05, text(size: size * 0.08, fill: rgb("#94a3b8"), weight: "medium", "0%"))
+      place(bottom + right, dx: -size * 0.05, dy: size * 0.05, text(size: size * 0.08, fill: rgb("#94a3b8"), weight: "medium", str(max-val) + "%"))
+    }
+  )
+}
+
+// EXAMPLE USAGE DEMONSTRATING DIFFERENT CUSTOM CONFIGURATIONS
+#grid(
+  columns: 3,
+  gutter: 30pt,
+  
+  // Example 1: Standard usage using defaults
+  progressive-gauge(75, label: "Default Tiers"),
+  
+  // Example 2: Custom Ice-to-Fire configuration
+  progressive-gauge(115, 
+    label: "Custom Hot Theme", 
+    thresholds: (30, 60, 100),
+    colors: (
+      rgb("#22d3ee"), // Cyan (Low)
+      rgb("#3b82f6"), // Blue (Medium)
+      rgb("#f97316"), // Orange (High)
+      rgb("#dc2626")  // Red (Overdrive!)
+    )
+  ), 
+  // Example 3: Custom Ice-to-Fire configuration
+  progressive-gauge(90, 
+    label: "Custom Hot Theme", 
+    thresholds: (30, 60, 100),
+    colors: (
+      rgb("#22d3ee"), // Cyan (Low)
+      rgb("#3b82f6"), // Blue (Medium)
+      rgb("#f97316"), // Orange (High)
+      rgb("#dc2626")  // Red (Overdrive!)
+    )
+  )
+)
+
+```
+
+
+{{< pagebreak >}}
+
+
+```{=typst}
+#let progressive-gauge(
+  percentage, 
+  label: none, 
+  size: 110pt, 
+  stroke-width: 10pt,
+  thresholds: (40, 85, 100),
+  colors: (rgb("#22c55e"), rgb("#eab308"), rgb("#ef4444"), rgb("#a855f7"))
+) = {
+  let max-val = calc.max(percentage, 100)
+  let val = calc.max(percentage, 0)
+  
+  let gauge-color = if val <= thresholds.at(0) { colors.at(0) }
+    else if val <= thresholds.at(1) { colors.at(1) }
+    else if val <= thresholds.at(2) { colors.at(2) }
+    else { colors.at(3) }
+
+  let center-pt = size / 2
+  let radius = (size - stroke-width) / 2
+  
+  let start-angle = 135deg
+  let total-sweep = 270deg
+  let target-100-sweep = (100 / max-val) * total-sweep
+  let steps = 60
+
+  block(
+    width: size,
+    height: size,
+    {
+      // Gray Track
+      for i in range(0, steps) {
+        let angle1 = start-angle + (i / steps) * total-sweep
+        let angle2 = start-angle + ((i + 1) / steps) * total-sweep
+        let x1 = center-pt + radius * calc.cos(angle1)
+        let y1 = center-pt + radius * calc.sin(angle1)
+        let x2 = center-pt + radius * calc.cos(angle2)
+        let y2 = center-pt + radius * calc.sin(angle2)
+        place(line(start: (x1, y1), end: (x2, y2), stroke: (paint: rgb("#e2e8f0"), thickness: stroke-width, cap: "round")))
+      }
+      
+      // Progress Track
+      if val > 0 {
+        let fg-steps = calc.ceil((val / max-val) * steps)
+        for i in range(0, fg-steps) {
+          let t1 = i / steps
+          let t2 = calc.min((i + 1) / steps, val / max-val)
+          let angle1 = start-angle + t1 * total-sweep
+          let angle2 = start-angle + t2 * total-sweep
+          let x1 = center-pt + radius * calc.cos(angle1)
+          let y1 = center-pt + radius * calc.sin(angle1)
+          let x2 = center-pt + radius * calc.cos(angle2)
+          let y2 = center-pt + radius * calc.sin(angle2)
+          place(line(start: (x1, y1), end: (x2, y2), stroke: (paint: gauge-color, thickness: stroke-width, cap: "round")))
+        }
+      }
+      
+      // 100% Target Divider Line
+      if percentage > 100 {
+        let target-angle = start-angle + target-100-sweep
+        let inner-r = radius - (stroke-width * 0.8)
+        let outer-r = radius + (stroke-width * 0.8)
+        let tx1 = center-pt + inner-r * calc.cos(target-angle)
+        let ty1 = center-pt + inner-r * calc.sin(target-angle)
+        let tx2 = center-pt + outer-r * calc.cos(target-angle)
+        let ty2 = center-pt + outer-r * calc.sin(target-angle)
+        place(line(start: (tx1, ty1), end: (tx2, ty2), stroke: (paint: rgb("#1e293b"), thickness: 2pt, cap: "round")))
+        
+        let text-r = outer-r + 6pt
+        let text-x = center-pt + text-r * calc.cos(target-angle)
+        let text-y = center-pt + text-r * calc.sin(target-angle)
+        place(top + left, dx: text-x, dy: text-y - 4pt, text(size: size * 0.07, fill: rgb("#1e293b"), weight: "bold", "100%"))
+      }
+      
+      // Midpoint Text Stack
+      place(
+        top + left, dx: center-pt, dy: center-pt - (size * 0.1), 
+        block(width: 0pt, height: 0pt, {
+          align(center + horizon)[
+            #block(width: size)[
+              #if label != none { text(size: size * 0.08, fill: rgb("#64748b"), weight: "bold", upper(label)); v(-12pt) }
+              #text(size: size * 0.20, weight: "bold", str(val) + "%")
+            ]
+          ]
+        })
+      )
+      
+      // Min/Max Endcap Indicators
+      place(bottom + left, dx: size * 0.05, dy: size * 0.05, text(size: size * 0.08, fill: rgb("#94a3b8"), weight: "medium", "0%"))
+      place(bottom + right, dx: -size * 0.05, dy: size * 0.05, text(size: size * 0.08, fill: rgb("#94a3b8"), weight: "medium", str(max-val) + "%"))
+    }
+  )
+}
+
+// 2. THE LINEAR BAR INDICATOR FUNCTION
+#let bar-indicator(percentage, label: none) = {
+  let val = calc.min(calc.max(percentage, 0), 100)
+  let bar-color = if val <= 40 { rgb("#22c55e") }
+    else if val <= 85 { rgb("#eab308") }
+    else { rgb("#ef4444") }
+
+  block(
+    width: 100%,
+    stack(
+      spacing: 6pt,
+      // Metadata Row (Label left, percentage right)
+      grid(
+        columns: (1fr, auto),
+        text(size: 9pt, weight: "bold", fill: rgb("#475569"), upper(label)),
+        text(size: 9pt, weight: "bold", fill: rgb("#1e293b"), str(val) + "%")
+      ),
+      // Track Line Layering
+      rect(
+        width: 100%,
+        height: 8pt,
+        fill: rgb("#e2e8f0"),
+        radius: 4pt,
+        outset: 0pt,
+        stroke: none,
+        // Active filled progress strip nested inside
+        if val > 0 {
+          rect(
+            width: val * 1%,
+            height: 100%,
+            fill: bar-color,
+            radius: 4pt
+          )
+        }
+      )
+    )
+  )
+}
+
+// 3. MASTER DASHBOARD GRID LAYOUT
+#set align(center)
+
+// Outer Container Grid
+#grid(
+  columns: (1fr),
+  row-gutter: 40pt,
+  
+  // First Row: Two Arch Gauges Centered together
+  grid(
+    columns: (auto, auto),
+    gutter: 60pt,
+    progressive-gauge(82, label: "Core Speed"),
+    progressive-gauge(115, label: "Memory Load")
+  ),
+  
+  // Second Row: 3x2 Grid of Bar Indicators
+  grid(
+    columns: (1fr, 1fr, 1fr), // 3 Equal Columns
+    column-gutter: 30pt,
+    row-gutter: 20pt,         // 2 Rows created implicitly by 6 elements
+    
+    bar-indicator(35, label: "Disk Alpha"),
+    bar-indicator(72, label: "Disk Beta"),
+    bar-indicator(94, label: "Network In"),
+    
+    bar-indicator(15, label: "Network Out"),
+    bar-indicator(50, label: "Sensor A"),
+    bar-indicator(83, label: "Sensor B")
+  )
+)
+
+```
+
+
+
+
+{{< pagebreak >}}
+
+
+
+
+```{=typst}
+
+#let progressive-gauge(
+  percentage, 
+  label: none, 
+  size: 110pt, 
+  stroke-width: 10pt,
+  thresholds: (40, 85, 100),
+  colors: (rgb("#22c55e"), rgb("#eab308"), rgb("#ef4444"), rgb("#a855f7"))
+) = {
+  let max-val = calc.max(percentage, 100)
+  let val = calc.max(percentage, 0)
+  
+  let gauge-color = if val <= thresholds.at(0) { colors.at(0) }
+    else if val <= thresholds.at(1) { colors.at(1) }
+    else if val <= thresholds.at(2) { colors.at(2) }
+    else { colors.at(3) }
+
+  let center-pt = size / 2
+  let radius = (size - stroke-width) / 2
+  
+  let start-angle = 135deg
+  let total-sweep = 270deg
+  let target-100-sweep = (100 / max-val) * total-sweep
+  let steps = 60
+
+  block(
+    width: size,
+    height: size,
+    {
+      // Gray Track
+      for i in range(0, steps) {
+        let angle1 = start-angle + (i / steps) * total-sweep
+        let angle2 = start-angle + ((i + 1) / steps) * total-sweep
+        let x1 = center-pt + radius * calc.cos(angle1)
+        let y1 = center-pt + radius * calc.sin(angle1)
+        let x2 = center-pt + radius * calc.cos(angle2)
+        let y2 = center-pt + radius * calc.sin(angle2)
+        place(line(start: (x1, y1), end: (x2, y2), stroke: (paint: rgb("#e2e8f0"), thickness: stroke-width, cap: "round")))
+      }
+      
+      // Progress Track
+      if val > 0 {
+        let fg-steps = calc.ceil((val / max-val) * steps)
+        for i in range(0, fg-steps) {
+          let t1 = i / steps
+          let t2 = calc.min((i + 1) / steps, val / max-val)
+          let angle1 = start-angle + t1 * total-sweep
+          let angle2 = start-angle + t2 * total-sweep
+          let x1 = center-pt + radius * calc.cos(angle1)
+          let y1 = center-pt + radius * calc.sin(angle1)
+          let x2 = center-pt + radius * calc.cos(angle2)
+          let y2 = center-pt + radius * calc.sin(angle2)
+          place(line(start: (x1, y1), end: (x2, y2), stroke: (paint: gauge-color, thickness: stroke-width, cap: "round")))
+        }
+      }
+      
+      // 100% Target Divider Line
+      if percentage > 100 {
+        let target-angle = start-angle + target-100-sweep
+        let inner-r = radius - (stroke-width * 0.8)
+        let outer-r = radius + (stroke-width * 0.8)
+        let tx1 = center-pt + inner-r * calc.cos(target-angle)
+        let ty1 = center-pt + inner-r * calc.sin(target-angle)
+        let tx2 = center-pt + outer-r * calc.cos(target-angle)
+        let ty2 = center-pt + outer-r * calc.sin(target-angle)
+        place(line(start: (tx1, ty1), end: (tx2, ty2), stroke: (paint: rgb("#1e293b"), thickness: 2pt, cap: "round")))
+        
+        let text-r = outer-r + 6pt
+        let text-x = center-pt + text-r * calc.cos(target-angle)
+        let text-y = center-pt + text-r * calc.sin(target-angle)
+        place(top + left, dx: text-x, dy: text-y - 4pt, text(size: size * 0.07, fill: rgb("#1e293b"), weight: "bold", "100%"))
+      }
+      
+      // Midpoint Text Stack
+      place(
+        top + left, dx: center-pt, dy: center-pt - (size * 0.1), 
+        block(width: 0pt, height: 0pt, {
+          align(center + horizon)[
+            #block(width: size)[
+              #if label != none { text(size: size * 0.08, fill: rgb("#64748b"), weight: "bold", upper(label)); v(-12pt) }
+              #text(size: size * 0.20, weight: "bold", str(val) + "%")
+            ]
+          ]
+        })
+      )
+      
+      // Min/Max Endcap Indicators
+      place(bottom + left, dx: size * 0.05, dy: size * 0.05, text(size: size * 0.08, fill: rgb("#94a3b8"), weight: "medium", "0%"))
+      place(bottom + right, dx: -size * 0.05, dy: size * 0.05, text(size: size * 0.08, fill: rgb("#94a3b8"), weight: "medium", str(max-val) + "%"))
+    }
+  )
+}
+
+// 2. THE CUSTOM BOX METER COMPONENT (Your Style Integration)
+#let bar-indicator(percentage, label: none) = {
+  let val = calc.min(calc.max(percentage, 0), 100)
+  let bar-color = if val <= 40 { rgb("#22c55e") }
+    else if val <= 85 { rgb("#eab308") }
+    else { rgb("#ef4444") }
+
+  // Implements your exact box style structure
+  box(
+    stroke: 1pt + rgb("e0e0e0"),
+    inset: 15pt,
+    radius: 8pt,
+    fill: rgb("fafafa"),
+    width: 100%,
+    [
+      #align(center)[#text(weight: "bold", size: 14pt, fill: rgb("2c3e50"))[#label]]
+      #v(10pt)
+      
+      #stack(
+        spacing: 6pt,
+        // Aligns the percentage value cleanly directly under the title
+        align(center)[#text(size: 11pt, weight: "bold", fill: rgb("#1e293b"), str(val) + "%")],
+        v(2pt),
+        // Progress Track
+        rect(
+          width: 100%,
+          height: 8pt,
+          fill: rgb("#e2e8f0"),
+          radius: 4pt,
+          if val > 0 {
+            rect(
+              width: val * 1%,
+              height: 100%,
+              fill: bar-color,
+              radius: 4pt
+            )
+          }
+        )
+      )
+    ]
+  )
+}
+
+// 3. MASTER DASHBOARD GRID LAYOUT
+#set align(center)
+
+#grid(
+  columns: (1fr),
+  row-gutter: 40pt,
+  
+  // First Row: Two Arch Gauges
+  grid(
+    columns: (auto, auto),
+    gutter: 60pt,
+    progressive-gauge(82, label: "Core Speed"),
+    progressive-gauge(115, label: "Memory Load")
+  ),
+  
+  // Second Row: 3x2 Grid of Custom Boxed Indicators
+  grid(
+    columns: (1fr, 1fr, 1fr), 
+    column-gutter: 20pt,
+    row-gutter: 20pt,         
+    
+    bar-indicator(35, label: "Disk Alpha"),
+    bar-indicator(72, label: "Disk Beta"),
+    bar-indicator(94, label: "Network In"),
+    
+    bar-indicator(15, label: "Network Out"),
+    bar-indicator(50, label: "Sensor A"),
+    bar-indicator(83, label: "Sensor B")
+  )
+)
+
+```
+
+
+
+{{< pagebreak >}}
+
+
+```{=typst}
+// 1. THE ARCH GAUGE FUNCTION
+#let progressive-gauge(
+  percentage, 
+  label: none, 
+  size: 110pt, 
+  stroke-width: 10pt,
+  thresholds: (40, 85, 100),
+  colors: (rgb("#22c55e"), rgb("#eab308"), rgb("#ef4444"), rgb("#a855f7"))
+) = {
+  let max-val = calc.max(percentage, 100)
+  let val = calc.max(percentage, 0)
+  
+  let gauge-color = if val <= thresholds.at(0) { colors.at(0) }
+    else if val <= thresholds.at(1) { colors.at(1) }
+    else if val <= thresholds.at(2) { colors.at(2) }
+    else { colors.at(3) }
+
+  let center-pt = size / 2
+  let radius = (size - stroke-width) / 2
+  
+  let start-angle = 135deg
+  let total-sweep = 270deg
+  let target-100-sweep = (100 / max-val) * total-sweep
+  let steps = 60
+
+  block(
+    width: size,
+    height: size,
+    {
+      // Gray Track
+      for i in range(0, steps) {
+        let angle1 = start-angle + (i / steps) * total-sweep
+        let angle2 = start-angle + ((i + 1) / steps) * total-sweep
+        let x1 = center-pt + radius * calc.cos(angle1)
+        let y1 = center-pt + radius * calc.sin(angle1)
+        let x2 = center-pt + radius * calc.cos(angle2)
+        let y2 = center-pt + radius * calc.sin(angle2)
+        place(line(start: (x1, y1), end: (x2, y2), stroke: (paint: rgb("#e2e8f0"), thickness: stroke-width, cap: "round")))
+      }
+      
+      // Progress Track
+      if val > 0 {
+        let fg-steps = calc.ceil((val / max-val) * steps)
+        for i in range(0, fg-steps) {
+          let t1 = i / steps
+          let t2 = calc.min((i + 1) / steps, val / max-val)
+          let angle1 = start-angle + t1 * total-sweep
+          let angle2 = start-angle + t2 * total-sweep
+          let x1 = center-pt + radius * calc.cos(angle1)
+          let y1 = center-pt + radius * calc.sin(angle1)
+          let x2 = center-pt + radius * calc.cos(angle2)
+          let y2 = center-pt + radius * calc.sin(angle2)
+          place(line(start: (x1, y1), end: (x2, y2), stroke: (paint: gauge-color, thickness: stroke-width, cap: "round")))
+        }
+      }
+      
+      // 100% Target Divider Line
+      if percentage > 100 {
+        let target-angle = start-angle + target-100-sweep
+        let inner-r = radius - (stroke-width * 0.8)
+        let outer-r = radius + (stroke-width * 0.8)
+        let tx1 = center-pt + inner-r * calc.cos(target-angle)
+        let ty1 = center-pt + inner-r * calc.sin(target-angle)
+        let tx2 = center-pt + outer-r * calc.cos(target-angle)
+        let ty2 = center-pt + outer-r * calc.sin(target-angle)
+        place(line(start: (tx1, ty1), end: (tx2, ty2), stroke: (paint: rgb("#1e293b"), thickness: 2pt, cap: "round")))
+        
+        let text-r = outer-r + 6pt
+        let text-x = center-pt + text-r * calc.cos(target-angle)
+        let text-y = center-pt + text-r * calc.sin(target-angle)
+        place(top + left, dx: text-x, dy: text-y - 4pt, text(size: size * 0.07, fill: rgb("#1e293b"), weight: "bold", "100%"))
+      }
+      
+      // Midpoint Text Stack
+      place(
+        top + left, dx: center-pt, dy: center-pt - (size * 0.1), 
+        block(width: 0pt, height: 0pt, {
+          align(center + horizon)[
+            #block(width: size)[
+              #if label != none { text(size: size * 0.08, fill: rgb("#64748b"), weight: "bold", upper(label)); v(-8pt) }
+              #text(size: size * 0.20, weight: "bold", str(val) + "%")
+            ]
+          ]
+        })
+      )
+      
+      // Min/Max Endcap Indicators
+      place(bottom + left, dx: size * 0.05, dy: size * 0.05, text(size: size * 0.08, fill: rgb("#94a3b8"), weight: "medium", "0%"))
+      place(bottom + right, dx: -size * 0.05, dy: size * 0.05, text(size: size * 0.08, fill: rgb("#94a3b8"), weight: "medium", str(max-val) + "%"))
+    }
+  )
+}
+
+// 2. THE UPDATED COMPACT METRIC BAR INDICATOR
+#let bar-indicator(percentage, label: none) = {
+  let val = calc.min(calc.max(percentage, 0), 100)
+  let bar-color = if val <= 40 { rgb("#22c55e") }
+    else if val <= 85 { rgb("#eab308") }
+    else { rgb("#ef4444") }
+
+  box(
+    stroke: 1pt + rgb("e0e0e0"),
+    inset: 15pt,
+    radius: 8pt,
+    fill: rgb("fafafa"),
+    width: 100%,
+    [
+      // Text Row Layout: Label on Left, Value next to it, Percentage on Right
+      #grid(
+        columns: (auto, 1fr, auto),
+        column-gutter: 8pt,
+        text(weight: "bold", size: 12pt, fill: rgb("2c3e50"))[#label],
+        align(left + horizon)[#text(size: 11pt, weight: "medium", fill: rgb("#64748b"))[(#val)]],
+        align(right + horizon)[#text(size: 12pt, weight: "bold", fill: rgb("#1e293b"))[#str(val)%]]
+      )
+      #v(10pt)
+      
+      // Fixed Track Component Layering
+      #align(left)[
+        #block(
+          width: 100%,
+          height: 8pt,
+          {
+            // 1. Gray Background Track
+            place(top + left, rect(width: 100%, height: 8pt, fill: rgb("#e2e8f0"), radius: 4pt))
+            
+            // 2. Overlapping Progress Strip (Shares exact same base metrics & thickness)
+            if val > 0 {
+              place(top + left, rect(width: val * 1%, height: 8pt, fill: bar-color, radius: 4pt))
+            }
+          }
+        )
+      ]
+    ]
+  )
+}
+
+// 3. MASTER DASHBOARD GRID LAYOUT
+#set align(center)
+
+#grid(
+  columns: (1fr),
+  row-gutter: 40pt,
+  
+  // First Row: Two Arch Gauges
+  grid(
+    columns: (auto, auto),
+    gutter: 60pt,
+    progressive-gauge(82, label: "Core Speed"),
+    progressive-gauge(115, label: "Memory Load")
+  ),
+  
+  // Second Row: 3x2 Grid of Left-Aligned Boxed Indicators
+  grid(
+    columns: (1fr, 1fr, 1fr), 
+    column-gutter: 20pt,
+    row-gutter: 20pt,         
+    
+    bar-indicator(35, label: "Disk Alpha"),
+    bar-indicator(72, label: "Disk Beta"),
+    bar-indicator(94, label: "Network In"),
+    
+    bar-indicator(15, label: "Network Out"),
+    bar-indicator(50, label: "Sensor A"),
+    bar-indicator(83, label: "Sensor B")
+  )
+)
+
+```
+
+
+{{< pagebreak >}}
+
+
+```{=typst}
+// 1. THE ARCH GAUGE FUNCTION
+#let progressive-gauge(
+  percentage, 
+  label: none, 
+  size: 110pt, 
+  stroke-width: 10pt,
+  thresholds: (40, 85, 100),
+  colors: (rgb("#22c55e"), rgb("#eab308"), rgb("#ef4444"), rgb("#a855f7"))
+) = {
+  let max-val = calc.max(percentage, 100)
+  let val = calc.max(percentage, 0)
+  
+  let gauge-color = if val <= thresholds.at(0) { colors.at(0) }
+    else if val <= thresholds.at(1) { colors.at(1) }
+    else if val <= thresholds.at(2) { colors.at(2) }
+    else { colors.at(3) }
+
+  let center-pt = size / 2
+  let radius = (size - stroke-width) / 2
+  
+  let start-angle = 135deg
+  let total-sweep = 270deg
+  let target-100-sweep = (100 / max-val) * total-sweep
+  let steps = 60
+
+  block(
+    width: size,
+    height: size,
+    {
+      // Gray Track
+      for i in range(0, steps) {
+        let angle1 = start-angle + (i / steps) * total-sweep
+        let angle2 = start-angle + ((i + 1) / steps) * total-sweep
+        let x1 = center-pt + radius * calc.cos(angle1)
+        let y1 = center-pt + radius * calc.sin(angle1)
+        let x2 = center-pt + radius * calc.cos(angle2)
+        let y2 = center-pt + radius * calc.sin(angle2)
+        place(line(start: (x1, y1), end: (x2, y2), stroke: (paint: rgb("#e2e8f0"), thickness: stroke-width, cap: "round")))
+      }
+      
+      // Progress Track
+      if val > 0 {
+        let fg-steps = calc.ceil((val / max-val) * steps)
+        for i in range(0, fg-steps) {
+          let t1 = i / steps
+          let t2 = calc.min((i + 1) / steps, val / max-val)
+          let angle1 = start-angle + t1 * total-sweep
+          let angle2 = start-angle + t2 * total-sweep
+          let x1 = center-pt + radius * calc.cos(angle1)
+          let y1 = center-pt + radius * calc.sin(angle1)
+          let x2 = center-pt + radius * calc.cos(angle2)
+          let y2 = center-pt + radius * calc.sin(angle2)
+          place(line(start: (x1, y1), end: (x2, y2), stroke: (paint: gauge-color, thickness: stroke-width, cap: "round")))
+        }
+      }
+      
+      // 100% Target Divider Line
+      if percentage > 100 {
+        let target-angle = start-angle + target-100-sweep
+        let inner-r = radius - (stroke-width * 0.8)
+        let outer-r = radius + (stroke-width * 0.8)
+        let tx1 = center-pt + inner-r * calc.cos(target-angle)
+        let ty1 = center-pt + inner-r * calc.sin(target-angle)
+        let tx2 = center-pt + outer-r * calc.cos(target-angle)
+        let ty2 = center-pt + outer-r * calc.sin(target-angle)
+        place(line(start: (tx1, ty1), end: (tx2, ty2), stroke: (paint: rgb("#1e293b"), thickness: 2pt, cap: "round")))
+        
+        let text-r = outer-r + 6pt
+        let text-x = center-pt + text-r * calc.cos(target-angle)
+        let text-y = center-pt + text-r * calc.sin(target-angle)
+        place(top + left, dx: text-x, dy: text-y - 4pt, text(size: size * 0.07, fill: rgb("#1e293b"), weight: "bold", "100%"))
+      }
+      
+      // Midpoint Text Stack
+      place(
+        top + left, dx: center-pt, dy: center-pt - (size * 0.1), 
+        block(width: 0pt, height: 0pt, {
+          align(center + horizon)[
+            #block(width: size)[
+              #if label != none { text(size: size * 0.08, fill: rgb("#64748b"), weight: "bold", upper(label)); v(-8pt) }
+              #text(size: size * 0.20, weight: "bold", str(val) + "%")
+            ]
+          ]
+        })
+      )
+      
+      // Min/Max Endcap Indicators
+      place(bottom + left, dx: size * 0.05, dy: size * 0.05, text(size: size * 0.08, fill: rgb("#94a3b8"), weight: "medium", "0%"))
+      place(bottom + right, dx: -size * 0.05, dy: size * 0.05, text(size: size * 0.08, fill: rgb("#94a3b8"), weight: "medium", str(max-val) + "%"))
+    }
+  )
+}
+
+// 2. THE UPDATED COMPACT METRIC BAR INDICATOR
+#let bar-indicator(percentage, label: none) = {
+  let val = calc.min(calc.max(percentage, 0), 100)
+  let bar-color = if val <= 40 { rgb("#22c55e") }
+    else if val <= 85 { rgb("#eab308") }
+    else { rgb("#ef4444") }
+
+  box(
+    stroke: 1pt + rgb("e0e0e0"),
+    inset: 15pt,
+    radius: 8pt,
+    fill: rgb("fafafa"),
+    width: 100%,
+    [
+      // Text Row Layout: Label on Left, Value next to it, Percentage on Right
+      #grid(
+        columns: (auto, 1fr, auto),
+        column-gutter: 8pt,
+        text(weight: "bold", size: 12pt, fill: rgb("2c3e50"))[#label],
+        align(left + horizon)[#text(size: 11pt, weight: "medium", fill: rgb("#64748b"))[(#val)]],
+        align(right + horizon)[#text(size: 12pt, weight: "bold", fill: rgb("#1e293b"))[#str(val)%]]
+      )
+      #v(10pt)
+      
+      // Fixed Track Component Layering
+      #align(left)[
+        #block(
+          width: 100%,
+          height: 8pt,
+          {
+            // 1. Gray Background Track
+            place(top + left, rect(width: 100%, height: 8pt, fill: rgb("#e2e8f0"), radius: 4pt))
+            
+            // 2. Overlapping Progress Strip (Shares exact same base metrics & thickness)
+            if val > 0 {
+              place(top + left, rect(width: val * 1%, height: 8pt, fill: bar-color, radius: 4pt))
+            }
+          }
+        )
+      ]
+    ]
+  )
+}
+
+// 3. MASTER DASHBOARD GRID LAYOUT
+#set align(center)
+
+#grid(
+  columns: (1fr),
+  row-gutter: 40pt,
+  
+  // First Row: Two Arch Gauges
+  grid(
+    columns: (auto, auto),
+    gutter: 60pt,
+    progressive-gauge(82, label: "Core Speed"),
+    progressive-gauge(115, label: "Memory Load")
+  ),
+  
+  // Second Row: 3x2 Grid of Left-Aligned Boxed Indicators
+  grid(
+    columns: (1fr, 1fr, 1fr), 
+    column-gutter: 20pt,
+    row-gutter: 20pt,         
+    
+    bar-indicator(35, label: "Disk Alpha"),
+    bar-indicator(72, label: "Disk Beta"),
+    bar-indicator(94, label: "Network In"),
+    
+    bar-indicator(15, label: "Network Out"),
+    bar-indicator(50, label: "Sensor A"),
+    bar-indicator(83, label: "Sensor B")
+  )
+)
+
+```

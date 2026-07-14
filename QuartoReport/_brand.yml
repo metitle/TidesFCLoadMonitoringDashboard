@@ -1,0 +1,6 @@
+# _brand.yml
+typography:
+  fonts:
+    - family: 'Oswald'
+      source: google
+      weight: [300, 400, 700]

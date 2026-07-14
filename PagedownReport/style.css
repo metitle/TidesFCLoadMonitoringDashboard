@@ -1,0 +1,166 @@
+/* 1. IMPORTS & GLOBAL CONFIGURATION */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+
+:root {
+  --pagedjs-margin-left: 1in;
+  --pagedjs-margin-right: 1in;
+  --pagedjs-margin-bottom: 1in;
+  --pagedjs-margin-top: 1in;
+}
+
+/* 2. DEFAULT PAGE SETTINGS (All pages) */
+@page {
+  size: letter landscape;
+  background: #221C35;
+  
+  @top-left-corner {
+    content: "";
+    background-image: url(Halifax.png);
+    background-repeat: no-repeat;
+    background-size: 0.5in;
+    background-position: center;
+  }
+  @bottom-center {
+    content: counter(page);
+    color: grey;
+    font-size: 10pt;
+  }
+}
+
+/* 3. INDIVIDUAL COVER & BREAK PAGES (Declared separately for valid syntax) */
+@page:first {
+  background-size: cover;
+  @top-left-corner { 
+    content: "";
+    background: none; }
+  @bottom-center { 
+    content: "";
+    background: none; }
+}
+
+@page:nth(2) {
+  margin: 0;
+  @top-left-corner { 
+    content: "";
+    background: none; }
+  @bottom-center { 
+    content: "";
+    background: none; }
+}
+
+@page:nth(8) {
+  margin: 0;
+  @top-left-corner { 
+    content: "";
+    background: none; }
+  @bottom-center { 
+    content: "";
+    background: none; }
+}
+
+@page:nth(12) {
+  margin: 0;
+  @top-left-corner { 
+    content: "";
+    background: none; }
+  @bottom-center { 
+    content: "";
+    background: none; }
+}
+
+/* 4. PAGED.JS LAYOUT CORRECTIONS */
+.pagedjs_page {
+  text-align: center;
+}
+
+.pagedjs_page .pagedjs_page_content > * {
+  margin: 0 auto;
+}
+
+html, body, .pagedjs_page, .pagedjs_pages {
+  display: block !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+@media print {
+  html, body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    color: white !important;
+  }
+}
+
+/* 5. TYPOGRAPHY */
+body {
+  font-family: "Oswald", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: white;
+  font-weight: 700;
+}
+
+h1 { font-size: 60pt; margin: 24px 0 20px 0; }
+h2 { font-size: 30pt; margin: 12px 0; }
+h3 { font-size: 24pt; margin: 12px 0; }
+h4 { font-size: 12pt; margin: 0; }
+p  { font-size: 12pt; }
+
+/* 6. TABLES */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  contain: strict;
+  content-visibility: auto;
+  margin: 20px auto; /* Centers the table and adds vertical spacing */
+}
+
+th, td {
+  border: 1px solid #221C35;
+  vertical-align: middle;
+}
+
+th {
+  line-height: 1.2;
+  font-weight: 600;
+  text-align: center;
+  border: none;
+  background: none;
+  color: white;
+}
+
+td {
+  line-height: 1.4;
+  font-weight: 400;
+  background: white;
+  color: #221C35; /* Keeps text dark and visible on the white cells */
+}
+
+/* 7. UTILITIES & LAYOUTS */
+.force-break {
+  display: block !important;
+  clear: both !important;
+  float: none !important;
+  break-before: page !important;
+  page-break-before: always !important;
+}
+
+.first-page-cover {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh; 
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.first-page-cover h1 {
+  margin: 0 !important;
+  color: #ffffff; 
+}
