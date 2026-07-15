@@ -3,7 +3,6 @@
 .RData
 .httr-oauth
 .DS_Store
-.quarto
 .Renviron
 rsconnect/
 .Rprofile
