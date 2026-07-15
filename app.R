@@ -3004,15 +3004,15 @@ md_distance_team_total %>%
         #   bar_chart(round(value), width = width, fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255),  background = "#E5E1E6")
         # }),
         `Total Distance (m)` = colDef(format = colFormat(digits = 0),align = "center", style = function(value) {
-          bar_style(width = value / max(match_day_summary$`Total Distance (m)`), fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")}),
+          bar_style(width = (value - min(match_day_summary$`Total Distance (m)`))/(max(match_day_summary$`Total Distance (m)`)-min(match_day_summary$`Total Distance (m)`)), fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")}),
         `HSR Distance (m)` = colDef(format = colFormat(digits = 0),align = "center", style = function(value) {
-          bar_style(width = value / max(match_day_summary$`HSR Distance (m)`), fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")}),
+          bar_style(width = (value - min(match_day_summary$`HSR Distance (m)`))/(max(match_day_summary$`HSR Distance (m)`)-min(match_day_summary$`HSR Distance (m)`)), fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")}),
         `Sprint Distance (m)` = colDef(format = colFormat(digits = 0),align = "center", style = function(value) {
-          bar_style(width = value / max(match_day_summary$`Sprint Distance (m)`), fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")}),
+          bar_style(width = (value - min(match_day_summary$`Sprint Distance (m)`))/(max(match_day_summary$`Sprint Distance (m)`)-min(match_day_summary$`Sprint Distance (m)`)), fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")}),
         `Accel Efforts` = colDef(format = colFormat(digits = 0),align = "center", style = function(value) {
-          bar_style(width = value / max(match_day_summary$`Accel Efforts`), fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")}),
+          bar_style(width = (value - min(match_day_summary$`Accel Efforts`))/(max(match_day_summary$`Accel Efforts`)-min(match_day_summary$`Accel Efforts`)), fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")}),
         `Decel Efforts` = colDef(format = colFormat(digits = 0),align = "center", style = function(value) {
-          bar_style(width = value / max(match_day_summary$`Decel Efforts`), fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")}),
+          bar_style(width = (value - min(match_day_summary$`Decel Efforts`))/(max(match_day_summary$`Decel Efforts`)-min(match_day_summary$`Decel Efforts`)), fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")}),
         `% of HSR + Sprint Distance`  = colDef(format = colFormat(percent = TRUE, digits = 2),align = "center"),
         `Max Speed (km/h)` = colDef(format = colFormat(digits = 1),align = "center")
       ) 
@@ -3466,7 +3466,7 @@ md_distance_team_total %>%
       summarize(accel_efforts=mean(accel_efforts,na.rm=T)) %>%
       pull(accel_efforts)
     
-    value_box(title="Accel Efforts (#)",
+    value_box(title="Accel Efforts",
               value = round(accel_efforts), 
               # showcase = bsicons::bs_icon("activity"),
               theme_color = "success")
@@ -3485,7 +3485,7 @@ md_distance_team_total %>%
       summarize(decel_efforts=mean(decel_efforts,na.rm=T)) %>% 
       pull(decel_efforts)
     
-    value_box(title="Decel Efforts (#)",
+    value_box(title="Decel Efforts",
               value = round(decel_efforts), 
               # showcase = bsicons::bs_icon("activity"),
               theme_color = "success")
@@ -3533,9 +3533,7 @@ md_distance_team_total %>%
               theme_color = "success")
     
   })
-  
-  # icon = icon("person-running"), 
-  
+
  
   
   output$download_pdf <- downloadHandler(
@@ -3546,11 +3544,20 @@ md_distance_team_total %>%
       
       req(input$images)
       
+      showModal(modalDialog("Compiling PDF Report...", footer = NULL))
+      on.exit(removeModal())
+      
       temp_dir <- tempdir()
-      tempReport <- file.path(temp_dir, "TidesMatchReport.Rmd")
-      file.copy("TidesMatchReport.Rmd", tempReport, overwrite = TRUE)
-      tempStyle <- file.path(temp_dir, "style.css")
-      file.copy("style.css", tempStyle, overwrite = TRUE)
+      # tempReport <- file.path(temp_dir, "TidesMatchReport.Rmd")
+      # file.copy("TidesMatchReport.Rmd", tempReport, overwrite = TRUE)
+      # tempStyle <- file.path(temp_dir, "style.css")
+      # file.copy("style.css", tempStyle, overwrite = TRUE)
+      tempReport <- file.path(temp_dir, 'TidesMatchReportTemplate.qmd')
+      file.copy(here('QuartoReport', 'TidesMatchReportTemplate.qmd'), tempReport, overwrite = TRUE)
+      tempStyle <- file.path(temp_dir, 'header.typ')
+      file.copy(here('QuartoReport', 'header.typ'), tempStyle, overwrite = TRUE)
+      tempBrand <- file.path(temp_dir, '_brand.yml')
+      file.copy(here('QuartoReport', '_brand.yml'), tempBrand, overwrite = TRUE)
       tempImage1 <- file.path(temp_dir, "Halifax.png")
       file.copy("Halifax.png", tempImage1, overwrite = TRUE)
       tempImage2 <- file.path(temp_dir, "Montreal.png")
@@ -3573,55 +3580,82 @@ md_distance_team_total %>%
       file.copy("AUS.png", tempImage10, overwrite = TRUE)
       tempImage11 <- file.path(temp_dir, "vs.png")
       file.copy("vs.png", tempImage11, overwrite = TRUE)
-      tempImage12 <- file.path(temp_dir, "TidesFCImage2.jpg")
-      file.copy("TidesFCImage2.jpg", tempImage12, overwrite = TRUE)
-      tempImage13 <- file.path(temp_dir, "TidesFCImage3.jpg")
-      file.copy("TidesFCImage3.jpg", tempImage13, overwrite = TRUE)
-      tempImage14 <- file.path(temp_dir, "TidesFCImage4.jpg")
-      file.copy("TidesFCImage4.jpg", tempImage14, overwrite = TRUE)
+      # tempImage12 <- file.path(temp_dir, "TidesFCImage2.jpeg")
+      # file.copy("TidesFCImage2.jpeg", tempImage12, overwrite = TRUE)
+      # tempImage13 <- file.path(temp_dir, "TidesFCImage3.jpeg")
+      # file.copy("TidesFCImage3.jpeg", tempImage13, overwrite = TRUE)
+      # tempImage14 <- file.path(temp_dir, "TidesFCImage4.jpeg")
+      # file.copy("TidesFCImage4.jpeg", tempImage14, overwrite = TRUE)
       tempImage15 <- file.path(temp_dir, "TidesFCImage5.jpg")
       file.copy("TidesFCImage5.jpg", tempImage15, overwrite = TRUE)
+      tempImage16 <- file.path(temp_dir, "TidesFCImage6.jpg")
+      file.copy("TidesFCImage6.jpg", tempImage16, overwrite = TRUE)
+      tempImage17 <- file.path(temp_dir, "TidesFCImage7.jpg")
+      file.copy("TidesFCImage7.jpg", tempImage17, overwrite = TRUE)
+      tempImage18 <- file.path(temp_dir, input$images$name[1])
+      file.copy(input$images$datapath[1], tempImage18, overwrite = TRUE)
+      tempImage19 <- file.path(temp_dir, input$images$name[2])
+      file.copy(input$images$datapath[2], tempImage19, overwrite = TRUE)
+      tempImage20 <- file.path(temp_dir, input$images$name[3])
+      file.copy(input$images$datapath[3], tempImage20, overwrite = TRUE)
+      tempDataPath <- file.path(temp_dir, "stats_period.rds")
+      saveRDS(stats_period, file = tempDataPath)
       
-
+      
       # 1. Convert to Base64 strings (Same optimized collection logic)
-      b64_strings <- c()
-      for (i in 1:nrow(input$images)) {
-        filepath <- input$images$datapath[i]
-        ext <- tools::file_ext(input$images$name[i])
-        mime_type <- ifelse(tolower(ext) == "png", "image/png", "image/jpeg")
-        encoded <- base64enc::base64encode(filepath)
-        b64_strings <- c(b64_strings, paste0("data:", mime_type, ";base64,", encoded))
-      }
-      
-      # 5. Prevent timeouts: Apply the fixes discussed previously
-      old_timeout <- getOption("pagedown.timeout")
-      options(pagedown.timeout = 120) 
-      on.exit(options(pagedown.timeout = old_timeout), add = TRUE)
-      
+      # b64_strings <- c()
+      # for (i in 1:nrow(input$images)) {
+      #   filepath <- input$images$datapath[i]
+      #   ext <- tools::file_ext(input$images$name[i])
+      #   mime_type <- ifelse(tolower(ext) == "png", "image/png", "image/jpeg")
+      #   encoded <- base64enc::base64encode(filepath)
+      #   b64_strings <- c(b64_strings, paste0("data:", mime_type, ";base64,", encoded))
+      # }
+      # 
+      # # 5. Prevent timeouts: Apply the fixes discussed previously
+      # old_timeout <- getOption("pagedown.timeout")
+      # options(pagedown.timeout = 120) 
+      # on.exit(options(pagedown.timeout = old_timeout), add = TRUE)
+      # 
       
       # Set up parameters to pass to Rmd document
       report_params <- list(md_input = input$md_input, 
-                            image1 = b64_strings[1],
-                            image2 = b64_strings[2],
-                            image3 = b64_strings[3],
-                            stats_period = stats_period)
-      
-      # Render to intermediate HTML file
-      temp_html <- rmarkdown::render(
+                            # image1 = b64_strings[1],
+                            # image2 = b64_strings[2],
+                            # image3 = b64_strings[3],
+                            image1 = input$images$name[1],
+                            image2 = input$images$name[2],
+                            image3 = input$images$name[3], 
+                            data_path = tempDataPath)
+      # 3. Compile the PDF using Quarto and pass the UI inputs into params
+      quarto::quarto_render(
         input = tempReport,
-        params = report_params,
-        envir = new.env(parent = globalenv())
+        execute_params = report_params,
+        output_format = "typst"
       )
       
-      # Convert intermediate HTML to the final target PDF file path via headless Chrome
-      pagedown::chrome_print(
-        input = temp_html,
-        output = file,
-        timeout = 120,
-        extra_args = c("--disable-gpu", "--no-sandbox")
-      )
+      # 4. Quarto saves the output adjacent to the input file as 'report.pdf'
+      # Locate that compiled file and copy it to Shiny's final target path
+      compiled_pdf <- file.path(temp_dir, "TidesMatchReportTemplate.pdf")
+      file.copy(compiled_pdf, file)
       
-      # extra_args = c("--disable-gpu", "--no-sandbox", "--js-flags=--max-old-space-size=4096",  "--virtual-time-budget=10000")
+      
+      # # Render to intermediate HTML file
+      # temp_html <- rmarkdown::render(
+      #   input = tempReport,
+      #   params = report_params,
+      #   envir = new.env(parent = globalenv())
+      # )
+      # 
+      # # Convert intermediate HTML to the final target PDF file path via headless Chrome
+      # pagedown::chrome_print(
+      #   input = temp_html,
+      #   output = file,
+      #   timeout = 120,
+      #   outline = F,
+      #   extra_args = c("--disable-gpu", "--no-sandbox")
+      # )
+      
     }
   )
   
