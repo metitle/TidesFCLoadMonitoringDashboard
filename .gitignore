@@ -7,3 +7,5 @@
 rsconnect/
 .Rprofile
 .csv
+QuartoReport/stats_period.RData
+QuartoReport/stats.RData
