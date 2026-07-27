@@ -5191,16 +5191,20 @@ md_distance_team_total %>%
                             data_path = tempDataPath)
       
       tryCatch({
+        
+        output_filename <- "TidesMatchReportTemplate.pdf"
+        
         quarto::quarto_render(
           input = tempReport,
           execute_params = report_params,
           output_format = "typst",
+          output_file = output_filename 
         )
         
-        compiled_pdf <- file.path(temp_dir, "TidesMatchReportTemplate.pdf")
+        compiled_pdf <- file.path(temp_dir, output_filename)
         # 5. Hand the compiled PDF to the browser stream
         if (file.exists(compiled_pdf) && file.info(compiled_pdf)$size > 0) {
-          file.copy(compiled_pdf, file)
+          file.copy(compiled_pdf, file, overwrite = T)
         } else {
           stop("Quarto completed but no PDF was generated.")
         }
