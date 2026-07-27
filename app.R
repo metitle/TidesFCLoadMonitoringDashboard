@@ -5101,6 +5101,7 @@ md_distance_team_total %>%
     filename = function() {
       paste0("Tides Match Report ",input$md_input, ".pdf")
     },
+    contentType = "application/pdf", 
     content = function(file) {
       
       req(input$images)
@@ -5198,7 +5199,7 @@ md_distance_team_total %>%
         
         compiled_pdf <- file.path(temp_dir, "TidesMatchReportTemplate.pdf")
         # 5. Hand the compiled PDF to the browser stream
-        if (file.exists(compiled_pdf)) {
+        if (file.exists(compiled_pdf) && file.info(compiled_pdf)$size > 0) {
           file.copy(compiled_pdf, file)
         } else {
           stop("Quarto completed but no PDF was generated.")
