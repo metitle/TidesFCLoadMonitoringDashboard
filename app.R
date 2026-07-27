@@ -5162,8 +5162,7 @@ md_distance_team_total %>%
       tempDataPath <- file.path(temp_dir, "stats_period.rds")
       saveRDS(stats_period, file = tempDataPath)
       
-      temp_pdf <- file.path(temp_dir, "TidesMatchReportTemplate.pdf")
-      
+
       # 1. Convert to Base64 strings (Same optimized collection logic)
       # b64_strings <- c()
       # for (i in 1:nrow(input$images)) {
@@ -5195,12 +5194,12 @@ md_distance_team_total %>%
           input = tempReport,
           execute_params = report_params,
           output_format = "typst",
-          output_file = temp_pdf
         )
         
+        compiled_pdf <- file.path(temp_dir, "TidesMatchReportTemplate.pdf")
         # 5. Hand the compiled PDF to the browser stream
-        if (file.exists(temp_pdf)) {
-          file.copy(temp_pdf, file)
+        if (file.exists(compiled_pdf)) {
+          file.copy(compiled_pdf, file)
         } else {
           stop("Quarto completed but no PDF was generated.")
         }
