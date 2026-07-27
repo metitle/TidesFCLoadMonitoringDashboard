@@ -68,7 +68,7 @@ if (is.null(image2)) {
   image2 <- 'TidesFCImage6.jpg'
 }
 if (is.null(image3)) {
-  image3 <- 'TidesFCImage7.jgp'
+  image3 <- 'TidesFCImage7.jpg'
 }
 
 md_date <- stats_period %>% filter(activity_name==md_input) %>% mutate(date = paste0(weekdays(date), ', ', format(date, '%B %d, %Y'))) %>% pull(date) %>% unique
@@ -98,7 +98,6 @@ md_num: '`r md_num`'
 md_year: '`r md_year`'
 ---
 
-
 ```{=typst}
 
 #show heading: set align(center)
@@ -127,8 +126,6 @@ md_year: '`r md_year`'
   #text(size: 24pt)[{{< meta md_date >}}]
 ]
 ```
-
-
 {{< pagebreak >}}
 
 ```{=typst}
@@ -136,9 +133,7 @@ md_year: '`r md_year`'
 // Page 2 Section Divider
 #section-page("{{< meta image1 >}}", "SQUAD GAME DATA")
 ```
-
 {{< pagebreak >}}
-
 
 ```{r}
 
@@ -285,7 +280,6 @@ md_distance_per_half %>%
 
 {{< pagebreak >}}
 
-
 ```{r}
 md_distance_by_player <- stats_period %>%
   dplyr::filter(position_name != "Goal Keeper" & activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
@@ -299,7 +293,6 @@ md_distance_by_player <- stats_period %>%
 
 
 ```
-
 
 #### Total Distance and Total Distance/Min By Player (per half)
 
@@ -340,8 +333,6 @@ md_distance_by_player %>%
   
     
 ```
-
-
 
 ```{r md_by_player_total_distance_per_min, fig.width=9.5,fig.height=2.8, dpi = 600, dev.args = list(bg = "transparent")}
 
@@ -384,8 +375,6 @@ md_distance_by_player %>%
 {{< pagebreak >}}
 
 #### High Speed Running Distance and HSR Distance/Min By Player (per half)
-
-
 
 ```{r md_by_player_hsr_distance,  fig.width=9.5,fig.height=2.8, dpi = 600, dev.args = list(bg = "transparent")}
 
@@ -466,7 +455,6 @@ md_distance_by_player %>%
 
 #### Sprint Distance and Sprint Distance/Min By Player (per half)
 
-
 ```{r md_by_player_sprint_distance,  fig.width=9.5,fig.height=2.8, dpi = 600, dev.args = list(bg = "transparent")}
 
 md_distance_by_player %>% 
@@ -504,7 +492,6 @@ md_distance_by_player %>%
  legend.key.size = unit(8, "pt") 
  )
 ```
-
 
 ```{r md_by_player_sprint_distance_per_min,  fig.width=9.5,fig.height=2.8, dpi = 600, dev.args = list(bg = "transparent")}
 
@@ -549,9 +536,7 @@ md_distance_by_player %>%
 // Page 8 Section Divider
 #section-page("{{< meta image2 >}}", "MATCH DAY COMPARISON")
 ```
-
 {{< pagebreak >}}
-
 
 ```{r}
 
@@ -586,8 +571,6 @@ md_distance_desc <- md_distance_team_total %>%
   unique
 
 ```
-
-
 
 ```{r md_comparison_total_distance,  fig.width=9.5,fig.height=3, dpi = 600, dev.args = list(bg = "transparent")}
 
@@ -629,8 +612,6 @@ md_distance_team_total %>%
 
     
 ```
-
-
 
 ```{r md_comparison_total_distance_per_min,  fig.width=9.5,fig.height=3, dpi = 600, dev.args = list(bg = "transparent")}
 
@@ -712,8 +693,6 @@ md_distance_team_total %>%
 
 ```
 
-
-
 ```{r md_comparison_hsr_distance_per_min,  fig.width=9.5,fig.height=3, dpi = 600, dev.args = list(bg = "transparent")}
 
 
@@ -794,7 +773,6 @@ md_distance_team_total %>%
 
 ```
 
-
 ```{r md_comparison_sprint_distance_per_min,  fig.width=9.5,fig.height=3, dpi = 600, dev.args = list(bg = "transparent")}
 
 
@@ -842,9 +820,7 @@ md_distance_team_total %>%
 // Page 12 Section Divider
 #section-page("{{< meta image3 >}}", "DISTANCE ACROSS THE MATCH")
 ```
-
 {{< pagebreak >}}
-
 
 ```{r 15min_distance}
 

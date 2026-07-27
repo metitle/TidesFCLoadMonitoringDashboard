@@ -3,6 +3,7 @@ library(shinyWidgets)
 library(bslib)
 library(DT)
 library(reactable)
+library(reactable.extras)
 library(hms)
 # library(rmarkdown)
 library(tidyverse)
@@ -19,6 +20,8 @@ library(rootSolve)
 # library(htmltools)
 library(plotly)
 library(here)
+library(RColorBrewer)
+
 
 options(digits = 12, 
         reactable.theme = reactableTheme(
@@ -28,7 +31,8 @@ options(digits = 12,
           style = list(fontFamily = "-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif"),
           headerStyle = list(borderColor = "#221C35", backgroundColor = "#221C35", color = "white", fontWeight = "bold"),
           borderColor = "#221C35",
-          borderWidth = "1.5px"
+          borderWidth = "1.5px",
+          groupHeaderStyle = list(borderColor = "#221C35", backgroundColor = "#00B0B9", color = "white", fontWeight = "bold")
         )
 )
 
@@ -557,7 +561,7 @@ server <- function(input, output, session) {
     selected = athlete_positions$athlete_name[1],
     showValueAsTags = F,
     search = F,
-    multiple = T)
+    multiple = F)
   
   athlete3 <- virtualSelectInput(
     inputId = "athlete3",
@@ -782,20 +786,65 @@ server <- function(input, output, session) {
     multiple = T)
   
   observe({
-    
+
     req(input$athlete7, input$date_input6)
-    
-    stats_period_filtered <- stats_period %>% 
-      dplyr::filter(athlete_name %in% input$athlete7 & date == input$date_input6) %>% 
+
+    stats_period_filtered <- stats_period %>%
+      dplyr::filter(athlete_name %in% input$athlete7 & date == input$date_input6) %>%
       drop_na(period_name)
-    
+
     updateVirtualSelect(
-      inputId = "period_input", 
+      inputId = "period_input",
       label = "Drill/Period",
       choices = unique(stats_period_filtered$period_name),
       selected = unique(stats_period_filtered$period_name))
-    
+
   }) %>% bindEvent(input$athlete7, input$date_input6)
+  
+  # observe({
+  #   
+  #   req(input$athlete2)
+  #   
+  #   if ("Goal Keeper" %in% (stats %>% filter(athlete_name == input$athlete2) %>% drop_na(position_name) %>% pull(position_name) %>% unique)){
+  #     
+  #     updateSelectInput(
+  #       inputId="ext_load_param", 
+  #       label = "External Workload Parameter",
+  #       choices = c("Total Distance" = "external_load_total_distance", "Field Time" = "external_load_field_time", 
+  #         "Dive Count" = "external_load_dive_count", "Total Dive Load" = "external_load_total_dive_load", 
+  #         "Explosive Efforts" = "external_load_explosive_efforts"),
+  #       selected = "Total Distance")
+  #     
+  #     updateSelectInput(
+  #       inputId="workload_param", 
+  #       label = "Workload Parameter",
+  #       choices = c("Total Distance" = "workload_total_distance", "Field Time" = "workload_field_time", 
+  #         "Dive Count" = "workload_dive_count", "Total Dive Load" = "workload_total_dive_load", 
+  #         "Explosive Efforts" = "workload_explosive_efforts", "Avg HR"="workload_mean_heart_rate", 
+  #         "Max HR"="workload_max_heart_rate","RPE" = "workload_rpe"),
+  #       selected = "Total Distance")
+  #     
+  #   } else {
+  #     
+  #     updateSelectInput(
+  #       inputId="ext_load_param", 
+  #       label = "External Workload Parameter",
+  #       choices = c("Total Distance" = "external_load_total_distance", "High Speed Distance" = "external_load_high_speed_distance", "Sprint Distance" = "external_load_sprint_distance", 
+  #         "Field Time" = "external_load_field_time", "Meterage per Minute" = "external_load_meterage_per_minute", "Max Velocity" = "external_load_max_vel_kph", 
+  #         "Accel Efforts" = "external_load_accel_efforts", "Decel Efforts" = "external_load_decel_efforts","Accel + Decel Efforts" = "external_load_accel_decel_efforts"),
+  #       selected = "Total Distance")
+  #     
+  #     updateSelectInput(
+  #       inputId="workload_param", 
+  #       label = "Workload Parameter",
+  #       choices = c("Total Distance" = "workload_total_distance", "High Speed Distance" = "workload_high_speed_distance", "Sprint Distance" = "workload_sprint_distance", 
+  #         "Field Time" = "workload_field_time", "Meterage per Minute" = "workload_meterage_per_minute", "Max Velocity" = "workload_max_vel_kph", 
+  #         "Accel Efforts" = "workload_accel_efforts", "Decel Efforts" = "workload_decel_efforts","Accel + Decel Efforts" = "workload_accel_decel_efforts",
+  #         "Avg HR"="workload_mean_heart_rate", "Max HR"="workload_max_heart_rate","RPE" = "workload_rpe"),
+  #       selected = "Total Distance")
+  #   }
+  #   
+  # }) %>% bindEvent(input$athlete2)
   
   # Main dashboard UI
   dashboard_ui <- function() {
@@ -813,11 +862,11 @@ server <- function(input, output, session) {
                        danger = "#572C5F",
                        "card-cap-bg" = "#221C35",
                        "card-cap-color" = "#FFFFFF"),  
-      title = div(img(src = "HfxTidesFC.png", height = "40px", style = "margin-right: 10px;"), "Halifax Tides FC Load Monitoring"),
+      title = div(img(src = "HfxTidesFC.png", height = "40px", style = "margin-right: 10px;"), "Hfx Tides Load Monitoring"),
       sidebar=NULL,
       fillable = T,
       nav_spacer(),
-      nav_panel(title="Daily Load Report", 
+      nav_panel(title="Daily Report", 
                 layout_sidebar(      
                   sidebar = sidebar(athlete6, date_input5, bg = "#E5E1E6"),
                   layout_column_wrap(
@@ -895,7 +944,7 @@ server <- function(input, output, session) {
                   )
                 )
       ),
-      nav_panel(title="Match Day Report",
+      nav_panel(title="Match Report",
                 layout_sidebar(
                   sidebar = sidebar(athlete8, md_input, 
                                     fileInput("images","Select Image Files", multiple = T,accept = "image/*", width="100%"),
@@ -975,39 +1024,35 @@ server <- function(input, output, session) {
                   #   card_header("Sprint Distance Per Min Across Match"),
                   #   card_body(min_height = 200, plotlyOutput("MDSprintDistancePerMin15min"))
                   # ),
-                  layout_column_wrap(
-                    width=1/2,
-                    heights_equal = "row",
-                    card(
-                      full_screen = TRUE,
-                      card_header("MD Comparison Total Distance"),
-                      card_body(min_height = 200, plotlyOutput("MDComparisonTotalDistance"))
-                    ),
-                    card(
-                      full_screen = TRUE,
-                      card_header("MD Comparison Total Distance Per Min"),
-                      card_body(min_height = 200, plotlyOutput("MDComparisonTotalDistancePerMin"))
-                    ),
-                    card(
-                      full_screen = TRUE,
-                      card_header("MD Comparison HSR Distance"),
-                      card_body(min_height = 200, plotlyOutput("MDComparisonHSRDistance"))
-                    ),
-                    card(
-                      full_screen = TRUE,
-                      card_header("MD Comparison HSR Distance Per Min"),
-                      card_body(min_height = 200, plotlyOutput("MDComparisonHSRDistancePerMin"))
-                    ),
-                    card(
-                      full_screen = TRUE,
-                      card_header("MD Comparison Sprint Distance"),
-                      card_body(min_height = 200, plotlyOutput("MDComparisonSprintDistance"))
-                    ),
-                    card(
-                      full_screen = TRUE,
-                      card_header("MD Comparison Sprint Distance Per Min"),
-                      card_body(min_height = 200, plotlyOutput("MDComparisonSprintDistancePerMin"))
-                    )
+                  card(
+                    full_screen = TRUE,
+                    card_header("MD Comparison Total Distance"),
+                    card_body(min_height = 200, plotlyOutput("MDComparisonTotalDistance"))
+                  ),
+                  card(
+                    full_screen = TRUE,
+                    card_header("MD Comparison Total Distance Per Min"),
+                    card_body(min_height = 200, plotlyOutput("MDComparisonTotalDistancePerMin"))
+                  ),
+                  card(
+                    full_screen = TRUE,
+                    card_header("MD Comparison HSR Distance"),
+                    card_body(min_height = 200, plotlyOutput("MDComparisonHSRDistance"))
+                  ),
+                  card(
+                    full_screen = TRUE,
+                    card_header("MD Comparison HSR Distance Per Min"),
+                    card_body(min_height = 200, plotlyOutput("MDComparisonHSRDistancePerMin"))
+                  ),
+                  card(
+                    full_screen = TRUE,
+                    card_header("MD Comparison Sprint Distance"),
+                    card_body(min_height = 200, plotlyOutput("MDComparisonSprintDistance"))
+                  ),
+                  card(
+                    full_screen = TRUE,
+                    card_header("MD Comparison Sprint Distance Per Min"),
+                    card_body(min_height = 200, plotlyOutput("MDComparisonSprintDistancePerMin"))
                   )
                 )
       ),
@@ -1019,6 +1064,28 @@ server <- function(input, output, session) {
                     full_screen = TRUE,
                     card_header("Acute:Chronic Workload"),
                     card_body(min_height = 200, plotlyOutput("AcuteChronicLoad"))
+                  ),
+                  card(
+                    full_screen = TRUE,
+                    card_header("Workload Planning"),
+                    card_body(min_height = 200,
+                              div(style = "padding-bottom: 5px;",
+                                  actionButton("update_table_btn", "Update Table", icon = icon("sync")),
+                                  actionButton("clear_table_btn", "Clear Edits", icon=icon("eraser"),class = "btn-danger"),
+                                  prettyRadioButtons("select_week", label="", choices=c("Current Week", "Next Week"), selected="Current Week", inline=T),
+                              ),
+                              reactableOutput("AcuteChronicTable"))
+                  ),
+                  card(
+                    full_screen = TRUE,
+                    card_header("Goal Keeper Workload Planning"),
+                    card_body(min_height = 200,
+                              div(style = "padding-bottom: 5px;",
+                                  actionButton("update_gk_table_btn", "Update Table", icon = icon("sync")),
+                                  actionButton("clear_gk_table_btn", "Clear Edits", icon=icon("eraser"),class = "btn-danger"),
+                                  prettyRadioButtons("select_week_gk",label="", choices=c("Current Week", "Next Week"), selected="Current Week", inline=T),
+                              ),
+                              reactableOutput("AcuteChronicGKTable"))
                   )
                 )
       ),
@@ -1027,12 +1094,12 @@ server <- function(input, output, session) {
                   sidebar = sidebar(athlete2, date_input1, ext_load_param, workload_param, bg = "#E5E1E6"),
                   layout_column_wrap(
                     width=1/2,
-                    card(
-                      height = 400,
-                      full_screen = TRUE,
-                      card_header("Internal vs. External Workload"),
-                      card_body(min_height = 200, plotlyOutput("IntExtLoad"))
-                    ),
+                    # card(
+                    #   height = 400,
+                    #   full_screen = TRUE,
+                    #   card_header("Internal vs. External Workload"),
+                    #   card_body(min_height = 200, plotlyOutput("IntExtLoad"))
+                    # ),
                     card(
                       height = 400,
                       full_screen = TRUE,
@@ -1044,13 +1111,19 @@ server <- function(input, output, session) {
                       full_screen = TRUE,
                       card_header("Wellness vs. Workload"),
                       card_body(min_height = 200, plotlyOutput("WellnessWorkload"))
-                    ),
-                    card(
-                      height = 400,
-                      full_screen = TRUE,
-                      card_header("Readiness vs. Wellness"),
-                      card_body(min_height = 200, plotlyOutput("ReadinessWellness"))
                     )
+                    # ,
+                    # card(
+                    #   height = 400,
+                    #   full_screen = TRUE,
+                    #   card_header("Readiness vs. Wellness"),
+                    #   card_body(min_height = 200, plotlyOutput("ReadinessWellness"))
+                    # )
+                  ),
+                  card(
+                    full_screen = TRUE,
+                    card_header("Z-Score Summary Table"),
+                    card_body(min_height = 200, reactableOutput("ZScoreHeatmapTable"))
                   )
                 )
       ),
@@ -1067,7 +1140,7 @@ server <- function(input, output, session) {
       ),
       nav_panel(title="Wellness",
                 layout_sidebar(
-                  sidebar = sidebar(athlete3, bg = "#E5E1E6"),
+                  sidebar = sidebar(athlete3, date_range3, bg = "#E5E1E6"),
                   card(
                     height = 400,
                     full_screen = TRUE,
@@ -1080,11 +1153,16 @@ server <- function(input, output, session) {
                   card(
                     height = 400,
                     full_screen = TRUE,
-                    card_header("Historical Wellness"),
+                    card_header("Wellness History"),
                     layout_sidebar(
-                      sidebar = sidebar(date_range3, wellness_param, bg = "#E5E1E6"),
+                      sidebar = sidebar(wellness_param, bg = "#E5E1E6"),
                       card_body(min_height = 200,plotlyOutput("HistoricalWellness"))
                     )
+                  ),
+                  card(
+                    full_screen = TRUE,
+                    card_header("Wellness History Table"),
+                    card_body(min_height = 200,reactableOutput("WellnessHistoryTable"))
                   )
                 )        
       ),
@@ -1099,16 +1177,16 @@ server <- function(input, output, session) {
       #             )
       #           )        
       # ),
-      nav_panel(title="Load Planning",
-                layout_sidebar(sidebar = sidebar(athlete4, acwr_param2, acwr_input, bg = "#E5E1E6"),
-                               card(
-                                 height = 400,
-                                 full_screen = TRUE,
-                                 card_header("Load Planning"),
-                                 card_body(min_height = 200, uiOutput("PlannedLoad"))
-                               )
-                )        
-      ),
+      # nav_panel(title="Load Planning",
+      #           layout_sidebar(sidebar = sidebar(athlete4, acwr_param2, acwr_input, bg = "#E5E1E6"),
+      #                          card(
+      #                            height = 400,
+      #                            full_screen = TRUE,
+      #                            card_header("Load Planning"),
+      #                            card_body(min_height = 200, uiOutput("PlannedLoad"))
+      #                          )
+      #           )        
+      # ),
       # nav_panel(title="Load Report",
       #           layout_sidebar(
       #             sidebar = sidebar(date_input3,
@@ -2353,9 +2431,9 @@ md_distance_team_total %>%
       config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
       layout(
         shapes = list(
-          list(type = "rect", xref='paper', yref='y2', x0 = 0, x1 = 1, y0 = 0.9, y1 = 1.3, layer = "below", fillcolor = rgb(229, 225, 230, round(0.3 * 255),maxColorValue = 255), line = list(color = rgb(229, 225, 230,round(0.3 * 255),maxColorValue = 255))),
-          list(type = "rect", xref='paper', yref='y2', x0 = 0, x1 = 1, y0 = 0.8, y1 = 0.9, layer = "below", fillcolor = rgb(229, 225, 230, round(0.6 * 255),maxColorValue = 255),  line = list(color = rgb(229, 225, 230,round(0.6 * 255),maxColorValue = 255))),
-          list(type = "rect", xref='paper', yref='y2', x0 = 0, x1 = 1, y0 = 1.3, y1 = 1.4, layer = "below", fillcolor = rgb(229, 225, 230,round(0.6 * 255),maxColorValue = 255),  line = list(color = rgb(229, 225, 230,round(0.6 * 255),maxColorValue = 255)))
+          list(type = "rect", xref='paper', yref='y2', x0 = 0, x1 = 1, y0 = 0.8, y1 = 1.2, layer = "below", fillcolor = rgb(229, 225, 230, round(0.3 * 255),maxColorValue = 255), line = list(color = rgb(229, 225, 230,round(0.3 * 255),maxColorValue = 255))),
+          list(type = "rect", xref='paper', yref='y2', x0 = 0, x1 = 1, y0 = 0.7, y1 = 0.8, layer = "below", fillcolor = rgb(229, 225, 230, round(0.6 * 255),maxColorValue = 255),  line = list(color = rgb(229, 225, 230,round(0.6 * 255),maxColorValue = 255))),
+          list(type = "rect", xref='paper', yref='y2', x0 = 0, x1 = 1, y0 = 1.2, y1 = 1.3, layer = "below", fillcolor = rgb(229, 225, 230,round(0.6 * 255),maxColorValue = 255),  line = list(color = rgb(229, 225, 230,round(0.6 * 255),maxColorValue = 255)))
         ),
         yaxis2 = list(range=c(0,2),showline=TRUE,showgrid = FALSE, tickformat = ".1f",overlaying = "y", automargin = TRUE, side = "right", title = "Acute:Chronic Workload Ratio"),
         xaxis = list(showline=TRUE,showgrid = FALSE,type = 'date', tickformat = "%b %d", dtick=604800000, title=""),
@@ -2381,190 +2459,1042 @@ md_distance_team_total %>%
   })
   
   
+  # 1. Initialize a reactive tracking value for user modifications
+  editable_daily <- reactiveVal(NULL)
+  
+  # 2. Re-populate the 7-day baseline grid when the date picker changes
+  observe({
+    req(input$select_week)
+    
+    if (input$select_week == "Current Week") {
+
+    # Pull base stats records for the selected week
+    daily_base <- stats %>%
+      filter(athlete_name %in% athletes_catapult$athlete_name & position_name != "Goal Keeper") %>%
+      select(athlete_name | date | total_distance | high_speed_distance | sprint_distance | accel_decel_efforts) %>%
+      filter(date >= floor_date(Sys.Date(), unit = "week", week_start = 1) & date <= Sys.Date())
+    
+    # Generate explicit filler slots for dates missing logs this week
+    dates_seq <- seq(from = floor_date(Sys.Date(), unit = "week", week_start = 1), by = "day", length.out = 7)
+    
+    
+    metrics_placeholder <- data.frame(
+      athlete_name = athletes_catapult %>% filter(position_name != "Goal Keeper") %>% pull(athlete_name),
+      total_distance = 0, high_speed_distance = 0, sprint_distance = 0, accel_decel_efforts = 0
+    )
+    
+    dates_grid <- data.frame(athlete_name = athletes_catapult %>% filter(position_name != "Goal Keeper") %>% pull(athlete_name)) %>%
+      group_by(athlete_name) %>%
+      reframe(date = dates_seq) %>%
+      ungroup %>% 
+      left_join(metrics_placeholder, by = join_by(athlete_name)) %>%
+      mutate(name_date = paste0(athlete_name, date)) %>%
+      filter(!(name_date %in% paste0(daily_base$athlete_name, daily_base$date))) %>%
+      select(!name_date)
+    
+    # Merge active logs with the empty tracking row matrix slots
+    combined_daily <- daily_base %>%
+      full_join(dates_grid, by = c("athlete_name", "date", "total_distance", "high_speed_distance", "sprint_distance", "accel_decel_efforts")) %>%
+      arrange(athlete_name, date) 
+    
+    } else {
+      
+      # Generate explicit filler slots for dates missing logs this week
+      dates_seq <- seq(from = ceiling_date(Sys.Date(), unit = "week", week_start = 1), by = "day", length.out = 7)
+      
+      metrics_placeholder <- data.frame(
+        athlete_name = athletes_catapult %>% filter(position_name != "Goal Keeper") %>% pull(athlete_name),
+        total_distance = 0, high_speed_distance = 0, sprint_distance = 0, accel_decel_efforts = 0
+      )
+      
+      dates_grid <- data.frame(athlete_name = athletes_catapult %>% filter(position_name != "Goal Keeper") %>% pull(athlete_name)) %>%
+        group_by(athlete_name) %>%
+        reframe(date = dates_seq) %>%
+        ungroup %>% 
+        left_join(metrics_placeholder, by = join_by(athlete_name))
+      
+      combined_daily <- dates_grid %>% 
+        arrange(athlete_name, date) 
+      
+    }
+    
+    team_avg <- combined_daily %>%
+      group_by(date) %>% 
+      summarise(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
+      mutate(athlete_name = "Team Average") %>% 
+      relocate(athlete_name)
+    
+    # Append to the main data frame
+    combined_daily <- bind_rows(combined_daily, team_avg)
+    
+    
+    editable_daily(combined_daily)
+  }) %>% bindEvent(input$select_week)
+  
+  # 3. MANUAL TRIGGER: Scrape cell changes and compute data changes ONLY when the button is clicked
+  observe({
+    df <- editable_daily()
+    req(df, input$select_week)
+    changed <- FALSE
+    metrics_cols <- c("total_distance", "high_speed_distance", "sprint_distance", "accel_decel_efforts")
+    
+    for (i in 1:nrow(df)) {
+      p_id <- stringr::str_replace_all(df$athlete_name[i], " ", "_")
+      d_id <- df$date[i]
+      
+      for (col in metrics_cols) {
+        input_id <- paste("inp", col, p_id, d_id, sep = "__")
+        val <- input[[input_id]]
+        
+        # Scrape the user entries into our memory matrix
+        if (!is.null(val) && !is.na(val) && val != df[i, col]) {
+          df[i, col] <- val
+          changed <- TRUE
+        }
+      }
+    }
+    
+    if (changed) {
+      editable_daily(df)
+      
+      if (input$select_week == "Current Week") {
+        
+      # Inline generation of updated plan data to avoid helper calls
+      chronic <- stats %>%
+        filter(athlete_name %in% athletes_catapult$athlete_name & position_name != "Goal Keeper") %>%
+        select(athlete_name | date | total_distance | high_speed_distance | sprint_distance | accel_decel_efforts) %>%
+        filter(date >= (floor_date(Sys.Date(), unit = "week", week_start = 1) - weeks(3)) & date < floor_date(Sys.Date(), unit = "week", week_start = 1)) %>%
+        group_by(athlete_name) %>%
+        summarize(across(where(is.numeric), ~sum(.x)/3))
+      } else {
+        
+        # Inline generation of updated plan data to avoid helper calls
+        chronic <- stats %>%
+          filter(athlete_name %in% athletes_catapult$athlete_name & position_name != "Goal Keeper") %>%
+          select(athlete_name | date | total_distance | high_speed_distance | sprint_distance | accel_decel_efforts) %>%
+          filter(date >= (ceiling_date(Sys.Date(), unit = "week", week_start = 1) - weeks(3)) & date < ceiling_date(Sys.Date(), unit = "week", week_start = 1)) %>%
+          group_by(athlete_name) %>%
+          summarize(across(where(is.numeric), ~sum(.x)/3))
+        
+      }
+      
+      
+      thresholds <- chronic %>%
+        mutate(across(!athlete_name, ~ 0.7 * .x, .names = "{.col}_lower"),
+               across(!athlete_name & !contains("_lower"), ~ 1.3 * .x, .names = "{.col}_upper")) %>% 
+        rename_with(~paste0(.x,"_chronic"),.cols=where(is.numeric) & !contains("_lower") &!contains("_upper"))
+      
+      acute <- df %>%
+        group_by(athlete_name) %>%
+        summarize(across(where(is.numeric), sum)) %>% 
+        filter(athlete_name != "Team Average")
+      
+      updated_plan <- acute %>%
+        rename_with(~paste0(.x,"_acute"),.cols=where(is.numeric)) %>% 
+        full_join(thresholds, by = join_by(athlete_name)) %>%
+        mutate(total_distance_acwr = total_distance_acute/total_distance_chronic,
+               high_speed_distance_acwr = high_speed_distance_acute/high_speed_distance_chronic,
+               sprint_distance_acwr = sprint_distance_acute/sprint_distance_chronic,
+               accel_decel_efforts_acwr = accel_decel_efforts_acute/accel_decel_efforts_chronic,
+               total_distance_remaining = total_distance_upper - total_distance_acute,
+               high_speed_distance_remaining = high_speed_distance_upper - high_speed_distance_acute,
+               sprint_distance_remaining = sprint_distance_upper - sprint_distance_acute,
+               accel_decel_efforts_remaining = accel_decel_efforts_upper - accel_decel_efforts_acute) %>%
+        relocate(contains("total_distance"), contains("high_speed_distance"), contains("sprint_distance"), contains("accel_decel_efforts"), .after = athlete_name) %>%
+        rename(Player = athlete_name) %>%
+        arrange(Player) 
+      
+      team_avg_load <- updated_plan %>%
+        summarise(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
+        mutate(Player = "Team Average") %>% 
+        relocate(Player)
+      
+      # Append to the main data frame
+      updated_plan_table <- bind_rows(updated_plan, team_avg_load)
+      
+      
+      # Push data changes cleanly without resetting row visibility
+      updateReactable("AcuteChronicTable", data = updated_plan_table)
+    }
+  }) %>% bindEvent(input$update_table_btn) 
+  
+  
+  observe({
+    req(input$select_week)
+    
+    if (input$select_week == "Current Week") {
+      
+    daily_base <- stats %>%
+      filter(athlete_name %in% athletes_catapult$athlete_name & position_name != "Goal Keeper") %>%
+      select(athlete_name | date | total_distance | high_speed_distance | sprint_distance | accel_decel_efforts) %>%
+      filter(date >= floor_date(Sys.Date(), unit = "week", week_start = 1) & date <= Sys.Date())
+    
+    dates_seq <- seq(from = floor_date(Sys.Date(), unit = "week", week_start = 1), by = "day", length.out = 7)
+    
+    metrics_placeholder <- data.frame(
+      athlete_name = athletes_catapult %>% filter(position_name != "Goal Keeper") %>% pull(athlete_name),
+      total_distance = 0, high_speed_distance = 0, sprint_distance = 0, accel_decel_efforts = 0
+    )
+    
+    dates_grid <- data.frame(athlete_name = athletes_catapult %>% filter(position_name != "Goal Keeper") %>% pull(athlete_name)) %>%
+      group_by(athlete_name) %>%
+      reframe(date = dates_seq) %>%
+      ungroup %>% 
+      left_join(metrics_placeholder, by = join_by(athlete_name)) %>%
+      mutate(name_date = paste0(athlete_name, date)) %>%
+      filter(!(name_date %in% paste0(daily_base$athlete_name, daily_base$date))) %>%
+      select(!name_date)
+    
+    combined_daily <- daily_base %>%
+      full_join(dates_grid, by = c("athlete_name", "date", "total_distance", "high_speed_distance", "sprint_distance", "accel_decel_efforts")) %>%
+      arrange(athlete_name, date)
+    
+    } else {
+      
+      # Generate explicit filler slots for dates missing logs this week
+      dates_seq <- seq(from = ceiling_date(Sys.Date(), unit = "week", week_start = 1), by = "day", length.out = 7)
+      
+      metrics_placeholder <- data.frame(
+        athlete_name = athletes_catapult %>% filter(position_name != "Goal Keeper") %>% pull(athlete_name),
+        total_distance = 0, high_speed_distance = 0, sprint_distance = 0, accel_decel_efforts = 0
+      )
+      
+      dates_grid <- data.frame(athlete_name = athletes_catapult %>% filter(position_name != "Goal Keeper") %>% pull(athlete_name)) %>%
+        group_by(athlete_name) %>%
+        reframe(date = dates_seq) %>%
+        ungroup %>% 
+        left_join(metrics_placeholder, by = join_by(athlete_name))
+      
+      combined_daily <- dates_grid %>% 
+        arrange(athlete_name, date) 
+      
+    }
+    
+    team_avg <- combined_daily %>%
+      group_by(date) %>% 
+      summarise(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
+      mutate(athlete_name = "Team Average") %>% 
+      relocate(athlete_name)
+    
+    # Append to the main data frame
+    combined_daily <- bind_rows(combined_daily, team_avg)
+    
+    # Reset the reactive memory to original values
+    editable_daily(combined_daily)
+    
+    # Crucial: Since sub-table input text fields hold onto browser states, 
+    # we must trigger a structural UI reload by calling shinyjs::refresh() or updating the output slot
+    shinyjs::runjs("Shiny.setInputValue('acute_chronic_table_state', Math.random());") 
+    
+  }) %>% bindEvent(input$clear_table_btn)
+  
+  # 4. Table Structure Definition Output (Matches your layout preferences)
+  output$AcuteChronicTable <- renderReactable({
+    daily_current <- editable_daily()
+    req(daily_current, input$select_week)
+    
+    # Listens to our random trigger above to force sub-table input redraws when cleared
+    input$acute_chronic_table_state 
+    
+    if (input$select_week == "Current Week") {
+      
+    # Inline generation of layout datasets to avoid helper calls
+    chronic <- stats %>%
+      filter(athlete_name %in% athletes_catapult$athlete_name & position_name != "Goal Keeper") %>%
+      select(athlete_name | date | total_distance | high_speed_distance | sprint_distance | accel_decel_efforts) %>%
+      filter(date >= (floor_date(Sys.Date(), unit = "week", week_start = 1) - weeks(3)) & date < floor_date(Sys.Date(), unit = "week", week_start = 1)) %>%
+      group_by(athlete_name) %>%
+      summarize(across(where(is.numeric), ~sum(.x)/3))
+    
+    } else {
+      
+      # Inline generation of updated plan data to avoid helper calls
+      chronic <- stats %>%
+        filter(athlete_name %in% athletes_catapult$athlete_name & position_name != "Goal Keeper") %>%
+        select(athlete_name | date | total_distance | high_speed_distance | sprint_distance | accel_decel_efforts) %>%
+        filter(date >= (ceiling_date(Sys.Date(), unit = "week", week_start = 1) - weeks(3)) & date < ceiling_date(Sys.Date(), unit = "week", week_start = 1)) %>%
+        group_by(athlete_name) %>%
+        summarize(across(where(is.numeric), ~sum(.x)/3))
+      
+    }
+    thresholds <- chronic %>%
+      mutate(across(!athlete_name, ~ 0.7 * .x, .names = "{.col}_lower"),
+             across(!athlete_name & !contains("_lower"), ~ 1.3 * .x, .names = "{.col}_upper")) %>% 
+      rename_with(~paste0(.x,"_chronic"),.cols=where(is.numeric) & !contains("_lower") &!contains("_upper"))
+    
+    acute <- daily_current %>%
+      group_by(athlete_name) %>%
+      summarize(across(where(is.numeric), sum)) %>% 
+      filter(athlete_name != "Team Average")
+      
+    
+    load_plan <- acute %>%
+      rename_with(~paste0(.x,"_acute"),.cols=where(is.numeric)) %>% 
+      full_join(thresholds, by = join_by(athlete_name)) %>%
+      mutate(total_distance_acwr = total_distance_acute/total_distance_chronic,
+             high_speed_distance_acwr = high_speed_distance_acute/high_speed_distance_chronic,
+             sprint_distance_acwr = sprint_distance_acute/sprint_distance_chronic,
+             accel_decel_efforts_acwr = accel_decel_efforts_acute/accel_decel_efforts_chronic,
+             total_distance_remaining = total_distance_upper - total_distance_acute,
+             high_speed_distance_remaining = high_speed_distance_upper - high_speed_distance_acute,
+             sprint_distance_remaining = sprint_distance_upper - sprint_distance_acute,
+             accel_decel_efforts_remaining = accel_decel_efforts_upper - accel_decel_efforts_acute) %>%
+      relocate(contains("total_distance"), contains("high_speed_distance"), contains("sprint_distance"), contains("accel_decel_efforts"), .after = athlete_name) %>%
+      rename(Player = athlete_name) %>%
+      arrange(Player) 
+    
+    
+    team_avg_load <- load_plan %>%
+      summarise(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
+      mutate(Player = "Team Average") %>% 
+      relocate(Player)
+    
+    # Append to the main data frame
+    load_plan_table <- bind_rows(load_plan, team_avg_load)
+    
+    weekly_details <- daily_current %>%
+      arrange(athlete_name, date) %>%
+      mutate(formatted_date = format(date, format = "%a, %b %d")) %>%
+      rename(Player = athlete_name) %>% 
+      relocate(formatted_date,.after=Player)
+    
+    bar_style <- function(width = 1, fill = "#00B0B9", height = "100%",
+                          align = c("left", "right"), color = NULL) {
+      align <- match.arg(align)
+      if (align == "left") {
+        position <- paste0(width * 100, "%")
+        image <- sprintf("linear-gradient(90deg, %1$s %2$s, transparent %2$s)", fill, position)
+      } else {
+        position <- paste0(100 - width * 100, "%")
+        image <- sprintf("linear-gradient(90deg, transparent %1$s, %2$s %1$s)", position, fill)
+      }
+      list(
+        backgroundImage = image,
+        backgroundSize = paste("100%", height),
+        backgroundRepeat = "no-repeat",
+        backgroundPosition = "center",
+        color = color
+      )
+    }
+    
+    reactable(
+      load_plan_table,
+      striped = F, outline = F, bordered = T, compact = T, highlight = F,
+      defaultPageSize = nrow(load_plan_table),
+      onClick = "expand",  
+      style = list(overflowX = "auto", display = "block"),
+      rowStyle = function(index) {
+        if (load_plan_table[index, "Player"] == "Team Average") {
+          list(fontWeight = "bold")
+        }
+      },
+      defaultColDef = colDef(align = "center",format = colFormat(digits = 0)), 
+      columns = list(
+        Player = colDef(minWidth = 150,
+                        align = "left",
+                        sticky = "left", # Locks column during horizontal scrolling
+                        style = list(fontWeight = 600, backgroundColor = "#fff", zIndex = 1)),
+        total_distance_acute = colDef(name = "Acute"),
+        total_distance_chronic = colDef(name = "Chronic"),
+        total_distance_acwr = colDef(name = "ACWR", style = function(value) {
+          if (value > 1.3 || value < 0.7) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > 1.2 || value < 0.8) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 0.8 && value <= 1.2) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2)),
+        total_distance_lower = colDef(name = "Lower", style = function(value, index) {
+          acute <- load_plan_table$total_distance_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        total_distance_upper = colDef(name = "Upper", style = function(value, index) {
+          acute <- load_plan_table$total_distance_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        total_distance_remaining = colDef(name = "Remaining"),
+        high_speed_distance_acute = colDef(name = "Acute"),
+        high_speed_distance_chronic = colDef(name = "Chronic"),
+        high_speed_distance_acwr = colDef(name = "ACWR", style = function(value) {
+          if (value > 1.3 || value < 0.7) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > 1.2 || value < 0.8) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 0.8 && value <= 1.2) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2)),
+        high_speed_distance_lower = colDef(name = "Lower", style = function(value, index) {
+          acute <- load_plan_table$high_speed_distance_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        high_speed_distance_upper = colDef(name = "Upper", style = function(value, index) {
+          acute <- load_plan_table$high_speed_distance_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        high_speed_distance_remaining = colDef(name = "Remaining"),
+        sprint_distance_acute = colDef(name = "Acute"),
+        sprint_distance_chronic = colDef(name = "Chronic"),
+        sprint_distance_acwr = colDef(name = "ACWR", style = function(value) {
+          if (value > 1.3 || value < 0.7) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > 1.2 || value < 0.8) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 0.8 && value <= 1.2) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2)),
+        sprint_distance_lower = colDef(name = "Lower", style = function(value, index) {
+          acute <- load_plan_table$sprint_distance_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        sprint_distance_upper = colDef(name = "Upper", style = function(value, index) {
+          acute <- load_plan_table$sprint_distance_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        sprint_distance_remaining = colDef(name = "Remaining"),
+        accel_decel_efforts_acute = colDef(name = "Acute"),
+        accel_decel_efforts_chronic = colDef(name = "Chronic"),
+        accel_decel_efforts_acwr = colDef(name = "ACWR", style = function(value) {
+          if (value > 1.3 || value < 0.7) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > 1.2 || value < 0.8) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 0.8 && value <= 1.2) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2)),
+        accel_decel_efforts_lower = colDef(name = "Lower", style = function(value, index) {
+          acute <- load_plan_table$accel_decel_efforts_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        accel_decel_efforts_upper = colDef(name = "Upper", style = function(value, index) {
+          acute <- load_plan_table$accel_decel_efforts_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        accel_decel_efforts_remaining = colDef(name = "Remaining")
+      ),
+      columnGroups = list(
+        colGroup(name = "Total Distance (m)", columns = c("total_distance_acute", "total_distance_chronic","total_distance_acwr", "total_distance_lower",  "total_distance_upper","total_distance_remaining")),
+        colGroup(name = "HSR Distance (m)", columns = c("high_speed_distance_acute","high_speed_distance_chronic","high_speed_distance_acwr", "high_speed_distance_lower",  "high_speed_distance_upper","high_speed_distance_remaining")),
+        colGroup(name = "Sprint Distance (m)", columns =c("sprint_distance_acute", "sprint_distance_chronic","sprint_distance_acwr", "sprint_distance_lower",  "sprint_distance_upper","sprint_distance_remaining")),
+        colGroup(name = "Accel + Decel Efforts", columns = c("accel_decel_efforts_acute","accel_decel_efforts_chronic","accel_decel_efforts_acwr", "accel_decel_efforts_lower",  "accel_decel_efforts_upper","accel_decel_efforts_remaining"))
+      ),
+      details = function(index) {
+        player_name <- load_plan_table$Player[index]
+        weekly_info <- weekly_details %>% filter(Player == player_name)
+        
+        htmltools::div(
+          style = "padding: 1rem; background-color: #fcfcfc;",
+          reactable(
+            weekly_info %>% select(!c(Player, date)),
+            striped = F, outline = F, bordered = T, compact = T, highlight = F, fullWidth = F,
+            defaultColDef = colDef(align = "center"), 
+            columns = list(
+              formatted_date = colDef(name = "Date", align="left",sortable = FALSE),
+              total_distance = colDef(name = "Total Distance (m)", cell = function(val, r_idx) {
+                p_clean <- stringr::str_replace_all(player_name, " ", "_")
+                as.character(numericInput(paste("inp", "total_distance", p_clean, weekly_info$date[r_idx], sep = "__"), NULL, value = round(val),min = 0,  width = "100px"))
+              }, html = TRUE),
+              high_speed_distance = colDef(name = "HSR Distance (m)", cell = function(val, r_idx) {
+                p_clean <- stringr::str_replace_all(player_name, " ", "_")
+                as.character(numericInput(paste("inp", "high_speed_distance", p_clean, weekly_info$date[r_idx], sep = "__"), NULL, value = round(val), min = 0, width = "100px"))
+              }, html = TRUE),
+              sprint_distance = colDef(name = "Sprint Distance (m)", cell = function(val, r_idx) {
+                p_clean <- stringr::str_replace_all(player_name, " ", "_")
+                as.character(numericInput(paste("inp", "sprint_distance", p_clean, weekly_info$date[r_idx], sep = "__"), NULL, value = round(val), min = 0, width = "100px"))
+              }, html = TRUE),
+              accel_decel_efforts = colDef(name = "Accel + Decel Efforts", cell = function(val, r_idx) {
+                p_clean <- stringr::str_replace_all(player_name, " ", "_")
+                as.character(numericInput(paste("inp", "accel_decel_efforts", p_clean, weekly_info$date[r_idx], sep = "__"), NULL, value = round(val), min = 0, width = "100px"))
+              }, html = TRUE)
+            )
+          )
+        )
+      }
+    )
+  })
+  
+  
+  
+  
+  # 1. Initialize a reactive tracking value for user modifications
+  editable_daily_gk <- reactiveVal(NULL)
+  
+  # 2. Re-populate the 7-day baseline grid when the date picker changes
+  observe({
+    req(input$select_week_gk)
+    
+    if (input$select_week_gk == "Current Week") {
+      
+    # Pull base stats records for the selected week
+    daily_base <- stats %>%
+      filter(athlete_name %in% athletes_catapult$athlete_name & position_name == "Goal Keeper") %>%
+      select(athlete_name | date | total_distance | dive_count | total_dive_load | explosive_efforts) %>%
+      filter(date >= floor_date(Sys.Date(), unit = "week", week_start = 1) & date <= Sys.Date())
+    
+    # Generate explicit filler slots for dates missing logs this week
+    dates_seq <- seq(from = floor_date(Sys.Date(), unit = "week", week_start = 1), by = "day", length.out = 7)
+    
+    metrics_placeholder <- data.frame(
+      athlete_name = athletes_catapult %>% filter(position_name == "Goal Keeper") %>% pull(athlete_name),
+      total_distance = 0, dive_count = 0, total_dive_load = 0, explosive_efforts = 0
+    )
+    
+    dates_grid <- data.frame(athlete_name = athletes_catapult %>% filter(position_name == "Goal Keeper") %>% pull(athlete_name)) %>%
+      group_by(athlete_name) %>%
+      reframe(date = dates_seq) %>%
+      ungroup %>% 
+      left_join(metrics_placeholder, by = join_by(athlete_name)) %>%
+      mutate(name_date = paste0(athlete_name, date)) %>%
+      filter(!(name_date %in% paste0(daily_base$athlete_name, daily_base$date))) %>%
+      select(!name_date)
+    
+    # Merge active logs with the empty tracking row matrix slots
+    combined_daily <- daily_base %>%
+      full_join(dates_grid, by = c("athlete_name", "date", "total_distance", "dive_count", "total_dive_load", "explosive_efforts")) %>%
+      arrange(athlete_name, date) 
+    
+    } else {
+      
+      # Generate explicit filler slots for dates missing logs this week
+      dates_seq <- seq(from = ceiling_date(Sys.Date(), unit = "week", week_start = 1), by = "day", length.out = 7)
+      
+      metrics_placeholder <- data.frame(
+        athlete_name = athletes_catapult %>% filter(position_name == "Goal Keeper") %>% pull(athlete_name),
+        total_distance = 0, dive_count = 0, total_dive_load = 0, explosive_efforts = 0
+      )
+      
+      dates_grid <- data.frame(athlete_name = athletes_catapult %>% filter(position_name == "Goal Keeper") %>% pull(athlete_name)) %>%
+        group_by(athlete_name) %>%
+        reframe(date = dates_seq) %>%
+        ungroup %>% 
+        left_join(metrics_placeholder, by = join_by(athlete_name))
+      
+      combined_daily <- dates_grid %>% 
+        arrange(athlete_name, date) 
+      
+    }
+    
+    gk_avg <- combined_daily %>%
+      group_by(date) %>% 
+      summarise(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
+      mutate(athlete_name = "GK Average") %>% 
+      relocate(athlete_name)
+    
+    # Append to the main data frame
+    combined_daily <- bind_rows(combined_daily, gk_avg)
+    
+    editable_daily_gk(combined_daily)
+  }) %>% bindEvent(input$select_week_gk)
+  
+  # 3. MANUAL TRIGGER: Scrape cell changes and compute data changes ONLY when the button is clicked
+  observe({
+    df <- editable_daily_gk()
+    req(df, input$select_week_gk)
+    changed <- FALSE
+    metrics_cols <- c("total_distance", "dive_count", "total_dive_load", "explosive_efforts")
+    
+    for (i in 1:nrow(df)) {
+      p_id <- stringr::str_replace_all(df$athlete_name[i], " ", "_")
+      d_id <- df$date[i]
+      
+      for (col in metrics_cols) {
+        input_id <- paste("inp", col, p_id, d_id, sep = "__")
+        val <- input[[input_id]]
+        
+        # Scrape the user entries into our memory matrix
+        if (!is.null(val) && !is.na(val) && val != df[i, col]) {
+          df[i, col] <- val
+          changed <- TRUE
+        }
+      }
+    }
+    
+    if (changed) {
+      editable_daily_gk(df)
+      
+      if (input$select_week_gk == "Current Week") {
+        
+      # Inline generation of updated plan data to avoid helper calls
+      chronic <- stats %>%
+        filter(athlete_name %in% athletes_catapult$athlete_name & position_name == "Goal Keeper") %>%
+        select(athlete_name | date | total_distance | dive_count | total_dive_load | explosive_efforts) %>%
+        filter(date >= (floor_date(Sys.Date(), unit = "week", week_start = 1) - weeks(3)) & date < floor_date(Sys.Date(), unit = "week", week_start = 1)) %>%
+        group_by(athlete_name) %>%
+        summarize(across(where(is.numeric), ~sum(.x)/3))
+      
+      } else {
+        # Inline generation of updated plan data to avoid helper calls
+        chronic <- stats %>%
+          filter(athlete_name %in% athletes_catapult$athlete_name & position_name == "Goal Keeper") %>%
+          select(athlete_name | date | total_distance | dive_count | total_dive_load | explosive_efforts) %>%
+          filter(date >= (ceiling_date(Sys.Date(), unit = "week", week_start = 1) - weeks(3)) & date < ceiling_date(Sys.Date(), unit = "week", week_start = 1)) %>%
+          group_by(athlete_name) %>%
+          summarize(across(where(is.numeric), ~sum(.x)/3))
+        
+      }
+      
+      thresholds <- chronic %>%
+        mutate(across(!athlete_name, ~ 0.7 * .x, .names = "{.col}_lower"),
+               across(!athlete_name & !contains("_lower"), ~ 1.3 * .x, .names = "{.col}_upper")) %>% 
+        rename_with(~paste0(.x,"_chronic"),.cols=where(is.numeric) & !contains("_lower") &!contains("_upper"))
+      
+      acute <- df %>%
+        group_by(athlete_name) %>%
+        summarize(across(where(is.numeric), sum)) %>% 
+        filter(athlete_name != "GK Average")
+      
+      updated_plan <- acute %>%
+        rename_with(~paste0(.x,"_acute"),.cols=where(is.numeric)) %>% 
+        full_join(thresholds, by = join_by(athlete_name)) %>%
+        mutate(total_distance_acwr = total_distance_acute/total_distance_chronic,
+               dive_count_acwr = dive_count_acute/dive_count_chronic,
+               total_dive_load_acwr = total_dive_load_acute/total_dive_load_chronic,
+               explosive_efforts_acwr = explosive_efforts_acute/explosive_efforts_chronic,
+               total_distance_remaining = total_distance_upper - total_distance_acute,
+               dive_count_remaining = dive_count_upper - dive_count_acute,
+               total_dive_load_remaining = total_dive_load_upper - total_dive_load_acute,
+               explosive_efforts_remaining = explosive_efforts_upper - explosive_efforts_acute) %>%
+        relocate(contains("total_distance"), contains("dive_count"), contains("total_dive_load"), contains("explosive_efforts"), .after = athlete_name) %>%
+        rename(Player = athlete_name) %>%
+        arrange(Player) 
+      
+      gk_avg_load <- updated_plan %>%
+        summarise(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
+        mutate(Player = "GK Average") %>% 
+        relocate(Player)
+      
+      # Append to the main data frame
+      updated_plan_table <- bind_rows(updated_plan, gk_avg_load)
+      
+      
+      # Push data changes cleanly without resetting row visibility
+      updateReactable("AcuteChronicGKTable", data = updated_plan_table)
+    }
+  }) %>% bindEvent(input$update_gk_table_btn) 
+  
+  
+  observe({
+    req(input$select_week_gk)
+    
+    
+    if (input$select_week_gk == "Current Week") {
+      
+      
+    daily_base <- stats %>%
+      filter(athlete_name %in% athletes_catapult$athlete_name & position_name == "Goal Keeper") %>%
+      select(athlete_name | date | total_distance | dive_count | total_dive_load | explosive_efforts) %>%
+      filter(date >= floor_date(Sys.Date(), unit = "week", week_start = 1) & date <= Sys.Date())
+    
+    dates_seq <- seq(from = floor_date(Sys.Date(), unit = "week", week_start = 1), by = "day", length.out = 7)
+    
+    metrics_placeholder <- data.frame(
+      athlete_name = athletes_catapult %>% filter(position_name == "Goal Keeper") %>% pull(athlete_name),
+      total_distance = 0, dive_count = 0, total_dive_load = 0, explosive_efforts = 0
+    )
+    
+    dates_grid <- data.frame(athlete_name = athletes_catapult %>% filter(position_name == "Goal Keeper") %>% pull(athlete_name)) %>%
+      group_by(athlete_name) %>%
+      reframe(date = dates_seq) %>%
+      ungroup %>% 
+      left_join(metrics_placeholder, by = join_by(athlete_name)) %>%
+      mutate(name_date = paste0(athlete_name, date)) %>%
+      filter(!(name_date %in% paste0(daily_base$athlete_name, daily_base$date))) %>%
+      select(!name_date)
+    
+    combined_daily <- daily_base %>%
+      full_join(dates_grid, by = c("athlete_name", "date", "total_distance", "dive_count", "total_dive_load", "explosive_efforts")) %>%
+      arrange(athlete_name, date)
+    
+    } else {
+      
+      # Generate explicit filler slots for dates missing logs this week
+      dates_seq <- seq(from = ceiling_date(Sys.Date(), unit = "week", week_start = 1), by = "day", length.out = 7)
+      
+      metrics_placeholder <- data.frame(
+        athlete_name = athletes_catapult %>% filter(position_name == "Goal Keeper") %>% pull(athlete_name),
+        total_distance = 0, dive_count = 0, total_dive_load = 0, explosive_efforts = 0
+      )
+      
+      dates_grid <- data.frame(athlete_name = athletes_catapult %>% filter(position_name == "Goal Keeper") %>% pull(athlete_name)) %>%
+        group_by(athlete_name) %>%
+        reframe(date = dates_seq) %>%
+        ungroup %>% 
+        left_join(metrics_placeholder, by = join_by(athlete_name))
+      
+      combined_daily <- dates_grid %>% 
+        arrange(athlete_name, date) 
+      
+    }
+    
+  
+    gk_avg <- combined_daily %>%
+      group_by(date) %>% 
+      summarise(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
+      mutate(athlete_name = "GK Average") %>% 
+      relocate(athlete_name)
+    
+    # Append to the main data frame
+    combined_daily <- bind_rows(combined_daily, gk_avg)
+    
+    # Reset the reactive memory to original values
+    editable_daily_gk(combined_daily)
+    
+    # Crucial: Since sub-table input text fields hold onto browser states, 
+    # we must trigger a structural UI reload by calling shinyjs::refresh() or updating the output slot
+    shinyjs::runjs("Shiny.setInputValue('acute_chronic_gk_table_state', Math.random());") 
+    
+  }) %>% bindEvent(input$clear_gk_table_btn)
+  
+  # 4. Table Structure Definition Output (Matches your layout preferences)
+  output$AcuteChronicGKTable <- renderReactable({
+    daily_current <- editable_daily_gk()
+    req(daily_current, input$select_week_gk)
+    
+    # Listens to our random trigger above to force sub-table input redraws when cleared
+    input$acute_chronic_gk_table_state 
+    
+    
+    if (input$select_week_gk == "Current Week") {
+      
+    # Inline generation of layout datasets to avoid helper calls
+    chronic <- stats %>%
+      filter(athlete_name %in% athletes_catapult$athlete_name & position_name == "Goal Keeper") %>%
+      select(athlete_name | date | total_distance | dive_count | total_dive_load | explosive_efforts) %>%
+      filter(date >= (floor_date(Sys.Date(), unit = "week", week_start = 1) - weeks(3)) & date < floor_date(Sys.Date(), unit = "week", week_start = 1)) %>%
+      group_by(athlete_name) %>%
+      summarize(across(where(is.numeric), ~sum(.x)/3))
+    
+    } else {
+      
+      # Inline generation of layout datasets to avoid helper calls
+      chronic <- stats %>%
+        filter(athlete_name %in% athletes_catapult$athlete_name & position_name == "Goal Keeper") %>%
+        select(athlete_name | date | total_distance | dive_count | total_dive_load | explosive_efforts) %>%
+        filter(date >= (ceiling_date(Sys.Date(), unit = "week", week_start = 1) - weeks(3)) & date < ceiling_date(Sys.Date(), unit = "week", week_start = 1)) %>%
+        group_by(athlete_name) %>%
+        summarize(across(where(is.numeric), ~sum(.x)/3))
+    }
+    
+    thresholds <- chronic %>%
+      mutate(across(!athlete_name, ~ 0.7 * .x, .names = "{.col}_lower"),
+             across(!athlete_name & !contains("_lower"), ~ 1.3 * .x, .names = "{.col}_upper")) %>% 
+      rename_with(~paste0(.x,"_chronic"),.cols=where(is.numeric) & !contains("_lower") &!contains("_upper"))
+    
+    acute <- daily_current %>%
+      group_by(athlete_name) %>%
+      summarize(across(where(is.numeric), sum)) %>% 
+      filter(athlete_name != "GK Average")
+    
+    
+    load_plan <- acute %>%
+      rename_with(~paste0(.x,"_acute"),.cols=where(is.numeric)) %>% 
+      full_join(thresholds, by = join_by(athlete_name)) %>%
+      mutate(total_distance_acwr = total_distance_acute/total_distance_chronic,
+             dive_count_acwr = dive_count_acute/dive_count_chronic,
+             total_dive_load_acwr = total_dive_load_acute/total_dive_load_chronic,
+             explosive_efforts_acwr = explosive_efforts_acute/explosive_efforts_chronic,
+             total_distance_remaining = total_distance_upper - total_distance_acute,
+             dive_count_remaining = dive_count_upper - dive_count_acute,
+             total_dive_load_remaining = total_dive_load_upper - total_dive_load_acute,
+             explosive_efforts_remaining = explosive_efforts_upper - explosive_efforts_acute) %>%
+      relocate(contains("total_distance"), contains("dive_count"), contains("total_dive_load"), contains("explosive_efforts"), .after = athlete_name) %>%
+      rename(Player = athlete_name) %>%
+      arrange(Player) 
+    
+    
+    gk_avg_load <- load_plan %>%
+      summarise(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
+      mutate(Player = "GK Average") %>% 
+      relocate(Player)
+    
+    # Append to the main data frame
+    load_plan_table <- bind_rows(load_plan, gk_avg_load)
+    
+    weekly_details <- daily_current %>%
+      arrange(athlete_name, date) %>%
+      mutate(formatted_date = format(date, format = "%a, %b %d")) %>%
+      rename(Player = athlete_name) %>% 
+      relocate(formatted_date,.after=Player)
+    
+    bar_style <- function(width = 1, fill = "#00B0B9", height = "100%",
+                          align = c("left", "right"), color = NULL) {
+      align <- match.arg(align)
+      if (align == "left") {
+        position <- paste0(width * 100, "%")
+        image <- sprintf("linear-gradient(90deg, %1$s %2$s, transparent %2$s)", fill, position)
+      } else {
+        position <- paste0(100 - width * 100, "%")
+        image <- sprintf("linear-gradient(90deg, transparent %1$s, %2$s %1$s)", position, fill)
+      }
+      list(
+        backgroundImage = image,
+        backgroundSize = paste("100%", height),
+        backgroundRepeat = "no-repeat",
+        backgroundPosition = "center",
+        color = color
+      )
+    }
+    
+    reactable(
+      load_plan_table,
+      striped = F, outline = F, bordered = T, compact = T, highlight = F,
+      defaultPageSize = nrow(load_plan_table),
+      onClick = "expand",  
+      style = list(overflowX = "auto", display = "block"),
+      rowStyle = function(index) {
+        if (load_plan_table[index, "Player"] == "GK Average") {
+          list(fontWeight = "bold")
+        }
+      },
+      defaultColDef = colDef(align = "center",format = colFormat(digits = 0)), 
+      columns = list(
+        Player = colDef(minWidth = 150,
+                        align = "left",
+                        sticky = "left", # Locks column during horizontal scrolling
+                        style = list(fontWeight = 600, backgroundColor = "#fff", zIndex = 1)),
+        total_distance_acute = colDef(name = "Acute"),
+        total_distance_chronic = colDef(name = "Chronic"),
+        total_distance_acwr = colDef(name = "ACWR", style = function(value) {
+          if (value > 1.3 || value < 0.7) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > 1.2 || value < 0.8) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 0.8 && value <= 1.2) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2)),
+        total_distance_lower = colDef(name = "Lower", style = function(value, index) {
+          acute <- load_plan_table$total_distance_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        total_distance_upper = colDef(name = "Upper", style = function(value, index) {
+          acute <- load_plan_table$total_distance_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        total_distance_remaining = colDef(name = "Remaining"),
+        dive_count_acute = colDef(name = "Acute"),
+        dive_count_chronic = colDef(name = "Chronic"),
+        dive_count_acwr = colDef(name = "ACWR", style = function(value) {
+          if (value > 1.3 || value < 0.7) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > 1.2 || value < 0.8) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 0.8 && value <= 1.2) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2)),
+        dive_count_lower = colDef(name = "Lower", style = function(value, index) {
+          acute <- load_plan_table$dive_count_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        dive_count_upper = colDef(name = "Upper", style = function(value, index) {
+          acute <- load_plan_table$dive_count_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        dive_count_remaining = colDef(name = "Remaining"),
+        total_dive_load_acute = colDef(name = "Acute"),
+        total_dive_load_chronic = colDef(name = "Chronic"),
+        total_dive_load_acwr = colDef(name = "ACWR", style = function(value) {
+          if (value > 1.3 || value < 0.7) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > 1.2 || value < 0.8) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 0.8 && value <= 1.2) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2)),
+        total_dive_load_lower = colDef(name = "Lower", style = function(value, index) {
+          acute <- load_plan_table$total_dive_load_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        total_dive_load_upper = colDef(name = "Upper", style = function(value, index) {
+          acute <- load_plan_table$total_dive_load_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        total_dive_load_remaining = colDef(name = "Remaining"),
+        explosive_efforts_acute = colDef(name = "Acute"),
+        explosive_efforts_chronic = colDef(name = "Chronic"),
+        explosive_efforts_acwr = colDef(name = "ACWR", style = function(value) {
+          if (value > 1.3 || value < 0.7) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > 1.2 || value < 0.8) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 0.8 && value <= 1.2) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2)),
+        explosive_efforts_lower = colDef(name = "Lower", style = function(value, index) {
+          acute <- load_plan_table$explosive_efforts_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(0, 176, 185,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        explosive_efforts_upper = colDef(name = "Upper", style = function(value, index) {
+          acute <- load_plan_table$explosive_efforts_acute[index]
+          # Calculate relative width (ratio between 0 and 1)
+          # min/max constraints ensure the bar fills up nicely even if acute > value
+          percentage_width <- min(max(acute / value, 0), 1) 
+          bar_style(width = percentage_width, fill = rgb(87, 44, 95,alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+        }
+        ),
+        explosive_efforts_remaining = colDef(name = "Remaining")
+      ),
+      columnGroups = list(
+        colGroup(name = "Total Distance (m)", columns = c("total_distance_acute", "total_distance_chronic","total_distance_acwr", "total_distance_lower",  "total_distance_upper","total_distance_remaining")),
+        colGroup(name = "Dive Count", columns = c("dive_count_acute","dive_count_chronic","dive_count_acwr", "dive_count_lower",  "dive_count_upper","dive_count_remaining")),
+        colGroup(name = "Total Dive Load", columns =c("total_dive_load_acute", "total_dive_load_chronic","total_dive_load_acwr", "total_dive_load_lower",  "total_dive_load_upper","total_dive_load_remaining")),
+        colGroup(name = "Explosive Efforts", columns = c("explosive_efforts_acute","explosive_efforts_chronic","explosive_efforts_acwr", "explosive_efforts_lower",  "explosive_efforts_upper","explosive_efforts_remaining"))
+      ),
+      details = function(index) {
+        player_name <- load_plan_table$Player[index]
+        weekly_info <- weekly_details %>% filter(Player == player_name)
+        
+        htmltools::div(
+          style = "padding: 1rem; background-color: #fcfcfc;",
+          reactable(
+            weekly_info %>% select(!c(Player, date)),
+            striped = F, outline = F, bordered = T, compact = T, highlight = F, fullWidth = F,
+            defaultColDef = colDef(align = "center"), 
+            columns = list(
+              formatted_date = colDef(name = "Date", align="left",sortable = FALSE),
+              total_distance = colDef(name = "Total Distance (m)", cell = function(val, r_idx) {
+                p_clean <- stringr::str_replace_all(player_name, " ", "_")
+                as.character(numericInput(paste("inp", "total_distance", p_clean, weekly_info$date[r_idx], sep = "__"), NULL, value = round(val),min = 0,  width = "100px"))
+              }, html = TRUE),
+              dive_count = colDef(name = "Dive Count", cell = function(val, r_idx) {
+                p_clean <- stringr::str_replace_all(player_name, " ", "_")
+                as.character(numericInput(paste("inp", "dive_count", p_clean, weekly_info$date[r_idx], sep = "__"), NULL, value = round(val), min = 0, width = "100px"))
+              }, html = TRUE),
+              total_dive_load = colDef(name = "Total Dive Load", cell = function(val, r_idx) {
+                p_clean <- stringr::str_replace_all(player_name, " ", "_")
+                as.character(numericInput(paste("inp", "total_dive_load", p_clean, weekly_info$date[r_idx], sep = "__"), NULL, value = round(val), min = 0, width = "100px"))
+              }, html = TRUE),
+              explosive_efforts = colDef(name = "Explosive Efforts", cell = function(val, r_idx) {
+                p_clean <- stringr::str_replace_all(player_name, " ", "_")
+                as.character(numericInput(paste("inp", "explosive_efforts", p_clean, weekly_info$date[r_idx], sep = "__"), NULL, value = round(val), min = 0, width = "100px"))
+              }, html = TRUE)
+            )
+          )
+        )
+      }
+    )
+  })
+  
   player_load_stats2 <- reactive({
     
-    shiny::validate(need(!is.null(input$athlete2), "Select one or more players"))
+    shiny::validate(need(!is.null(input$athlete2), "Select a player"))
     
     stats %>%
-      select(athlete_name | date | (starts_with("zscore_7_28") & !contains("wellness") & !contains("RSI"))) %>% 
+      select(athlete_name | date | tag_name | (starts_with("zscore_7_28") & !contains("wellness") & !contains("RSI"))) %>% 
       rename(internal_load=zscore_7_28_max_heart_rate, subjective_load = zscore_7_28_rpe) %>% 
       rename_with(~str_replace(.x,"zscore_7_28", "external_load")) %>% 
       pivot_longer(cols = starts_with("external_load"), names_to = "external_load_param", values_to = "external_load") %>% 
-      dplyr::filter(date == input$date_input1 & athlete_name %in% input$athlete2 & external_load_param == input$ext_load_param) %>% 
-      group_by(date) %>% 
-      summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
-      ungroup
+      dplyr::filter(date <= input$date_input1 & date > input$date_input1 - days(5) & athlete_name == input$athlete2 & external_load_param == input$ext_load_param) 
+    # %>% 
+      # group_by(date, tag_name) %>%  
+      # summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
+      # ungroup
   })
+
   
-  
-  
-  text <- data.frame(x=c(-1.5,-1.5, 1.5, 1.5), 
-                     y= c(-1.5,1.5, -1.5,1.5), 
-                     label=c("Increase Load", "Maladaptation", "Adaptation", "Decrease Load"))
-  
-  
-  text2 <- data.frame(x=c(-1.5,-1.5, 1.5, 1.5), 
-                      y= c(-1.5,1.5, -1.5,1.5), 
-                      label=c("Investigate\nExternal Factors", "Increase Workload", "Decrease Workload", "Continue Training"))
-  
-  text3 <- data.frame(x=c(-1.5,-1.5, 1.5, 1.5), 
-                      y= c(-1.5,1.5, -1.5,1.5), 
-                      label=c("Extra Recovery", "Increase Mental\nPreparation", "Increase Physical\nPreparation", "Ready to Train/Play"))
-  
-  
-  int_ext_load_plot <- reactive({
-    
-    
-    
-    plot_ly() %>% 
-      add_annotations(xref='x', yref='y', x=text$x, y=text$y, text=text$label, showarrow = FALSE, align="center",font = list(color = rgb(0, 0, 0, 0.4),weight=600, size = 12))%>%
-      add_trace(x=player_load_stats2()$external_load, y=player_load_stats2()$internal_load, type="scatter", mode="markers",opacity=1, marker=list(color="#00B0B9", size=14),
-                hovertemplate = paste0(
-                  "<b>Z-Score (3-day avg vs. 28-day avg):</b><br>",
-                  "<b>%{xaxis.title.text}:</b> %{x:.2f}<br>",
-                  "<b>%{yaxis.title.text}:</b> %{y:.2f}",
-                  "<extra></extra>")) %>% 
-      config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
-      layout(
-        shapes = list(
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 0, y1 = 0, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = 0, x1 = 0, y0 = -3, y1 = 3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = -3, y0 = -3, y1 = 3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = 3, x1 = 3, y0 = -3, y1 = 3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = -3, y1 = -3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 3, y1 = 3, layer = "below")),
-        xaxis = list(range=c(-3,3),scaleanchor = "y", scaleratio = 1, constrain="domain",constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,
-                     title = paste("External Workload -",case_when(input$ext_load_param == "external_load_field_time"~ "Field Time", 
-                                                                   input$ext_load_param == "external_load_total_distance"~"Total Distance", 
-                                                                   input$ext_load_param == "external_load_high_speed_distance"~ "High Speed Distance", 
-                                                                   input$ext_load_param == "external_load_sprint_distance"~ "Sprint Distance",
-                                                                   input$ext_load_param == "external_load_accel_efforts"~ "Accel Efforts",
-                                                                   input$ext_load_param == "external_load_decel_efforts" ~"Decel Efforts", 
-                                                                   input$ext_load_param == "external_load_dive_count"~"Dive Count", 
-                                                                   input$ext_load_param == "external_load_total_dive_load"~"Total Dive Load", 
-                                                                   input$ext_load_param == "external_load_explosive_efforts"~"Explosive Efforts", 
-                                                                   .default = ""))),
-        yaxis = list(range=c(-3,3),scaleanchor = "x", scaleratio = 1,constrain="domain", constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,title = "Internal Workload - Max HR"),
-        plot_bgcolor  = rgb(0,0,0,0),
-        paper_bgcolor = rgb(0,0,0,0))
-    
-  })
-  
-  
-  sub_ext_load_plot <- reactive({
-    
-    plot_ly() %>%
-      add_annotations(xref='x', yref='y', x=text$x, y=text$y, text=text$label, showarrow = FALSE, align="center",font = list(color = rgb(0, 0, 0, 0.4),weight=600, size = 12))%>%
-      add_trace(x=player_load_stats2()$external_load, y=player_load_stats2()$subjective_load, type="scatter", mode="markers",opacity=1, marker=list(color="#00B0B9", size=14),
-                hovertemplate = paste0(
-                  "<b>Z-Score (3-day avg vs. 28-day avg):</b><br>",
-                  "<b>%{xaxis.title.text}:</b> %{x:.2f}<br>",
-                  "<b>%{yaxis.title.text}:</b> %{y:.2f}",
-                  "<extra></extra>")) %>%
-      config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
-      layout(
-        shapes = list(
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 0, y1 = 0, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = 0, x1 = 0, y0 = -3, y1 = 3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = -3, y0 = -3, y1 = 3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = 3, x1 = 3, y0 = -3, y1 = 3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = -3, y1 = -3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 3, y1 = 3, layer = "below")),
-        xaxis = list(range=c(-3,3),scaleanchor = "y", scaleratio = 1, constrain="domain", constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,
-                     title = paste("External Workload -",case_when(input$ext_load_param == "external_load_field_time"~ "Field Time",
-                                                                   input$ext_load_param == "external_load_total_distance"~"Total Distance",
-                                                                   input$ext_load_param == "external_load_high_speed_distance"~ "High Speed Distance",
-                                                                   input$ext_load_param == "external_load_sprint_distance"~ "Sprint Distance",
-                                                                   input$ext_load_param == "external_load_accel_efforts"~ "Accel Efforts",
-                                                                   input$ext_load_param == "external_load_decel_efforts" ~"Decel Efforts",
-                                                                   input$ext_load_param == "external_load_dive_count"~"Dive Count",
-                                                                   input$ext_load_param == "external_load_total_dive_load"~"Total Dive Load",
-                                                                   input$ext_load_param == "external_load_explosive_efforts"~"Explosive Efforts",
-                                                                   .default = ""))),
-        yaxis = list(range=c(-3,3),scaleanchor = "x", scaleratio = 1, constrain="domain",constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,title = "Subjective Workload - RPE"),
-        plot_bgcolor  = rgb(0,0,0,0),
-        paper_bgcolor = rgb(0,0,0,0))
-    
-    
-  })
-  
-  wellness_workload_plot <- reactive({
-    
-    shiny::validate(need(!is.null(input$athlete2), "Select one or more players"))
-    
-    player_load_stats4 <- stats %>%
-      select(athlete_name | date | starts_with("zscore_7_28")) %>% 
-      rename(wellness = zscore_7_28_wellness) %>%
-      rename_with(~ str_replace(.x, "zscore_7_28", "workload")) %>% 
-      pivot_longer(cols = starts_with("workload"), names_to = "workload_param", values_to = "workload") %>% 
-      dplyr::filter(workload_param == input$workload_param) %>% 
-      arrange(athlete_name, date) %>% 
-      # group_by(athlete_name) %>% 
-      # mutate(workload2 = dplyr::lag(workload)) %>% 
-      # ungroup %>% 
-      dplyr::filter(date == input$date_input1 & athlete_name %in% input$athlete2) %>% 
-      group_by(date) %>% 
-      summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
-      ungroup
-    
-    
-    plot_ly() %>% 
-      add_annotations(xref='x', yref='y', x=text2$x, y=text2$y, text=text2$label, showarrow = FALSE, align="center",font = list(color = rgb(0, 0, 0, 0.4),weight=600, size = 12))%>%
-      add_trace(x=player_load_stats4$workload, y=player_load_stats4$wellness, type="scatter", mode="markers",opacity=1, marker=list(color="#00B0B9", size=14),
-                hovertemplate = paste0(
-                  "<b>Z-Score (3-day avg vs. 28-day avg):</b><br>",
-                  "<b>%{xaxis.title.text}:</b> %{x:.2f}<br>",
-                  "<b>%{yaxis.title.text}:</b> %{y:.2f}",
-                  "<extra></extra>")) %>% 
-      config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
-      layout(
-        shapes = list(
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 0, y1 = 0, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = 0, x1 = 0, y0 = -3, y1 = 3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = -3, y0 = -3, y1 = 3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = 3, x1 = 3, y0 = -3, y1 = 3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = -3, y1 = -3, layer = "below"),
-          list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 3, y1 = 3, layer = "below")),
-        xaxis = list(range=c(-3,3),scaleanchor = "y", scaleratio = 1,constrain="domain", constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,
-                     title = paste("Workload -",
-                                   case_when(input$workload_param == "workload_field_time"~ "Field Time", 
-                                             input$workload_param == "workload_total_distance"~"Total Distance",
-                                             input$workload_param == "workload_high_speed_distance"~ "High Speed Distance",
-                                             input$workload_param == "workload_sprint_distance"~ "Sprint Distance",
-                                             input$workload_param == "workload_accel_efforts"~ "Accel Efforts",
-                                             input$workload_param == "workload_decel_efforts" ~"Decel Efforts",
-                                             input$workload_param == "workload_dive_count"~"Dive Count",
-                                             input$workload_param == "workload_total_dive_load"~"Total Dive Load",
-                                             input$workload_param == "workload_explosive_efforts"~"Explosive Efforts",
-                                             input$workload_param == "workload_rpe"~"RPE",
-                                             input$workload_param == "workload_max_heart_rate"~"Max HR",
-                                             .default = ""))),
-        yaxis = list(range=c(-3,3),scaleanchor = "x", scaleratio = 1, constrain="domain",constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,title = "Wellness"),
-        plot_bgcolor  = rgb(0,0,0,0),
-        paper_bgcolor = rgb(0,0,0,0))
-    
-  })
-  
-  
-  # readiness_wellness_plot <- reactive({
+  # text <- data.frame(x=c(-1.5,-1.5, 1.5, 1.5), 
+  #                    y= c(-1.5,1.5, -1.5,1.5), 
+  #                    label=c("Increase Load", "Maladaptation", "Adaptation", "Decrease Load"))
+  # 
+  # 
+  # text2 <- data.frame(x=c(-1.5,-1.5, 1.5, 1.5), 
+  #                     y= c(-1.5,1.5, -1.5,1.5), 
+  #                     label=c("Investigate\nExternal Factors", "Increase Workload", "Decrease Workload", "Continue Training"))
+  # 
+  # text3 <- data.frame(x=c(-1.5,-1.5, 1.5, 1.5), 
+  #                     y= c(-1.5,1.5, -1.5,1.5), 
+  #                     label=c("Extra Recovery", "Increase Mental\nPreparation", "Increase Physical\nPreparation", "Ready to Train/Play"))
+
+
+  # int_ext_load_plot <- reactive({
   #   
-  #   shiny::validate(need(!is.null(input$athlete2), "Select one or more players"))
   #   
-  #   player_load_stats4 <- stats %>%
-  #     select(athlete_name | date | zscore_7_28_wellness | zscore_7_28_RSI) %>% 
-  #     rename(wellness = zscore_7_28_wellness, readiness = zscore_7_28_RSI) %>%
-  #     arrange(athlete_name, date) %>% 
-  #     group_by(athlete_name) %>% 
-  #     mutate(readiness2 = dplyr::lag(readiness)) %>% 
-  #     ungroup %>% 
-  #     dplyr::filter(date == input$date_input1 & athlete_name %in% input$athlete2) %>%
-  #     group_by(date) %>% 
-  #     summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
-  #     ungroup
   #   
   #   plot_ly() %>% 
-  #     add_annotations(xref='x', yref='y', x=text3$x, y=text3$y, text=text3$label, showarrow = FALSE, align="center",font = list(color = rgb(0, 0, 0, 0.4),weight=600, size = 12))%>%
-  #     add_trace(x=player_load_stats4$wellness, y=player_load_stats4$readiness2, type="scatter", mode="markers",opacity=1, marker=list(color="#00B0B9", size=14),
+  #     add_annotations(xref='x', yref='y', x=text$x, y=text$y, text=text$label, showarrow = FALSE, align="center",font = list(color = rgb(0, 0, 0, 0.4),weight=600, size = 12))%>%
+  #     add_trace(x=player_load_stats2()$external_load, y=player_load_stats2()$internal_load, type="scatter", mode="markers",opacity=1, marker=list(color="#00B0B9", size=14),
   #               hovertemplate = paste0(
   #                 "<b>Z-Score (3-day avg vs. 28-day avg):</b><br>",
   #                 "<b>%{xaxis.title.text}:</b> %{x:.2f}<br>",
@@ -2579,12 +3509,538 @@ md_distance_team_total %>%
   #         list(type = "line", xref='x', yref='y', x0 = 3, x1 = 3, y0 = -3, y1 = 3, layer = "below"),
   #         list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = -3, y1 = -3, layer = "below"),
   #         list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 3, y1 = 3, layer = "below")),
-  #       xaxis = list(range=c(-3,3),scaleanchor = "y", scaleratio = 1,constrain="domain",constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,title = "Wellness"),
-  #       yaxis = list(range=c(-3,3),scaleanchor = "x", scaleratio = 1, constrain="domain",constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,title = "Readiness - Reactive Strength Index"),
+  #       xaxis = list(range=c(-3,3),scaleanchor = "y", scaleratio = 1, constrain="domain",constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,
+  #                    title = case_when(input$ext_load_param == "external_load_field_time"~ "Field Time", 
+  #                                                                  input$ext_load_param == "external_load_total_distance"~"Total Distance", 
+  #                                                                  input$ext_load_param == "external_load_high_speed_distance"~ "High Speed Distance", 
+  #                                                                  input$ext_load_param == "external_load_sprint_distance"~ "Sprint Distance",
+  #                                                                  input$ext_load_param == "external_load_accel_efforts"~ "Accel Efforts",
+  #                                                                  input$ext_load_param == "external_load_decel_efforts" ~"Decel Efforts", 
+  #                                                                  input$ext_load_param == "external_load_dive_count"~"Dive Count", 
+  #                                                                  input$ext_load_param == "external_load_total_dive_load"~"Total Dive Load", 
+  #                                                                  input$ext_load_param == "external_load_explosive_efforts"~"Explosive Efforts", 
+  #                                                                  .default = "")),
+  #       yaxis = list(range=c(-3,3),scaleanchor = "x", scaleratio = 1,constrain="domain", constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,title = "Max HR"),
   #       plot_bgcolor  = rgb(0,0,0,0),
   #       paper_bgcolor = rgb(0,0,0,0))
   #   
   # })
+  
+
+  
+  sub_ext_load_plot <- reactive({
+    
+    # plot_ly() %>%
+    #   add_annotations(xref='x', yref='y', x=text$x, y=text$y, text=text$label, showarrow = FALSE, align="center",font = list(color = rgb(0, 0, 0, 0.4),weight=600, size = 12))%>%
+    #   add_trace(x=player_load_stats2()$external_load, y=player_load_stats2()$subjective_load, type="scatter", mode="markers",opacity=1, marker=list(color="#00B0B9", size=14),
+    #             hovertemplate = paste0(
+    #               "<b>Z-Score (3-day avg vs. 28-day avg):</b><br>",
+    #               "<b>%{xaxis.title.text}:</b> %{x:.2f}<br>",
+    #               "<b>%{yaxis.title.text}:</b> %{y:.2f}",
+    #               "<extra></extra>")) %>%
+    #   config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
+    #   layout(
+    #     shapes = list(
+    #       list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 0, y1 = 0, layer = "below"),
+    #       list(type = "line", xref='x', yref='y', x0 = 0, x1 = 0, y0 = -3, y1 = 3, layer = "below"),
+    #       list(type = "line", xref='x', yref='y', x0 = -3, x1 = -3, y0 = -3, y1 = 3, layer = "below"),
+    #       list(type = "line", xref='x', yref='y', x0 = 3, x1 = 3, y0 = -3, y1 = 3, layer = "below"),
+    #       list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = -3, y1 = -3, layer = "below"),
+    #       list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 3, y1 = 3, layer = "below")),
+    #     xaxis = list(range=c(-3,3),scaleanchor = "y", scaleratio = 1, constrain="domain", constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,
+    #                  title = case_when(input$ext_load_param == "external_load_field_time"~ "Field Time",
+    #                                                                input$ext_load_param == "external_load_total_distance"~"Total Distance",
+    #                                                                input$ext_load_param == "external_load_high_speed_distance"~ "High Speed Distance",
+    #                                                                input$ext_load_param == "external_load_sprint_distance"~ "Sprint Distance",
+    #                                                                input$ext_load_param == "external_load_accel_efforts"~ "Accel Efforts",
+    #                                                                input$ext_load_param == "external_load_decel_efforts" ~"Decel Efforts",
+    #                                                                input$ext_load_param == "external_load_dive_count"~"Dive Count",
+    #                                                                input$ext_load_param == "external_load_total_dive_load"~"Total Dive Load",
+    #                                                                input$ext_load_param == "external_load_explosive_efforts"~"Explosive Efforts",
+    #                                                                .default = "")),
+    #     yaxis = list(range=c(-3,3),scaleanchor = "x", scaleratio = 1, constrain="domain",constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,title = "RPE"),
+    #     plot_bgcolor  = rgb(0,0,0,0),
+    #     paper_bgcolor = rgb(0,0,0,0))
+    
+    player_load_stats2() %>% 
+      plot_ly() %>% 
+      add_trace(x=~external_load, 
+                y=~subjective_load, 
+                type="scatter", 
+                mode="markers",
+                color=~factor(date),
+                colors= brewer.pal(n = nrow(player_load_stats2()),name="Blues"),
+                # colors= viridis(n = nrow(responses_filtered),direction=1,option = "G"),
+                customdata=~paste0(format(date,"%b %d, %Y"), "<br><b>MD Code:</b> ", tag_name),
+                marker=list(size=12),
+                hovertemplate = paste0(
+                  "<b>Date:</b> %{customdata}<br>",
+                  "<b>Z-Score</b> (3-day avg vs. 28-day avg)<br>",
+                  "<b>%{xaxis.title.text}:</b> %{x:.2f}<br>",
+                  "<b>%{yaxis.title.text}:</b> %{y:.2f}",
+                  "<extra></extra>")) %>% 
+      config(displaylogo = FALSE,
+             scrollZoom = FALSE,
+             displayModeBar = FALSE) %>%     
+      layout(
+        legend = list(traceorder = "reversed"),
+        shapes = list(
+          list(type="rect", xref='x', yref='y', x0 = -2, x1 = 2, y0 = -2, y1 = 2,layer = "below", line = list(width=0), fillcolor="red",opacity = 0.2),
+          list(type="rect", xref='x', yref='y', x0 = -1.5, x1 =1.5, y0 = -1.5, y1 = 1.5,layer = "below", line = list(width=0), fillcolor="yellow",opacity = 0.2),
+          list(type="rect", xref='x', yref='y', x0 = -1, x1 = 1, y0 = -1, y1 = 1,layer = "below", line = list(width=0), fillcolor="green",opacity = 0.2)),
+        xaxis = list(range=c(-2.1,2.1),scaleanchor = "y", scaleratio = 1,constrain="domain",constraintoward="center", zeroline=T, showticklabels = T,showline=F,showgrid = T,ticks = "",tickvals = seq(-3,3,by=0.5), title = case_when(input$ext_load_param == "external_load_field_time"~ "Field Time",
+                                                                                                                                                                                                                                                                   input$ext_load_param == "external_load_total_distance"~"Total Distance",
+                                                                                                                                                                                                                                                                   input$ext_load_param == "external_load_high_speed_distance"~ "High Speed Distance",
+                                                                                                                                                                                                                                                                   input$ext_load_param == "external_load_sprint_distance"~ "Sprint Distance",
+                                                                                                                                                                                                                                                                   input$ext_load_param == "external_load_accel_efforts"~ "Accel Efforts",
+                                                                                                                                                                                                                                                                   input$ext_load_param == "external_load_decel_efforts" ~"Decel Efforts",
+                                                                                                                                                                                                                                                                   input$ext_load_param == "external_load_dive_count"~"Dive Count",
+                                                                                                                                                                                                                                                                   input$ext_load_param == "external_load_total_dive_load"~"Total Dive Load",
+                                                                                                                                                                                                                                                                   input$ext_load_param == "external_load_explosive_efforts"~"Explosive Efforts",
+                                                                                                                                                                                                                                                                   .default = "")),
+        yaxis = list(range=c(-2.1,2.1),scaleanchor = "x", scaleratio = 1,constrain = "domain",constraintoward="center", zeroline=T, showticklabels = T,showline=F,showgrid = T, ticks = "",tickvals= seq(-3,3,by=0.5),  title = "Total Daily Session RPE"),
+        plot_bgcolor  = rgb(0,0,0,0),
+        paper_bgcolor = rgb(0,0,0,0))
+    
+  })
+  
+  wellness_workload_plot <- reactive({
+    
+    shiny::validate(need(!is.null(input$athlete2), "Select a player"))
+    
+    player_load_stats4 <- stats %>%
+      select(athlete_name | date | tag_name | starts_with("zscore_7_28")) %>% 
+      rename(wellness = zscore_7_28_wellness) %>%
+      rename_with(~ str_replace(.x, "zscore_7_28", "workload")) %>% 
+      pivot_longer(cols = starts_with("workload"), names_to = "workload_param", values_to = "workload") %>% 
+      dplyr::filter(workload_param == input$workload_param) %>% 
+      arrange(athlete_name, date) %>% 
+      # group_by(athlete_name) %>% 
+      # mutate(workload2 = dplyr::lag(workload)) %>% 
+      # ungroup %>% 
+      dplyr::filter(date <= input$date_input1 & date > input$date_input1 - days(5) & athlete_name == input$athlete2) 
+    # %>% 
+    #   group_by(date, tag_name) %>% 
+    #   summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
+    #   ungroup
+    
+    # plot_ly() %>% 
+    #   add_annotations(xref='x', yref='y', x=text2$x, y=text2$y, text=text2$label, showarrow = FALSE, align="center",font = list(color = rgb(0, 0, 0, 0.4),weight=600, size = 12))%>%
+    #   add_trace(x=player_load_stats4$workload, y=player_load_stats4$wellness, type="scatter", mode="markers",opacity=1, marker=list(color="#00B0B9", size=14),
+    #             hovertemplate = paste0(
+    #               "<b>Z-Score (3-day avg vs. 28-day avg):</b><br>",
+    #               "<b>%{xaxis.title.text}:</b> %{x:.2f}<br>",
+    #               "<b>%{yaxis.title.text}:</b> %{y:.2f}",
+    #               "<extra></extra>")) %>% 
+    #   config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
+    #   layout(
+    #     shapes = list(
+    #       list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 0, y1 = 0, layer = "below"),
+    #       list(type = "line", xref='x', yref='y', x0 = 0, x1 = 0, y0 = -3, y1 = 3, layer = "below"),
+    #       list(type = "line", xref='x', yref='y', x0 = -3, x1 = -3, y0 = -3, y1 = 3, layer = "below"),
+    #       list(type = "line", xref='x', yref='y', x0 = 3, x1 = 3, y0 = -3, y1 = 3, layer = "below"),
+    #       list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = -3, y1 = -3, layer = "below"),
+    #       list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 3, y1 = 3, layer = "below")),
+    #     xaxis = list(range=c(-3,3),scaleanchor = "y", scaleratio = 1,constrain="domain", constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,
+    #                  title = case_when(input$workload_param == "workload_field_time"~ "Field Time", 
+    #                                          input$workload_param == "workload_total_distance"~"Total Distance",
+    #                                          input$workload_param == "workload_high_speed_distance"~ "High Speed Distance",
+    #                                          input$workload_param == "workload_sprint_distance"~ "Sprint Distance",
+    #                                          input$workload_param == "workload_accel_efforts"~ "Accel Efforts",
+    #                                          input$workload_param == "workload_decel_efforts" ~"Decel Efforts",
+    #                                          input$workload_param == "workload_dive_count"~"Dive Count",
+    #                                          input$workload_param == "workload_total_dive_load"~"Total Dive Load",
+    #                                          input$workload_param == "workload_explosive_efforts"~"Explosive Efforts",
+    #                                          input$workload_param == "workload_rpe"~"RPE",
+    #                                          input$workload_param == "workload_max_heart_rate"~"Max HR",
+    #                                          .default = "")),
+    #     yaxis = list(range=c(-3,3),scaleanchor = "x", scaleratio = 1, constrain="domain",constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,title = "Wellness"),
+    #     plot_bgcolor  = rgb(0,0,0,0),
+    #     paper_bgcolor = rgb(0,0,0,0))
+    # 
+    
+    player_load_stats4 %>% 
+      plot_ly() %>% 
+      add_trace(x=~workload, 
+                y=~wellness, 
+                type="scatter", 
+                mode="markers",
+                color=~factor(date),
+                colors= brewer.pal(n = nrow(player_load_stats4),name="Blues"),
+                # colors= viridis(n = nrow(responses_filtered),direction=1,option = "G"),
+                customdata=~paste0(format(date,"%b %d, %Y"), "<br><b>MD Code:</b> ", tag_name),
+                marker=list(size=12),
+                hovertemplate = paste0(
+                  "<b>Date:</b> %{customdata}<br>",
+                  "<b>Z-Score</b> (3-day avg vs. 28-day avg)<br>",
+                  "<b>%{xaxis.title.text}:</b> %{x:.2f}<br>",
+                  "<b>%{yaxis.title.text}:</b> %{y:.2f}",
+                  "<extra></extra>")) %>% 
+      config(displaylogo = FALSE,
+             scrollZoom = FALSE,
+             displayModeBar = FALSE) %>%     
+      layout(
+        legend = list(traceorder = "reversed"),
+        shapes = list(
+          list(type="rect", xref='x', yref='y', x0 = -2, x1 = 2, y0 = -2, y1 = 2,layer = "below", line = list(width=0), fillcolor="red",opacity = 0.2),
+          list(type="rect", xref='x', yref='y', x0 = -1.5, x1 =1.5, y0 = -1.5, y1 = 1.5,layer = "below", line = list(width=0), fillcolor="yellow",opacity = 0.2),
+          list(type="rect", xref='x', yref='y', x0 = -1, x1 = 1, y0 = -1, y1 = 1,layer = "below", line = list(width=0), fillcolor="green",opacity = 0.2)),
+        xaxis = list(range=c(-2.1,2.1),scaleanchor = "y", scaleratio = 1,constrain="domain",constraintoward="center", zeroline=T, showticklabels = T,showline=F,showgrid = T,ticks = "",tickvals = seq(-3,3,by=0.5), title = case_when(input$workload_param == "workload_field_time"~ "Field Time", 
+                                                                                                                                                                                                                                             input$workload_param == "workload_total_distance"~"Total Distance",
+                                                                                                                                                                                                                                             input$workload_param == "workload_high_speed_distance"~ "High Speed Distance",
+                                                                                                                                                                                                                                             input$workload_param == "workload_sprint_distance"~ "Sprint Distance",
+                                                                                                                                                                                                                                             input$workload_param == "workload_accel_efforts"~ "Accel Efforts",
+                                                                                                                                                                                                                                             input$workload_param == "workload_decel_efforts" ~"Decel Efforts",
+                                                                                                                                                                                                                                             input$workload_param == "workload_dive_count"~"Dive Count",
+                                                                                                                                                                                                                                             input$workload_param == "workload_total_dive_load"~"Total Dive Load",
+                                                                                                                                                                                                                                             input$workload_param == "workload_explosive_efforts"~"Explosive Efforts",
+                                                                                                                                                                                                                                             input$workload_param == "workload_rpe"~"RPE",
+                                                                                                                                                                                                                                             input$workload_param == "workload_max_heart_rate"~"Max HR",
+                                                                                                                                                                                                                                             .default = "")),
+        yaxis = list(range=c(-2.1,2.1),scaleanchor = "x", scaleratio = 1,constrain = "domain",constraintoward="center", zeroline=T, showticklabels = T,showline=F,showgrid = T, ticks = "",tickvals= seq(-3,3,by=0.5),  title = "Wellness"),
+        plot_bgcolor  = rgb(0,0,0,0),
+        paper_bgcolor = rgb(0,0,0,0))
+    
+    
+  })
+  
+  
+  # readiness_wellness_plot <- reactive({
+  # 
+  #   shiny::validate(need(!is.null(input$athlete2), "Select a player"))
+  # 
+  #   player_load_stats4 <- stats %>%
+  #     select(athlete_name | date | zscore_7_28_wellness | zscore_7_28_RSI) %>%
+  #     rename(wellness = zscore_7_28_wellness, readiness = zscore_7_28_RSI) %>%
+  #     arrange(athlete_name, date) %>%
+  #     group_by(athlete_name) %>%
+  #     mutate(readiness2 = dplyr::lag(readiness)) %>%
+  #     ungroup %>%
+  #     dplyr::filter(date == input$date_input1 & athlete_name == input$athlete2) 
+  #   # %>%
+  #   #   group_by(date) %>%
+  #   #   summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>%
+  #   #   ungroup
+  # 
+  #   plot_ly() %>%
+  #     add_annotations(xref='x', yref='y', x=text3$x, y=text3$y, text=text3$label, showarrow = FALSE, align="center",font = list(color = rgb(0, 0, 0, 0.4),weight=600, size = 12))%>%
+  #     add_trace(x=player_load_stats4$wellness, y=player_load_stats4$readiness2, type="scatter", mode="markers",opacity=1, marker=list(color="#00B0B9", size=14),
+  #               hovertemplate = paste0(
+  #                 "<b>Z-Score (3-day avg vs. 28-day avg):</b><br>",
+  #                 "<b>%{xaxis.title.text}:</b> %{x:.2f}<br>",
+  #                 "<b>%{yaxis.title.text}:</b> %{y:.2f}",
+  #                 "<extra></extra>")) %>%
+  #     config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
+  #     layout(
+  #       shapes = list(
+  #         list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 0, y1 = 0, layer = "below"),
+  #         list(type = "line", xref='x', yref='y', x0 = 0, x1 = 0, y0 = -3, y1 = 3, layer = "below"),
+  #         list(type = "line", xref='x', yref='y', x0 = -3, x1 = -3, y0 = -3, y1 = 3, layer = "below"),
+  #         list(type = "line", xref='x', yref='y', x0 = 3, x1 = 3, y0 = -3, y1 = 3, layer = "below"),
+  #         list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = -3, y1 = -3, layer = "below"),
+  #         list(type = "line", xref='x', yref='y', x0 = -3, x1 = 3, y0 = 3, y1 = 3, layer = "below")),
+  #       xaxis = list(range=c(-3,3),scaleanchor = "y", scaleratio = 1,constrain="domain",constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,title = "Wellness"),
+  #       yaxis = list(range=c(-3,3),scaleanchor = "x", scaleratio = 1, constrain="domain",constraintoward="center", zeroline=FALSE, showticklabels = FALSE,showline=FALSE,showgrid = FALSE,title = "Reactive Strength Index"),
+  #       plot_bgcolor  = rgb(0,0,0,0),
+  #       paper_bgcolor = rgb(0,0,0,0))
+  # 
+  # })
+  
+  
+  zscore_heatmap_table  <- reactive({ 
+    
+    
+    if ("Goal Keeper" %in% (stats %>% filter(athlete_name == input$athlete2) %>% drop_na(position_name) %>% pull(position_name) %>% unique)){
+    player_load_stats <- stats %>%
+      select(athlete_name | date | tag_name | starts_with("zscore_7_28")) %>% 
+      rename_with(~str_remove(.x,"zscore_7_28_")) %>%
+      dplyr::filter(date <= input$date_input1 & date > input$date_input1 - days(5) & athlete_name == input$athlete2)%>% 
+      select(!c(athlete_name, high_speed_distance, sprint_distance,meterage_per_minute,max_vel_kph, accel_efforts, decel_efforts, accel_decel_efforts)) %>% 
+      rename(Date=date, `MD Code` = tag_name, `Total Distance` = total_distance, `Field Time`=field_time, `Dive Count` = dive_count, `Dive Load` = total_dive_load, `Explosive Efforts` = explosive_efforts, `Avg HR` = mean_heart_rate, `Max HR` = max_heart_rate,`Daily sRPE` = rpe, Wellness=wellness) %>% 
+      arrange(desc(Date))
+    
+    reactable(
+      player_load_stats,
+      striped = F,
+      outline=F,
+      bordered = T,
+      compact = T,
+      highlight = F,
+      defaultPageSize =nrow(player_load_stats),
+      columns = list(
+        `Field Time` = colDef(style = function(value) {
+          if (value > 1.5 || value < -1.5) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > -1 && value < 1) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2), align = "center"),
+        `Total Distance` = colDef(style = function(value) {
+          if (value > 1.5 || value < -1.5) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > -1 && value < 1) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2),align = "center"),
+        `Dive Count` = colDef(style = function(value) {
+          if (value > 1.5 || value < -1.5) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > -1 && value < 1) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2),align = "center"),
+        `Dive Load` = colDef(style = function(value) {
+          if (value > 1.5 || value < -1.5) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > -1 && value < 1) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2),align = "center"),
+        `Explosive Efforts` = colDef(style = function(value) {
+          if (value > 1.5 || value < -1.5) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > -1 && value < 1) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2),align = "center"),
+        `Avg HR` = colDef(style = function(value) {
+          if (value > 1.5 || value < -1.5) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > -1 && value < 1) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2),align = "center"),
+        `Max HR` = colDef(style = function(value) {
+          if (value > 1.5 || value < -1.5) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > -1 && value < 1) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2),align = "center"),
+        `Daily sRPE` = colDef(style = function(value) {
+          if (value > 1.5 || value < -1.5) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > -1 && value < 1) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2),align = "center"),
+        Wellness = colDef(style = function(value) {
+          if (value > 1.5 || value < -1.5) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value > -1 && value < 1) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }, format = colFormat(digits = 2),align = "center")
+      )
+    )
+    
+    } else {
+      
+      player_load_stats <- stats %>%
+        select(athlete_name | date | tag_name | starts_with("zscore_7_28")) %>% 
+        rename_with(~str_remove(.x,"zscore_7_28_")) %>%
+        dplyr::filter(date <= input$date_input1 & date > input$date_input1 - days(5) & athlete_name == input$athlete2)%>% 
+        select(!c(athlete_name, dive_count, total_dive_load,explosive_efforts)) %>% 
+        rename(Date=date, `MD Code` = tag_name, `Total Distance` = total_distance, `HSR Distance` = high_speed_distance, `Sprint Distance` = sprint_distance, `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Accel+Decel Efforts`=accel_decel_efforts, `Avg Speed` = meterage_per_minute, `Max Speed` = max_vel_kph, `Avg HR` = mean_heart_rate, `Max HR` = max_heart_rate, `Field Time`=field_time, `Daily sRPE` = rpe, Wellness=wellness) %>% 
+        arrange(desc(Date))
+   
+      reactable(
+        player_load_stats,
+        striped = F,
+        outline=F,
+        bordered = T,
+        compact = T,
+        highlight = F,
+        defaultPageSize =nrow(player_load_stats),
+        columns = list(
+          `Field Time` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2), align = "center"),
+          `Total Distance` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          `HSR Distance` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          `Sprint Distance` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          `Accel Efforts` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          `Decel Efforts` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          `Accel+Decel Efforts` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          `Avg Speed` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          `Max Speed` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          `Avg HR` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          `Max HR` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          `Daily sRPE` = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center"),
+          Wellness = colDef(style = function(value) {
+            if (value > 1.5 || value < -1.5) {
+              list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if ((value >= 1 && value <= 1.5) || (value >= -1.5 && value <= -1)) {
+              list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else if (value > -1 && value < 1) {
+              list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            } else {
+              list(background = NULL) # Default style for any missing cases
+            }
+          }, format = colFormat(digits = 2),align = "center")
+          )
+      )
+       }
+    
+
+    
+  })
+  
+  
   
   wellness_plot <- reactive({
     
@@ -2597,7 +4053,7 @@ md_distance_team_total %>%
       ungroup
     
     plot_ly(data=wellness_stats, x = ~category, y = ~category_item_ratio, type = "bar", color=~name,
-            colors = c("#572C5F","#00B0B9", "#B2C9D4"),
+            colors = c("#403A60", "#572C5F","#00B0B9", "#B2C9D4","#E5E1E6"),
             text = ~I(item_ratio), customdata = paste0(scales::percent(wellness_stats$category_ratio,accuracy = 0.1), "\n<b>", wellness_stats$name, ":</b> "), textposition = "inside",
             hovertemplate = paste0(
               "<b>%{x}:</b> %{customdata}",
@@ -2613,12 +4069,12 @@ md_distance_team_total %>%
     
   })
   
+
   
   historical_wellness_plot <- reactive({
     
     shiny::validate(need(!is.null(input$athlete3), "Select one or more players"))
     
-
     total_wellness <- wellness_scores %>%
       select(athlete_name, date,total_ratio) %>% 
       unique %>% 
@@ -2643,6 +4099,8 @@ md_distance_team_total %>%
       group_by(date) %>% 
       summarize(ratio = mean(ratio,na.rm=T)) %>% 
       ungroup
+
+    
     
     plot_ly(data=wellness_stats,x = ~date, y = ~ratio, type = "bar", color=I("#00B0B9"),
             hovertemplate = paste0(
@@ -2658,7 +4116,106 @@ md_distance_team_total %>%
     
   })
   
-  
+  wellness_table <- reactive({
+    
+    shiny::validate(need(!is.null(input$athlete3), "Select one or more players"))
+    
+    total_wellness <- wellness_scores %>%
+      select(athlete_name, date,total_ratio) %>% 
+      unique %>% 
+      rename(ratio=total_ratio) %>% 
+      mutate(category = "Wellness", name = "Total Wellness") %>% 
+      relocate(category, name, .before=ratio)
+    
+    category_wellness <- wellness_scores %>%
+      select(athlete_name, date, category, category_ratio) %>% 
+      unique %>% 
+      mutate(name = paste("Total", category)) %>% 
+      rename(ratio=category_ratio) %>% 
+      relocate(name, .before=ratio)
+
+    wellness_stats <- rbind(total_wellness, category_wellness) %>%
+      dplyr::filter(date >= input$date_range3[1] & date <= input$date_range3[2] & athlete_name %in% input$athlete3) %>%
+      group_by(date, category, name) %>% 
+      summarize(ratio = mean(ratio,na.rm=T)) %>% 
+      ungroup %>% 
+      select(!category) %>% 
+      pivot_wider(names_from=name, values_from=ratio) %>% 
+      relocate(`Total Wellness`, .after=date) %>% 
+      arrange(desc(date))
+    
+    
+    # wellness_stats <- rbind(total_wellness, category_wellness) %>%
+    #   dplyr::filter(date >= (Sys.Date()-weeks(3)) & date <= Sys.Date() & athlete_name %in% c("Saorla Miller")) %>%
+    #   group_by(date, category, name) %>% 
+    #   summarize(ratio = mean(ratio,na.rm=T)) %>% 
+    #   ungroup %>% 
+    #   select(!category) %>% 
+    #   pivot_wider(names_from=name, values_from=ratio) %>% 
+    #   relocate(`Total Wellness`, .after=date) %>% 
+    #   arrange(desc(date))
+    
+    # Create a color palette from red to green
+    # Space = "Lab" prevents a muddy brown middle ground
+    rg_ramp <- colorRamp(c("#FF0000", "#00FF00"), space = "Lab")
+    
+    reactable(
+      wellness_stats,
+      striped = F,
+      outline=F,
+      bordered = T,
+      compact = T,
+      highlight = F,
+      defaultPageSize =nrow(wellness_stats),
+      defaultColDef = colDef(align = "center"), 
+      columns = list(
+        date = colDef(name="Date", align = "left"), 
+        `Total Wellness` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
+          # Get RGB matrix scaled 0-255
+          rgb_vals <- rg_ramp(value)
+          # Build hex string with 20% alpha (51 out of 255)
+          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
+          list(background = cell_color, color = "#221C35")
+          }),
+        `Total Health` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
+          # Get RGB matrix scaled 0-255
+          rgb_vals <- rg_ramp(value)
+          # Build hex string with 20% alpha (51 out of 255)
+          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
+          list(background = cell_color, color = "#221C35")
+        }),
+        `Total Mental` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
+          # Get RGB matrix scaled 0-255
+          rgb_vals <- rg_ramp(value)
+          # Build hex string with 20% alpha (51 out of 255)
+          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
+          list(background = cell_color, color = "#221C35")
+        }),
+        `Total Nutrition` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
+          # Get RGB matrix scaled 0-255
+          rgb_vals <- rg_ramp(value)
+          # Build hex string with 20% alpha (51 out of 255)
+          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
+          list(background = cell_color, color = "#221C35")
+        }),
+        `Total Physical` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
+          # Get RGB matrix scaled 0-255
+          rgb_vals <- rg_ramp(value)
+          # Build hex string with 20% alpha (51 out of 255)
+          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
+          list(background = cell_color, color = "#221C35")
+        }),
+        `Total Sleep` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
+          # Get RGB matrix scaled 0-255
+          rgb_vals <- rg_ramp(value)
+          # Build hex string with 20% alpha (51 out of 255)
+          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
+          list(background = cell_color, color = "#221C35")
+        })
+      )
+    )
+    
+  })
   
   rpe_plot <- reactive({
     
@@ -2681,7 +4238,7 @@ md_distance_team_total %>%
       config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
       layout(barmode = "stack",
              xaxis = list(showline=TRUE,showgrid = FALSE, type = 'date', tickformat = "%b %d", dtick=604800000, title=""),
-             yaxis = list(showline=TRUE,showgrid = TRUE, title = "Daily RPE"),
+             yaxis = list(showline=TRUE,showgrid = TRUE, title = "Total Daily Session RPE"),
              legend = list(orientation = 'h', xanchor = "center", x = 0.5,y = -0.15),
              plot_bgcolor  = rgb(0,0,0,0),
              paper_bgcolor = rgb(0,0,0,0))
@@ -2726,8 +4283,8 @@ md_distance_team_total %>%
         defaultPageSize =nrow(player_daily_summary)+1,
         columns = list(
           Position = colDef(show = FALSE),
-          Player = colDef(minWidth = 145, 
-                          style = list(fontWeight = 600, whiteSpace = "nowrap", textOverflow = "ellipsis"),
+          Player = colDef(minWidth = 150, 
+                          style = list(fontWeight = 600),
                           footer="Average"),
           #   cell = function(value, index) {
           #   position <- player_daily_summary$Position[index]
@@ -2910,8 +4467,8 @@ md_distance_team_total %>%
       defaultPageSize =nrow(drill_daily_summary)+length(unique(drill_daily_summary$Period))+1,
       columns = list(
         Period = colDef(footer="All", grouped = JS("function(cellInfo) {return cellInfo.value}"), 
-                        minWidth = 145, style = list(fontWeight = 600)),
-        Player = colDef(minWidth = 145, style = list(fontWeight = 600, whiteSpace = "nowrap", textOverflow = "ellipsis")),
+                        minWidth = 150, style = list(fontWeight = 600)),
+        Player = colDef(minWidth = 150, style = list(fontWeight = 600)),
         Position = colDef(show=F),
         `Field Time (min)` = colDef(aggregate = "mean", footer=footer_total,format = colFormat(digits = 0),align = "center"),
         `Total Distance (m)` = colDef(aggregate = "mean", footer=footer_total, format = colFormat(digits = 0),align = "center"),
@@ -2996,8 +4553,8 @@ md_distance_team_total %>%
         Match = colDef(show = F),
         Sub = colDef(show = F),
         Position = colDef(show = F),
-        Player = colDef(minWidth = 145, 
-                        style = list(fontWeight = 600, whiteSpace = "nowrap", textOverflow = "ellipsis")),
+        Player = colDef(minWidth = 150, 
+                        style = list(fontWeight = 600)),
         `Field Time (min)` = colDef(format = colFormat(digits = 0), align = "center"),
         # `Total Distance (m)` = colDef(format = colFormat(digits = 0),align = "center",cell = function(value) {
         #   width <- paste0(value / max(match_day_summary$`Total Distance (m)`) * 100, "%")
@@ -3143,29 +4700,29 @@ md_distance_team_total %>%
   # })
   # 
   # 
-  planned_load <- reactive({
-
-    shiny::validate(need(!is.null(input$athlete4), "Select one or more players"))
-
-
-    # player_load_stats3 <- stats %>%
-    #   dplyr::filter(athlete_name %in% input$athlete4) %>%
-    #   group_by(date) %>%
-    #   summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>%
-    #   ungroup %>%
-    #   select(c(date, input$acwr_param2))
-    #
-    # uniroot.all(function(x) ((sum(player_load_stats3 %>% dplyr::filter(date > max(date)-days(6)) %>% select(!date) %>% pull())+x)/7)/((sum(player_load_stats3 %>% dplyr::filter(date > max(date)-days(27)) %>% select(!date) %>% pull())+x)/28)-input$acwr_input,lower=0, upper = max(player_load_stats3 %>% select(!date) %>% pull(),na.rm=T)*2)
-
-    player_load_stats3 <- stats %>%
-      dplyr::filter(athlete_name %in% input$athlete4) %>%
-      group_by(date) %>%
-      summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>%
-      ungroup %>%
-      select(date | !!rlang::sym(input$acwr_param2) | ((contains("al_ewma") | contains("cl_ewma")) & contains(input$acwr_param2)))
-
-    uniroot.all(function(x) ((1-BETA(7))*(player_load_stats3 %>% dplyr::filter(date == max(date)) %>% select(contains("al_ewma")) %>% pull()) + BETA(7)*x)/((1-BETA(28))*(player_load_stats3 %>% dplyr::filter(date == max(date)) %>% select(contains("cl_ewma")) %>% pull()) + BETA(28)*x)-input$acwr_input,lower=0, upper = max(player_load_stats3 %>% select(!date & !contains("al_ewma") & ! contains("cl_ewma")) %>% pull(),na.rm=T)*2)
-  })
+  # planned_load <- reactive({
+  # 
+  #   shiny::validate(need(!is.null(input$athlete4), "Select one or more players"))
+  # 
+  # 
+  #   # player_load_stats3 <- stats %>%
+  #   #   dplyr::filter(athlete_name %in% input$athlete4) %>%
+  #   #   group_by(date) %>%
+  #   #   summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>%
+  #   #   ungroup %>%
+  #   #   select(c(date, input$acwr_param2))
+  #   #
+  #   # uniroot.all(function(x) ((sum(player_load_stats3 %>% dplyr::filter(date > max(date)-days(6)) %>% select(!date) %>% pull())+x)/7)/((sum(player_load_stats3 %>% dplyr::filter(date > max(date)-days(27)) %>% select(!date) %>% pull())+x)/28)-input$acwr_input,lower=0, upper = max(player_load_stats3 %>% select(!date) %>% pull(),na.rm=T)*2)
+  # 
+  #   player_load_stats3 <- stats %>%
+  #     dplyr::filter(athlete_name %in% input$athlete4) %>%
+  #     group_by(date) %>%
+  #     summarize(across(where(is.numeric), ~mean(.x,na.rm=T))) %>%
+  #     ungroup %>%
+  #     select(date | !!rlang::sym(input$acwr_param2) | ((contains("al_ewma") | contains("cl_ewma")) & contains(input$acwr_param2)))
+  # 
+  #   uniroot.all(function(x) ((1-BETA(7))*(player_load_stats3 %>% dplyr::filter(date == max(date)) %>% select(contains("al_ewma")) %>% pull()) + BETA(7)*x)/((1-BETA(28))*(player_load_stats3 %>% dplyr::filter(date == max(date)) %>% select(contains("cl_ewma")) %>% pull()) + BETA(28)*x)-input$acwr_input,lower=0, upper = max(player_load_stats3 %>% select(!date & !contains("al_ewma") & ! contains("cl_ewma")) %>% pull(),na.rm=T)*2)
+  # })
   
   output$TotalDistanceGroupAvg <- renderPlotly(distance_group_avg_plot())
   
@@ -3219,7 +4776,7 @@ md_distance_team_total %>%
   
   output$AcuteChronicLoad <- renderPlotly(acute_chronic_load_plot())
   
-  output$IntExtLoad <- renderPlotly(int_ext_load_plot())
+  # output$IntExtLoad <- renderPlotly(int_ext_load_plot())
   
   output$SubExtLoad <- renderPlotly(sub_ext_load_plot())
   
@@ -3234,13 +4791,17 @@ md_distance_team_total %>%
   output$RPE <- renderPlotly(rpe_plot())
 
   
+  output$ZScoreHeatmapTable <- renderReactable({zscore_heatmap_table()})
+  
+  
+  output$WellnessHistoryTable <- renderReactable({wellness_table()})
+  
   output$PlayerDailySummaryTable <- renderReactable({player_daily_summary_table()})
   
   
   output$DrillSummaryTable <- renderReactable({drill_summary_table()})
 
   output$MatchDayTable <- renderReactable({match_day_table()})
-  
   
   # output$PlannedvsActualTable <-renderDT({planned_actual_table()},
   #                                        container = planned_actual_header(), extensions = 'Buttons',
@@ -3308,7 +4869,7 @@ md_distance_team_total %>%
     value_box(title="Total Distance (m)",
               value = round(total_distance), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3324,7 +4885,7 @@ md_distance_team_total %>%
     value_box(title="HSR Distance (m)",
               value = round(high_speed_distance), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3340,7 +4901,7 @@ md_distance_team_total %>%
     value_box(title="Sprint Distance (m)",
               value = round(sprint_distance), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3357,7 +4918,7 @@ md_distance_team_total %>%
     value_box(title="Accel Efforts (#)",
               value = round(accel_efforts), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3373,7 +4934,7 @@ md_distance_team_total %>%
     value_box(title="Decel Efforts (#)",
               value = round(decel_efforts), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3389,7 +4950,7 @@ md_distance_team_total %>%
     value_box(title="Max Velocity (km/h)",
               value = round(max_vel,1), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3410,7 +4971,7 @@ md_distance_team_total %>%
     value_box(title="Total Distance (m)",
               value = round(total_distance), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3430,7 +4991,7 @@ md_distance_team_total %>%
     value_box(title="HSR Distance (m)",
               value = round(high_speed_distance), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3449,7 +5010,7 @@ md_distance_team_total %>%
     value_box(title="Sprint Distance (m)",
               value = round(sprint_distance), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3466,10 +5027,10 @@ md_distance_team_total %>%
       summarize(accel_efforts=mean(accel_efforts,na.rm=T)) %>%
       pull(accel_efforts)
     
-    value_box(title="Accel Efforts",
+    value_box(title="Accel Efforts (#)",
               value = round(accel_efforts), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3485,10 +5046,10 @@ md_distance_team_total %>%
       summarize(decel_efforts=mean(decel_efforts,na.rm=T)) %>% 
       pull(decel_efforts)
     
-    value_box(title="Decel Efforts",
+    value_box(title="Decel Efforts (#)",
               value = round(decel_efforts), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
@@ -3507,32 +5068,32 @@ md_distance_team_total %>%
     value_box(title="Max Velocity (km/h)",
               value = round(max_vel,1), 
               # showcase = bsicons::bs_icon("activity"),
-              theme_color = "success")
+              theme = "success")
     
   })
   
-  output$PlannedLoad <- renderUI({
-    value_box(title=case_when(is_empty(planned_load()) ~"Load is < 0 or > 2 x player's max load",
-                              input$acwr_param2 == "field_time"~ "Field Time (s)", 
-                              input$acwr_param2 == "total_distance"~"Total Distance (m)", 
-                              input$acwr_param2 =="high_speed_distance"~ "High Speed Distance (m)", 
-                              input$acwr_param2 == "sprint_distance"~ "Sprint Distance (m)",
-                              input$acwr_param2 == "accel_efforts"~ "Accel Efforts",
-                              input$acwr_param2 == "decel_efforts" ~"Decel Efforts", 
-                              input$acwr_param2 == "max_heart_rate"~"Max HR (bpm)", 
-                              input$acwr_param2 == "dive_count"~"Dive Count", 
-                              input$acwr_param2 == "total_dive_load"~"Total Dive Load",                                                              
-                              input$acwr_param2 == "explosive_efforts"~"Explosive Efforts", 
-                              .default = ""),
-              value = round(planned_load()), 
-              showcase = bsicons::bs_icon("activity"),
-              # case_when(str_detect(input$acwr_param2, "dive")~shiny::icon("person-falling", lib="font-awesome"),
-              #                    str_detect(input$acwr_param2, "heart")~shiny::icon("heart-pulse", lib="font-awesome"),
-              #                    str_detect(input$acwr_param2, "time")~shiny::icon("stopwatch", lib="font-awesome"),
-              #                    .default = shiny::icon("person-running", lib="font-awesome")),
-              theme_color = "success")
-    
-  })
+  # output$PlannedLoad <- renderUI({
+  #   value_box(title=case_when(is_empty(planned_load()) ~"Load is < 0 or > 2 x player's max load",
+  #                             input$acwr_param2 == "field_time"~ "Field Time (s)", 
+  #                             input$acwr_param2 == "total_distance"~"Total Distance (m)", 
+  #                             input$acwr_param2 =="high_speed_distance"~ "High Speed Distance (m)", 
+  #                             input$acwr_param2 == "sprint_distance"~ "Sprint Distance (m)",
+  #                             input$acwr_param2 == "accel_efforts"~ "Accel Efforts",
+  #                             input$acwr_param2 == "decel_efforts" ~"Decel Efforts", 
+  #                             input$acwr_param2 == "max_heart_rate"~"Max HR (bpm)", 
+  #                             input$acwr_param2 == "dive_count"~"Dive Count", 
+  #                             input$acwr_param2 == "total_dive_load"~"Total Dive Load",                                                              
+  #                             input$acwr_param2 == "explosive_efforts"~"Explosive Efforts", 
+  #                             .default = ""),
+  #             value = round(planned_load()), 
+  #             showcase = bsicons::bs_icon("activity"),
+  #             # case_when(str_detect(input$acwr_param2, "dive")~shiny::icon("person-falling", lib="font-awesome"),
+  #             #                    str_detect(input$acwr_param2, "heart")~shiny::icon("heart-pulse", lib="font-awesome"),
+  #             #                    str_detect(input$acwr_param2, "time")~shiny::icon("stopwatch", lib="font-awesome"),
+  #             #                    .default = shiny::icon("person-running", lib="font-awesome")),
+  #             theme = "success")
+  #   
+  # })
 
  
   
@@ -3601,6 +5162,7 @@ md_distance_team_total %>%
       tempDataPath <- file.path(temp_dir, "stats_period.rds")
       saveRDS(stats_period, file = tempDataPath)
       
+      temp_pdf <- file.path(temp_dir, "TidesMatchReportTemplate.pdf")
       
       # 1. Convert to Base64 strings (Same optimized collection logic)
       # b64_strings <- c()
@@ -3627,17 +5189,40 @@ md_distance_team_total %>%
                             image2 = input$images$name[2],
                             image3 = input$images$name[3], 
                             data_path = tempDataPath)
-      # 3. Compile the PDF using Quarto and pass the UI inputs into params
-      quarto::quarto_render(
-        input = tempReport,
-        execute_params = report_params,
-        output_format = "typst"
-      )
       
-      # 4. Quarto saves the output adjacent to the input file as 'report.pdf'
-      # Locate that compiled file and copy it to Shiny's final target path
-      compiled_pdf <- file.path(temp_dir, "TidesMatchReportTemplate.pdf")
-      file.copy(compiled_pdf, file)
+      tryCatch({
+        quarto::quarto_render(
+          input = tempReport,
+          execute_params = report_params,
+          output_format = "typst",
+          output_file = temp_pdf
+        )
+        
+        # 5. Hand the compiled PDF to the browser stream
+        if (file.exists(temp_pdf)) {
+          file.copy(temp_pdf, file)
+        } else {
+          stop("Quarto completed but no PDF was generated.")
+        }
+        
+      }, error = function(e) {
+        # Fallback: Save the exact system error text to a downloadable file
+        # so you can see exactly why the cloud is rejecting your render.
+        showNotification(paste("Render Failed:", e$message), type = "error")
+        writeLines(paste("Cloud Render Error Log:\n", e$message), file)
+      })
+      
+      # # 3. Compile the PDF using Quarto and pass the UI inputs into params
+      # quarto::quarto_render(
+      #   input = tempReport,
+      #   execute_params = report_params,
+      #   output_format = "typst"
+      # )
+      # 
+      # # 4. Quarto saves the output adjacent to the input file as 'report.pdf'
+      # # Locate that compiled file and copy it to Shiny's final target path
+      # compiled_pdf <- file.path(temp_dir, "TidesMatchReportTemplate.pdf")
+      # file.copy(compiled_pdf, file)
       
       
       # # Render to intermediate HTML file
