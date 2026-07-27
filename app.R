@@ -5106,8 +5106,8 @@ md_distance_team_total %>%
       
       req(input$images)
       
-      showModal(modalDialog("Compiling PDF Report...", footer = NULL))
-      on.exit(removeModal())
+      # showModal(modalDialog("Compiling PDF Report...", footer = NULL))
+      # on.exit(removeModal())
       
       temp_dir <- tempdir()
       # tempReport <- file.path(temp_dir, "TidesMatchReport.Rmd")
@@ -5190,66 +5190,66 @@ md_distance_team_total %>%
                             image3 = input$images$name[3], 
                             data_path = tempDataPath)
       
-      param_yaml <- file.path(temp_dir, "params.yml")
-      yaml::write_yaml(report_params, param_yaml)[1]
-      
-      tryCatch({
-        output_filename <- "TidesMatchReportTemplate.pdf"
-        
-        # 3. Use system2 to trigger Quarto directly.
-        # This strips away reactive hooks and stops the dual-execution bug.
-        system2(
-          command = "quarto", 
-          args = c(
-            "render", shQuote(tempReport), 
-            "--to", "typst", 
-            "--output", shQuote(output_filename),
-            "--execute-params", shQuote(param_yaml) # <-- Passes sidecar file
-          ),
-          stdout = TRUE,
-          stderr = TRUE
-        )
-        
-        compiled_pdf <- file.path(temp_dir, output_filename)
-        
-        # 4. Stream verified binary out to browser download folder
-        if (file.exists(compiled_pdf) && file.info(compiled_pdf)$size > 0) {
-          file.copy(compiled_pdf, file, overwrite = TRUE)
-        } else {
-          stop("Quarto completed via system process, but the expected target PDF was missing.")
-        }
-        
-      }, error = function(e) {
-        showNotification(paste("Render Failed:", e$message), type = "error")
-        writeLines(paste("Cloud Render Error Log:\n", e$message), file)
-      })
-      
+      # param_yaml <- file.path(temp_dir, "params.yml")
+      # yaml::write_yaml(report_params, param_yaml)[1]
+      # 
       # tryCatch({
-      #   
       #   output_filename <- "TidesMatchReportTemplate.pdf"
       #   
-      #   quarto::quarto_render(
-      #     input = tempReport,
-      #     execute_params = report_params,
-      #     output_format = "typst",
-      #     output_file = output_filename 
+      #   # 3. Use system2 to trigger Quarto directly.
+      #   # This strips away reactive hooks and stops the dual-execution bug.
+      #   system2(
+      #     command = "quarto", 
+      #     args = c(
+      #       "render", shQuote(tempReport), 
+      #       "--to", "typst", 
+      #       "--output", shQuote(output_filename),
+      #       "--execute-params", shQuote(param_yaml) # <-- Passes sidecar file
+      #     ),
+      #     stdout = TRUE,
+      #     stderr = TRUE
       #   )
       #   
       #   compiled_pdf <- file.path(temp_dir, output_filename)
-      #   # 5. Hand the compiled PDF to the browser stream
+      #   
+      #   # 4. Stream verified binary out to browser download folder
       #   if (file.exists(compiled_pdf) && file.info(compiled_pdf)$size > 0) {
-      #     file.copy(compiled_pdf, file, overwrite = T)
+      #     file.copy(compiled_pdf, file, overwrite = TRUE)
       #   } else {
-      #     stop("Quarto completed but no PDF was generated.")
+      #     stop("Quarto completed via system process, but the expected target PDF was missing.")
       #   }
       #   
       # }, error = function(e) {
-      #   # Fallback: Save the exact system error text to a downloadable file
-      #   # so you can see exactly why the cloud is rejecting your render.
       #   showNotification(paste("Render Failed:", e$message), type = "error")
       #   writeLines(paste("Cloud Render Error Log:\n", e$message), file)
       # })
       
+      tryCatch({
+
+        output_filename <- "TidesMatchReportTemplate.pdf"
+
+        quarto::quarto_render(
+          input = tempReport,
+          execute_params = report_params,
+          output_format = "typst",
+          output_file = output_filename
+        )
+
+        compiled_pdf <- file.path(temp_dir, output_filename)
+        # 5. Hand the compiled PDF to the browser stream
+        if (file.exists(compiled_pdf) && file.info(compiled_pdf)$size > 0) {
+          file.copy(compiled_pdf, file, overwrite = T)
+        } else {
+          stop("Quarto completed but no PDF was generated.")
+        }
+
+      }, error = function(e) {
+        # Fallback: Save the exact system error text to a downloadable file
+        # so you can see exactly why the cloud is rejecting your render.
+        showNotification(paste("Render Failed:", e$message), type = "error")
+        writeLines(paste("Cloud Render Error Log:\n", e$message), file)
+      })
+
       # # 3. Compile the PDF using Quarto and pass the UI inputs into params
       # quarto::quarto_render(
       #   input = tempReport,
