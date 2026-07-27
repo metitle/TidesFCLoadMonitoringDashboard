@@ -5106,8 +5106,8 @@ md_distance_team_total %>%
       
       req(input$images)
       
-      # showModal(modalDialog("Compiling PDF Report...", footer = NULL))
-      # on.exit(removeModal())
+      showModal(modalDialog("Compiling PDF Report...", footer = NULL))
+      on.exit(removeModal())
       
       temp_dir <- tempdir()
       # tempReport <- file.path(temp_dir, "TidesMatchReport.Rmd")
