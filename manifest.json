@@ -605,38 +605,6 @@
         "RemoteSha": "1.0.12"
       }
     },
-    "bsicons": {
-      "Source": "CRAN",
-      "Repository": "https://cran.rstudio.com",
-      "description": {
-        "Package": "bsicons",
-        "Title": "Easily Work with 'Bootstrap' Icons",
-        "Version": "0.1.2",
-        "Authors@R": "c(\n    person(\"Carson\", \"Sievert\", , \"carson@posit.co\", role = c(\"cre\", \"aut\"),\n           comment = c(ORCID = \"0000-0002-4958-2844\")),\n    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")),\n    person(\"Mark\", \"Otto\", role = \"cph\",\n           comment = \"Bootstrap icons maintainer\")\n  )",
-        "Description": "Easily use 'Bootstrap' icons inside 'Shiny' apps and 'R\n    Markdown' documents. More generally, icons can be inserted in any\n    'htmltools' document through inline 'SVG'.",
-        "License": "MIT + file LICENSE",
-        "URL": "https://github.com/rstudio/bsicons",
-        "BugReports": "https://github.com/rstudio/bsicons/issues",
-        "Depends": "R (>= 2.10)",
-        "Imports": "cli, htmltools, rlang, utils",
-        "Suggests": "bslib, processx, testthat, webshot2, withr",
-        "Config/testthat/edition": "3",
-        "Encoding": "UTF-8",
-        "RoxygenNote": "7.2.3",
-        "NeedsCompilation": "no",
-        "Packaged": "2023-11-03 23:29:00 UTC; cpsievert",
-        "Author": "Carson Sievert [cre, aut] (<https://orcid.org/0000-0002-4958-2844>),\n  Posit Software, PBC [cph, fnd],\n  Mark Otto [cph] (Bootstrap icons maintainer)",
-        "Maintainer": "Carson Sievert <carson@posit.co>",
-        "Repository": "CRAN",
-        "Date/Publication": "2023-11-04 00:30:05 UTC",
-        "Built": "R 4.5.2; ; 2026-01-23 02:34:52 UTC; windows",
-        "RemoteType": "standard",
-        "RemotePkgRef": "bsicons",
-        "RemoteRef": "bsicons",
-        "RemoteRepos": "https://cran.rstudio.com",
-        "RemoteSha": "0.1.2"
-      }
-    },
     "bslib": {
       "Source": "CRAN",
       "Repository": "https://cran.rstudio.com",
@@ -767,6 +735,43 @@
         "RemoteRef": "cellranger",
         "RemoteRepos": "https://cran.rstudio.com",
         "RemoteSha": "1.1.0"
+      }
+    },
+    "checkmate": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "checkmate",
+        "Type": "Package",
+        "Title": "Fast and Versatile Argument Checks",
+        "Description": "Tests and assertions to perform frequent argument checks. A\n    substantial part of the package was written in C to minimize any worries\n    about execution time overhead.",
+        "Version": "2.3.4",
+        "Authors@R": "c(\n    person(\"Michel\", \"Lang\", NULL, \"michellang@gmail.com\",\n      role = c(\"cre\", \"aut\"), comment = c(ORCID = \"0000-0001-9754-0393\")),\n    person(\"Bernd\", \"Bischl\", NULL, \"bernd_bischl@gmx.net\", role = \"ctb\"),\n    person(\"Dénes\", \"Tóth\", NULL, \"toth.denes@kogentum.hu\", role = \"ctb\",\n      comment = c(ORCID = \"0000-0003-4262-3217\"))\n    )",
+        "URL": "https://mllg.github.io/checkmate/,\nhttps://github.com/mllg/checkmate",
+        "URLNote": "https://github.com/mllg/checkmate",
+        "BugReports": "https://github.com/mllg/checkmate/issues",
+        "NeedsCompilation": "yes",
+        "ByteCompile": "yes",
+        "Encoding": "UTF-8",
+        "Depends": "R (>= 3.0.0)",
+        "Imports": "backports (>= 1.1.0), utils",
+        "Suggests": "R6, fastmatch, data.table (>= 1.9.8), devtools, ggplot2,\nknitr, magrittr, microbenchmark, rmarkdown, testthat (>=\n3.0.4), tinytest (>= 1.1.0), tibble",
+        "License": "BSD_3_clause + file LICENSE",
+        "VignetteBuilder": "knitr",
+        "RoxygenNote": "7.3.3",
+        "Collate": "'AssertCollection.R' 'allMissing.R' 'anyInfinite.R'\n'anyMissing.R' 'anyNaN.R' 'asInteger.R' 'assert.R' 'helper.R'\n'makeExpectation.R' 'makeTest.R' 'makeAssertion.R'\n'checkAccess.R' 'checkArray.R' 'checkAtomic.R'\n'checkAtomicVector.R' 'checkCharacter.R' 'checkChoice.R'\n'checkClass.R' 'checkComplex.R' 'checkCount.R'\n'checkDataFrame.R' 'checkDataTable.R' 'checkDate.R'\n'checkDirectoryExists.R' 'checkDisjunct.R' 'checkDouble.R'\n'checkEnvironment.R' 'checkFALSE.R' 'checkFactor.R'\n'checkFileExists.R' 'checkFlag.R' 'checkFormula.R'\n'checkFunction.R' 'checkInt.R' 'checkInteger.R'\n'checkIntegerish.R' 'checkList.R' 'checkLogical.R'\n'checkMatrix.R' 'checkMultiClass.R' 'checkNamed.R'\n'checkNames.R' 'checkNull.R' 'checkNumber.R' 'checkNumeric.R'\n'checkOS.R' 'checkPOSIXct.R' 'checkPathForOutput.R'\n'checkPermutation.R' 'checkR6.R' 'checkRaw.R' 'checkScalar.R'\n'checkScalarNA.R' 'checkSetEqual.R' 'checkString.R'\n'checkSubset.R' 'checkTRUE.R' 'checkTibble.R' 'checkVector.R'\n'coalesce.R' 'isIntegerish.R' 'matchArg.R' 'qassert.R'\n'qassertr.R' 'vname.R' 'wfwl.R' 'zzz.R'",
+        "Packaged": "2026-02-02 10:59:55 UTC; michel",
+        "Author": "Michel Lang [cre, aut] (ORCID: <https://orcid.org/0000-0001-9754-0393>),\n  Bernd Bischl [ctb],\n  Dénes Tóth [ctb] (ORCID: <https://orcid.org/0000-0003-4262-3217>)",
+        "Maintainer": "Michel Lang <michellang@gmail.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2026-02-03 08:40:02 UTC",
+        "Built": "R 4.5.3; x86_64-w64-mingw32; 2026-07-17 09:02:43 UTC; windows",
+        "Archs": "x64",
+        "RemoteType": "standard",
+        "RemotePkgRef": "checkmate",
+        "RemoteRef": "checkmate",
+        "RemoteRepos": "https://cran.rstudio.com",
+        "RemoteSha": "2.3.4"
       }
     },
     "class": {
@@ -3522,6 +3527,40 @@
         "RemoteSha": "0.4.5"
       }
     },
+    "reactable.extras": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Type": "Package",
+        "Package": "reactable.extras",
+        "Title": "Extra Features for 'reactable' Package",
+        "Version": "0.2.1",
+        "Authors@R": "\n  c(\n    person(\"Recle\", \"Vibal\", role = c(\"aut\", \"cre\"), email = \"opensource+recle@appsilon.com\"),\n    person(\"Ivan\", \"Hrychaniuk\", role = c(\"aut\"), email = \"ivan.hrychaniuk@appsilon.com\"),\n    person(\"Andres\", \"Quintero\", role = c(\"aut\"), email = \"afquinteromoreano@gmail.com\"),\n    person(\"Pedro\", \"Silva\", role = c(\"aut\"), email = \"pedro@appsilon.com\"),\n    person(\"Eduardo\", \"Almeida\", role = c(\"ctb\"), email = \"eduardo@appsilon.com\"),\n    person(\"Appsilon Sp. z o.o.\", role = \"cph\", email = \"opensource@appsilon.com\")\n  )",
+        "Description": "Enhanced functionality for 'reactable' in 'shiny' applications, offering interactive and dynamic data table capabilities with ease.\n    With 'reactable.extras', easily integrate a range of functions and components to enrich your 'shiny' apps and facilitate user-friendly data exploration.",
+        "License": "LGPL-3",
+        "URL": "https://appsilon.github.io/reactable.extras/,\nhttps://github.com/Appsilon/reactable.extras",
+        "BugReports": "https://github.com/Appsilon/reactable.extras/issues",
+        "Depends": "R (>= 4.1.0)",
+        "Imports": "checkmate, dplyr, htmltools, purrr (>= 1.0.0), reactable (>=\n0.4.0), rjson, rlang, shiny",
+        "Suggests": "covr, lintr, mockery, rcmdcheck, shinytest2, spelling,\ntestthat (>= 3.0.0)",
+        "Config/testthat/edition": "3",
+        "Encoding": "UTF-8",
+        "Language": "en-US",
+        "RoxygenNote": "7.2.3",
+        "NeedsCompilation": "no",
+        "Packaged": "2024-10-29 14:25:23 UTC; kuba",
+        "Author": "Recle Vibal [aut, cre],\n  Ivan Hrychaniuk [aut],\n  Andres Quintero [aut],\n  Pedro Silva [aut],\n  Eduardo Almeida [ctb],\n  Appsilon Sp. z o.o. [cph]",
+        "Maintainer": "Recle Vibal <opensource+recle@appsilon.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2024-10-29 14:50:02 UTC",
+        "Built": "R 4.5.3; ; 2026-07-17 11:45:21 UTC; windows",
+        "RemoteType": "standard",
+        "RemotePkgRef": "reactable.extras",
+        "RemoteRef": "reactable.extras",
+        "RemoteRepos": "https://cran.rstudio.com",
+        "RemoteSha": "0.2.1"
+      }
+    },
     "readr": {
       "Source": "CRAN",
       "Repository": "https://cran.rstudio.com",
@@ -3688,6 +3727,33 @@
         "RemoteRef": "reprex",
         "RemoteRepos": "https://cran.rstudio.com",
         "RemoteSha": "2.1.1"
+      }
+    },
+    "rjson": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "rjson",
+        "Version": "0.2.23",
+        "Title": "JSON for R",
+        "Author": "Alex Couture-Beil [aut, cre]",
+        "Authors@R": "person(given = \"Alex\", family = \"Couture-Beil\", role = c(\"aut\", \"cre\"), email = \"rjson_pkg@mofo.ca\")",
+        "Maintainer": "Alex Couture-Beil <rjson_pkg@mofo.ca>",
+        "Depends": "R (>= 4.0.0)",
+        "Description": "Converts R object into JSON objects and vice-versa.",
+        "URL": "https://github.com/alexcb/rjson",
+        "License": "GPL-2",
+        "Repository": "CRAN",
+        "Packaged": "2024-09-16 17:34:28 UTC; root",
+        "NeedsCompilation": "yes",
+        "Date/Publication": "2024-09-16 18:20:02 UTC",
+        "Built": "R 4.5.2; x86_64-w64-mingw32; 2025-11-01 00:34:48 UTC; windows",
+        "Archs": "x64",
+        "RemoteType": "standard",
+        "RemotePkgRef": "rjson",
+        "RemoteRef": "rjson",
+        "RemoteRepos": "https://cran.rstudio.com",
+        "RemoteSha": "0.2.23"
       }
     },
     "rlang": {
@@ -4052,6 +4118,38 @@
         "RemoteRef": "shinyWidgets",
         "RemoteRepos": "https://cran.rstudio.com",
         "RemoteSha": "0.9.1"
+      }
+    },
+    "shinyjs": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "shinyjs",
+        "Title": "Easily Improve the User Experience of Your Shiny Apps in Seconds",
+        "Version": "2.1.1",
+        "Authors@R": "person(\"Dean\", \"Attali\", \n    email = \"daattali@gmail.com\",\n    role = c(\"aut\", \"cre\"),\n    comment= c(ORCID=\"0000-0002-5645-3493\"))",
+        "Description": "Perform common useful JavaScript operations in Shiny apps that will\n    greatly improve your apps without having to know any JavaScript. Examples\n    include: hiding an element, disabling an input, resetting an input back to\n    its original value, delaying code execution by a few seconds, and many more\n    useful functions for both the end user and the developer. 'shinyjs' can also\n    be used to easily call your own custom JavaScript functions from R.",
+        "URL": "https://deanattali.com/shinyjs/",
+        "BugReports": "https://github.com/daattali/shinyjs/issues",
+        "Depends": "R (>= 3.1.0)",
+        "Imports": "digest (>= 0.6.8), jsonlite, shiny (>= 1.0.0)",
+        "Suggests": "htmltools (>= 0.2.9), knitr (>= 1.7), rmarkdown, shinyAce,\nshinydisconnect, testthat (>= 0.9.1)",
+        "License": "MIT + file LICENSE",
+        "VignetteBuilder": "knitr",
+        "RoxygenNote": "7.3.3",
+        "Encoding": "UTF-8",
+        "NeedsCompilation": "no",
+        "Packaged": "2026-01-14 23:37:28 UTC; Dean",
+        "Author": "Dean Attali [aut, cre] (ORCID: <https://orcid.org/0000-0002-5645-3493>)",
+        "Maintainer": "Dean Attali <daattali@gmail.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2026-01-15 06:10:08 UTC",
+        "Built": "R 4.5.3; ; 2026-03-28 20:46:47 UTC; windows",
+        "RemoteType": "standard",
+        "RemotePkgRef": "shinyjs",
+        "RemoteRef": "shinyjs",
+        "RemoteRepos": "https://cran.rstudio.com",
+        "RemoteSha": "2.1.1"
       }
     },
     "sourcetools": {
@@ -4953,17 +5051,17 @@
     }
   },
   "files": {
-    ".RData": {
-      "checksum": "df847b595c466e3f00d78de2af5625db"
-    },
     ".Renviron": {
       "checksum": "4f5b083fc9d46c8aacf570d91ab9370a"
     },
     ".secrets/halifaxtidesdashboard-serviceaccount-encrypted.json": {
       "checksum": "a47b2de449820dfd12e21ca7e7840b3d"
     },
+    "acutechronictable_old.R": {
+      "checksum": "5fba54921dd4555a4bdf87f0a1789475"
+    },
     "app.R": {
-      "checksum": "3af2202be17f95e4272692d7fba4e7fc"
+      "checksum": "52a9a9c8c9dab60b589b4245da736a51"
     },
     "AUS.png": {
       "checksum": "5a6f010aa7234830e85b1fdc8fec2d9a"
@@ -4972,13 +5070,13 @@
       "checksum": "2227b18645ba5c661267c8fe4bc25f6d"
     },
     "Catapult Activities.csv": {
-      "checksum": "77ba723608501a7886e3febcc843e641"
+      "checksum": "fd1c1cc4ac0703bb3e6dcd20cdab4bfb"
     },
     "Catapult Stats By Activity.csv": {
-      "checksum": "b3674225d02273398660d999ede4cc38"
+      "checksum": "3d50e1a0fa1a1176898a79478d2ef621"
     },
     "Catapult Stats By Period.csv": {
-      "checksum": "65eccd025767d4e7d6d08ecec6b66189"
+      "checksum": "ce8bff3800f653134db20a7e49c779c4"
     },
     "Everton.png": {
       "checksum": "8df3d19352c046317932a88351f3fd35"
@@ -5001,23 +5099,11 @@
     "QuartoReport/_brand.yml": {
       "checksum": "d121399b8322b9969a2580245b8d3f95"
     },
-    "QuartoReport/Halifax.png": {
-      "checksum": "9c2f68ec34caebcc49ff1d61ba492d7d"
-    },
     "QuartoReport/header.typ": {
       "checksum": "32321320211add27c8a1188c41bf718a"
     },
-    "QuartoReport/plot.svg": {
-      "checksum": "25f45e1a6f1f58a030191182b348aa69"
-    },
-    "QuartoReport/stats.RData": {
-      "checksum": "20fe89d4afb3061065725bbe3cff34b9"
-    },
-    "QuartoReport/stats_period.RData": {
-      "checksum": "5cf48445b005be36fe0ea62f904b01b6"
-    },
     "QuartoReport/TidesMatchReportTemplate.qmd": {
-      "checksum": "b855bfea715c1d56bf3263ec4e66361b"
+      "checksum": "5fc484066e91ec977214abafdd1e3f60"
     },
     "QuartoReport/TidesMatchReportTemplate.typ": {
       "checksum": "4b4f89a9e79364998a28beda11bff181"
@@ -5025,14 +5111,14 @@
     "QuartoReport/TidesTrainingReportTemplate.qmd": {
       "checksum": "201f4093e6677d402fa545babf464e72"
     },
-    "QuartoReport/TidesTrainingReportTemplate2.pdf": {
-      "checksum": "2dcf6bd9f7a2e99dbadde865332d4aad"
-    },
     "QuartoReport/TidesTrainingReportTemplate2.qmd": {
       "checksum": "6656c670092e0c8e115546bd8a3374c9"
     },
     "QuartoReport/training_header.typ": {
       "checksum": "84cdb239cde0ae132186af3d3fb68b98"
+    },
+    "Tides RPE 2026-01-01 to 2026-07-20.csv": {
+      "checksum": "bafd883fcd126a25a4e9e56eaa453f03"
     },
     "TidesFCImage2.jpeg": {
       "checksum": "5c079948635d6471ca50eb65b84e8399"
@@ -5055,8 +5141,14 @@
     "TidesFCImage8.jpg": {
       "checksum": "25d5aa3cfac0f1207980b45c56cd52bf"
     },
+    "TidesFCImage9.jpeg": {
+      "checksum": "97f633f46dd26e71ef1f0b29309f742f"
+    },
     "Toronto.png": {
       "checksum": "7e57df8f75df64e3ce3bacac9e519ab5"
+    },
+    "Update XPS RPE GoogleDrive.R": {
+      "checksum": "759f19c945f2825407c73500ad977fd2"
     },
     "Vancouver.png": {
       "checksum": "e3cb3ff1e50968cbff96cca95c876bd8"
@@ -5128,10 +5220,10 @@
       "checksum": "275e9d82918f76a4830d23d1efaa0209"
     },
     "XPS RPE.csv": {
-      "checksum": "e1c7911657048d04beda6396f01730b5"
+      "checksum": "71921831ab212964aa8b47bcaa6481f8"
     },
     "XPS Wellness.csv": {
-      "checksum": "f91b22e1c3a6318ee0dc1e8e12f961b7"
+      "checksum": "dcf75ee7c47b7651a8725f4e0e70826e"
     }
   },
   "users": null
