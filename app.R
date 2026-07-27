@@ -862,7 +862,7 @@ server <- function(input, output, session) {
                        danger = "#572C5F",
                        "card-cap-bg" = "#221C35",
                        "card-cap-color" = "#FFFFFF"),  
-      title = div(img(src = "HfxTidesFC.png", height = "40px", style = "margin-right: 10px;"), "Hfx Tides Load Monitoring"),
+      title = div(img(src = "HfxTidesFC.png", height = "40px", style = "margin-right: 10px;"), "Tides FC Load Monitoring"),
       sidebar=NULL,
       fillable = T,
       nav_spacer(),
