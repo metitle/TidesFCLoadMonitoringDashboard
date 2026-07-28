@@ -384,11 +384,27 @@ server <- function(input, output, session) {
     
   }
   
-
-  metrics <- stats_activity_db %>% 
-    mutate(across(where(is.numeric),~replace(.x,1:nrow(stats_activity_db),0))) %>% 
-    select(athlete_name | where(is.numeric)) %>% 
-    distinct
+  metrics <- data.frame(
+    athlete_name = athletes_catapult %>% pull(athlete_name),
+    bench_time=0, field_time=0, total_distance=0, meterage_per_minute=0, velocity_band5_total_distance=0,
+    velocity_band6_total_distance=0, velocity2_band6_total_distance=0, max_vel=0, percentage_max_velocity=0,
+    gen2_acceleration_band7plus_total_effort_count=0, gen2_acceleration_band2plus_total_effort_count=0,
+    heart_rate_band5_average_duration_session=0, heart_rate_band6_average_duration_session=0,heart_rate_band7_average_duration_session=0,
+    heart_rate_band8_average_duration_session=0,mean_heart_rate=0,percentage_avg_heart_rate=0,percentage_max_heart_rate=0,max_heart_rate=0,athlete_max_hr=0,
+    total_goalkeeping_dives=0,total_dives_left=0,total_dives_right=0, total_dives_centre=0,`low_dive_load_(avg)`=0, `med_dive_load_(avg)`=0, `high_dive_load_(avg)`=0,
+    diveloadleft_band1_average_count_session=0, diveloadright_band1_average_count_session=0,diveloadcentre_band1_average_count_session=0,
+    diveloadleft_band2_average_count_session=0, diveloadright_band2_average_count_session=0, diveloadcentre_band2_average_count_session=0,
+    diveloadleft_band3_average_count_session=0, diveloadright_band3_average_count_session=0, diveloadcentre_band3_average_count_session=0,
+    total_dive_load=0,total_dive_load_left=0,total_dive_load_right=0,total_dive_load_centre=0, total_dive_load_low_intensity=0, total_dive_load_med_intensity=0,total_dive_load_high_intensity=0,
+    total_dive_load_left_low_intensit=0,total_dive_load_right_low_intensity=0, total_dive_load_centre_low_intensity=0,total_dive_load_left_med_intensity=0,total_dive_load_right_med_intensity=0, 
+    total_dive_load_centre_med_intensity=0,total_dive_load_left_high_intensity=0,total_dive_load_right_high_intensity=0, total_dive_load_centre_high_intensity=0,
+    median_time_to_feet=0, average_time_to_feet=0, average_time_to_feeet_left=0, average_time_to_feeet_right=0, average_time_to_feet_centre=0,
+    explosive_efforts=0, total_jumps=0, ima_accels=0, ima_decels=0)
+  
+  # metrics <- stats_activity_db %>% 
+  #   mutate(across(where(is.numeric),~replace(.x,1:nrow(stats_activity_db),0))) %>% 
+  #   select(athlete_name | where(is.numeric)) %>% 
+  #   distinct
   
 
   dates <- data.frame(athlete_name = athletes_catapult$athlete_name) %>% 
@@ -949,7 +965,7 @@ server <- function(input, output, session) {
                   sidebar = sidebar(athlete8, md_input, 
                                     fileInput("images","Select Image Files", multiple = T,accept = "image/*", width="100%"),
                                     # downloadButton("download_pdf", "Download Match Report"), 
-                                    actionButton("build_pdf", "Generate Report", icon = icon("file"), class = "btn-primary"),
+                                    actionButton("build_pdf", "Generate Report", icon = icon("file-lines"), class = "btn-primary"),
                                     uiOutput("download_wrapper"),
                                     bg = "#E5E1E6"),
                   card(
