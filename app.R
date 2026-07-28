@@ -2815,11 +2815,11 @@ md_distance_team_total %>%
         total_distance_acute = colDef(name = "Acute"),
         total_distance_chronic = colDef(name = "Chronic"),
         total_distance_acwr = colDef(name = "ACWR", style = function(value) {
-          if (value > 1.3 || value < 0.7) {
+          if (!is.na(value) && (value > 1.3 || value < 0.7)) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value > 1.2 || value < 0.8) {
+          } else if (!is.na(value) && (value > 1.2 || value < 0.8)) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 0.8 && value <= 1.2) {
+          } else if (!is.na(value) && value >= 0.8 && value <= 1.2) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
@@ -2845,11 +2845,11 @@ md_distance_team_total %>%
         high_speed_distance_acute = colDef(name = "Acute"),
         high_speed_distance_chronic = colDef(name = "Chronic"),
         high_speed_distance_acwr = colDef(name = "ACWR", style = function(value) {
-          if (value > 1.3 || value < 0.7) {
+          if (!is.na(value) && (value > 1.3 || value < 0.7)) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value > 1.2 || value < 0.8) {
+          } else if (!is.na(value) && (value > 1.2 || value < 0.8)) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 0.8 && value <= 1.2) {
+          } else if (!is.na(value) && value >= 0.8 && value <= 1.2) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
@@ -2875,11 +2875,11 @@ md_distance_team_total %>%
         sprint_distance_acute = colDef(name = "Acute"),
         sprint_distance_chronic = colDef(name = "Chronic"),
         sprint_distance_acwr = colDef(name = "ACWR", style = function(value) {
-          if (value > 1.3 || value < 0.7) {
+          if (!is.na(value) && (value > 1.3 || value < 0.7)) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value > 1.2 || value < 0.8) {
+          } else if (!is.na(value) && (value > 1.2 || value < 0.8)) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 0.8 && value <= 1.2) {
+          } else if (!is.na(value) && value >= 0.8 && value <= 1.2) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
@@ -2905,11 +2905,11 @@ md_distance_team_total %>%
         accel_decel_efforts_acute = colDef(name = "Acute"),
         accel_decel_efforts_chronic = colDef(name = "Chronic"),
         accel_decel_efforts_acwr = colDef(name = "ACWR", style = function(value) {
-          if (value > 1.3 || value < 0.7) {
+          if (!is.na(value) && (value > 1.3 || value < 0.7)) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value > 1.2 || value < 0.8) {
+          } else if (!is.na(value) && (value > 1.2 || value < 0.8)) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 0.8 && value <= 1.2) {
+          } else if (!is.na(value) && value >= 0.8 && value <= 1.2) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
@@ -3316,11 +3316,11 @@ md_distance_team_total %>%
         total_distance_acute = colDef(name = "Acute"),
         total_distance_chronic = colDef(name = "Chronic"),
         total_distance_acwr = colDef(name = "ACWR", style = function(value) {
-          if (value > 1.3 || value < 0.7) {
+          if (!is.na(value) && (value > 1.3 || value < 0.7)) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value > 1.2 || value < 0.8) {
+          } else if (!is.na(value) && (value > 1.2 || value < 0.8)) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 0.8 && value <= 1.2) {
+          } else if (!is.na(value) && value >= 0.8 && value <= 1.2) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
@@ -3346,11 +3346,11 @@ md_distance_team_total %>%
         dive_count_acute = colDef(name = "Acute"),
         dive_count_chronic = colDef(name = "Chronic"),
         dive_count_acwr = colDef(name = "ACWR", style = function(value) {
-          if (value > 1.3 || value < 0.7) {
+          if (!is.na(value) && (value > 1.3 || value < 0.7)) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value > 1.2 || value < 0.8) {
+          } else if (!is.na(value) && (value > 1.2 || value < 0.8)) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 0.8 && value <= 1.2) {
+          } else if (!is.na(value) && value >= 0.8 && value <= 1.2) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
@@ -3376,11 +3376,11 @@ md_distance_team_total %>%
         total_dive_load_acute = colDef(name = "Acute"),
         total_dive_load_chronic = colDef(name = "Chronic"),
         total_dive_load_acwr = colDef(name = "ACWR", style = function(value) {
-          if (value > 1.3 || value < 0.7) {
+          if (!is.na(value) && (value > 1.3 || value < 0.7)) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value > 1.2 || value < 0.8) {
+          } else if (!is.na(value) && (value > 1.2 || value < 0.8)) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 0.8 && value <= 1.2) {
+          } else if (!is.na(value) && value >= 0.8 && value <= 1.2) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
@@ -3406,11 +3406,11 @@ md_distance_team_total %>%
         explosive_efforts_acute = colDef(name = "Acute"),
         explosive_efforts_chronic = colDef(name = "Chronic"),
         explosive_efforts_acwr = colDef(name = "ACWR", style = function(value) {
-          if (value > 1.3 || value < 0.7) {
+          if (!is.na(value) && (value > 1.3 || value < 0.7)) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value > 1.2 || value < 0.8) {
+          } else if (!is.na(value) && (value > 1.2 || value < 0.8)) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 0.8 && value <= 1.2) {
+          } else if (!is.na(value) && value >= 0.8 && value <= 1.2) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
