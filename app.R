@@ -949,8 +949,8 @@ server <- function(input, output, session) {
                   sidebar = sidebar(athlete8, md_input, 
                                     fileInput("images","Select Image Files", multiple = T,accept = "image/*", width="100%"),
                                     downloadButton("download_pdf", "Download Match Report"), 
-                                    actionButton("run_diagnostic", "Run Screen Diagnostic", class = "btn-danger"),
-                                    verbatimTextOutput("quarto_screen_log"),
+                                    actionButton("build_pdf", "Generate Report", icon = icon("gear"), class = "btn-primary"),
+                                    uiOutput("download_wrapper"),
                                     bg = "#E5E1E6"),
                   card(
                     full_screen = TRUE,
@@ -5284,103 +5284,184 @@ md_distance_team_total %>%
     }
   )
   
-  # Reactive value to store the log text safely
-  log_output <- reactiveVal("")
   
+  
+  # Step 1: Compile the PDF securely inside a standard action observer
   observe({
     req(input$images)
-    log_output("Starting diagnostic run...\nStaging project assets...\n")
+    
+    # Pop up a loading notification so the user knows it's working
+    showModal(modalDialog("Compiling PDF Report... Please wait.", footer = NULL))
+    on.exit(removeModal(), add = TRUE)
     
     temp_dir <- tempdir()
     tempReport <- file.path(temp_dir, 'TidesMatchReportTemplate.qmd')
-    file.copy(here('QuartoReport', 'TidesMatchReportTemplate.qmd'), tempReport, overwrite = TRUE)
-    tempStyle <- file.path(temp_dir, 'header.typ')
-    file.copy(here('QuartoReport', 'header.typ'), tempStyle, overwrite = TRUE)
-    tempBrand <- file.path(temp_dir, '_brand.yml')
-    file.copy(here('QuartoReport', '_brand.yml'), tempBrand, overwrite = TRUE)
-    tempImage1 <- file.path(temp_dir, "Halifax.png")
-    file.copy("Halifax.png", tempImage1, overwrite = TRUE)
-    tempImage2 <- file.path(temp_dir, "Montreal.png")
-    file.copy("Montreal.png", tempImage2, overwrite = TRUE)
-    tempImage3 <- file.path(temp_dir, "Ottawa.png")
-    file.copy("Ottawa.png", tempImage3, overwrite = TRUE)
-    tempImage4 <- file.path(temp_dir, "Toronto.png")
-    file.copy("Toronto.png", tempImage4, overwrite = TRUE)
-    tempImage5 <- file.path(temp_dir, "Calgary.png")
-    file.copy("Calgary.png", tempImage5, overwrite = TRUE)
-    tempImage6 <- file.path(temp_dir, "Vancouver.png")
-    file.copy("Vancouver.png", tempImage6, overwrite = TRUE)
-    tempImage7 <- file.path(temp_dir, "Portsmouth.png")
-    file.copy("Portsmouth.png", tempImage7, overwrite = TRUE)
-    tempImage8 <- file.path(temp_dir, "Everton.png")
-    file.copy("Everton.png", tempImage8, overwrite = TRUE)
-    tempImage9 <- file.path(temp_dir, "West Ham.png")
-    file.copy("West Ham.png", tempImage9, overwrite = TRUE)
-    tempImage10 <- file.path(temp_dir, "AUS.png")
-    file.copy("AUS.png", tempImage10, overwrite = TRUE)
-    tempImage11 <- file.path(temp_dir, "vs.png")
-    file.copy("vs.png", tempImage11, overwrite = TRUE)
-    tempImage15 <- file.path(temp_dir, "TidesFCImage5.jpg")
-    file.copy("TidesFCImage5.jpg", tempImage15, overwrite = TRUE)
-    tempImage16 <- file.path(temp_dir, "TidesFCImage6.jpg")
-    file.copy("TidesFCImage6.jpg", tempImage16, overwrite = TRUE)
-    tempImage17 <- file.path(temp_dir, "TidesFCImage7.jpg")
-    file.copy("TidesFCImage7.jpg", tempImage17, overwrite = TRUE)
-    tempImage18 <- file.path(temp_dir, input$images$name[1])
-    file.copy(input$images$datapath[1], tempImage18, overwrite = TRUE)
-    tempImage19 <- file.path(temp_dir, input$images$name[2])
-    file.copy(input$images$datapath[2], tempImage19, overwrite = TRUE)
-    tempImage20 <- file.path(temp_dir, input$images$name[3])
-    file.copy(input$images$datapath[3], tempImage20, overwrite = TRUE)
+    
+    # Stage project assets into the scratch space
+    file.copy(here::here('QuartoReport', 'TidesMatchReportTemplate.qmd'), tempReport, overwrite = TRUE)
+    file.copy(here::here('QuartoReport', 'header.typ'), file.path(temp_dir, 'header.typ'), overwrite = TRUE)
+    file.copy(here::here('QuartoReport', '_brand.yml'), file.path(temp_dir, '_brand.yml'), overwrite = TRUE)
+    
+    # Map parameters and static images
+    static_images <- c("Halifax.png", "Montreal.png", "Ottawa.png", "Toronto.png", 
+                       "Calgary.png", "Vancouver.png", "Portsmouth.png", "Everton.png", 
+                       "West Ham.png", "AUS.png", "vs.png", "TidesFCImage5.jpg", 
+                       "TidesFCImage6.jpg", "TidesFCImage7.jpg")
+    for(img in static_images) {
+      if(file.exists(img)) file.copy(img, file.path(temp_dir, img), overwrite = TRUE)
+    }
+    
+    file.copy(input$images$datapath, file.path(temp_dir, input$images$name), overwrite = TRUE)
+    
     tempDataPath <- file.path(temp_dir, "stats_period.rds")
     saveRDS(stats_period, file = tempDataPath)
-  
     
-    # Set up parameters to pass to Rmd document
-    report_params <- list(md_input = input$md_input, 
-                          # image1 = b64_strings[1],
-                          # image2 = b64_strings[2],
-                          # image3 = b64_strings[3],
-                          image1 = input$images$name[1],
-                          image2 = input$images$name[2],
-                          image3 = input$images$name[3], 
-                          data_path = tempDataPath)
-    
-    output_filename <- "TidesMatchReportTemplate.pdf"
-    
-    log_output(paste0(log_output(), "Staging complete. Invoking quarto::quarto_render()...\n"))
+    report_params <- list(
+      md_input  = input$md_input, 
+      image1    = input$images$name,
+      image2    = input$images$name,
+      image3    = input$images$name, 
+      data_path = tempDataPath
+    )
     
     tryCatch({
-      # Run using the official R wrapper library
+      # Run the verified render command
       quarto::quarto_render(
         input          = tempReport,
         execute_params = report_params,
         output_format  = "typst",
-        output_file    = output_filename
+        output_file    = "TidesMatchReportTemplate.pdf"
       )
       
-      # Check if compilation succeeded
-      compiled_pdf <- file.path(temp_dir, output_filename)
-      if (file.exists(compiled_pdf)) {
-        log_output(paste0(log_output(), "\n🎉 SUCCESS! Quarto generated the PDF file in the cloud scratch space."))
-      } else {
-        log_output(paste0(log_output(), "\n⚠️ Quarto finished without an R error, but no PDF was found at: ", compiled_pdf))
-      }
+      # Remove the loading screen and show success
+      removeModal()
+      showNotification("PDF Successfully Generated!", type = "message", duration = 5)
+      
+      # 🌟 CRITICAL: Render the actual download button now that the file exists!
+      output$download_wrapper <- renderUI({
+        downloadButton("execute_download", "Click Here to Save PDF", class = "btn-success")
+      })
       
     }, error = function(e) {
-      # If quarto_render crashes, capture the exact message trace
-      error_summary <- paste0(
-        "\n❌ QUARTO COMPILATION CRASHED!\n",
-        "Error Message:\n", e$message
-      )
-      log_output(paste0(log_output(), error_summary))
+      removeModal()
+      showModal(modalDialog(title = "Compilation Error", pre(e$message), easyClose = TRUE))
     })
-  }) %>% bindEvent(input$run_diagnostic)
+  }) %>% bindEvent(input$build_pdf)
   
-  # Display log on your application layout
-  output$quarto_screen_log <- renderText({
-    log_output()
-  })
+  # Step 2: Purely stream the pre-built file to the local Downloads folder
+  output$execute_download <- downloadHandler(
+    filename = function() {
+      paste0("Tides Match Report ", input$md_input, ".pdf")
+    },
+    contentType = "application/pdf",
+    content = function(file) {
+      # Point directly to the file that was already created in Step 1
+      compiled_pdf <- file.path(tempdir(), "TidesMatchReportTemplate.pdf")
+      
+      if (file.exists(compiled_pdf)) {
+        file.copy(compiled_pdf, file, overwrite = TRUE)
+      } else {
+        showNotification("File lost in server scratch space. Please compile again.", type = "error")
+      }
+    }
+  )
+  # # Reactive value to store the log text safely
+  # log_output <- reactiveVal("")
+  # 
+  # observe({
+  #   req(input$images)
+  #   log_output("Starting diagnostic run...\nStaging project assets...\n")
+  #   
+  #   temp_dir <- tempdir()
+  #   tempReport <- file.path(temp_dir, 'TidesMatchReportTemplate.qmd')
+  #   file.copy(here('QuartoReport', 'TidesMatchReportTemplate.qmd'), tempReport, overwrite = TRUE)
+  #   tempStyle <- file.path(temp_dir, 'header.typ')
+  #   file.copy(here('QuartoReport', 'header.typ'), tempStyle, overwrite = TRUE)
+  #   tempBrand <- file.path(temp_dir, '_brand.yml')
+  #   file.copy(here('QuartoReport', '_brand.yml'), tempBrand, overwrite = TRUE)
+  #   tempImage1 <- file.path(temp_dir, "Halifax.png")
+  #   file.copy("Halifax.png", tempImage1, overwrite = TRUE)
+  #   tempImage2 <- file.path(temp_dir, "Montreal.png")
+  #   file.copy("Montreal.png", tempImage2, overwrite = TRUE)
+  #   tempImage3 <- file.path(temp_dir, "Ottawa.png")
+  #   file.copy("Ottawa.png", tempImage3, overwrite = TRUE)
+  #   tempImage4 <- file.path(temp_dir, "Toronto.png")
+  #   file.copy("Toronto.png", tempImage4, overwrite = TRUE)
+  #   tempImage5 <- file.path(temp_dir, "Calgary.png")
+  #   file.copy("Calgary.png", tempImage5, overwrite = TRUE)
+  #   tempImage6 <- file.path(temp_dir, "Vancouver.png")
+  #   file.copy("Vancouver.png", tempImage6, overwrite = TRUE)
+  #   tempImage7 <- file.path(temp_dir, "Portsmouth.png")
+  #   file.copy("Portsmouth.png", tempImage7, overwrite = TRUE)
+  #   tempImage8 <- file.path(temp_dir, "Everton.png")
+  #   file.copy("Everton.png", tempImage8, overwrite = TRUE)
+  #   tempImage9 <- file.path(temp_dir, "West Ham.png")
+  #   file.copy("West Ham.png", tempImage9, overwrite = TRUE)
+  #   tempImage10 <- file.path(temp_dir, "AUS.png")
+  #   file.copy("AUS.png", tempImage10, overwrite = TRUE)
+  #   tempImage11 <- file.path(temp_dir, "vs.png")
+  #   file.copy("vs.png", tempImage11, overwrite = TRUE)
+  #   tempImage15 <- file.path(temp_dir, "TidesFCImage5.jpg")
+  #   file.copy("TidesFCImage5.jpg", tempImage15, overwrite = TRUE)
+  #   tempImage16 <- file.path(temp_dir, "TidesFCImage6.jpg")
+  #   file.copy("TidesFCImage6.jpg", tempImage16, overwrite = TRUE)
+  #   tempImage17 <- file.path(temp_dir, "TidesFCImage7.jpg")
+  #   file.copy("TidesFCImage7.jpg", tempImage17, overwrite = TRUE)
+  #   tempImage18 <- file.path(temp_dir, input$images$name[1])
+  #   file.copy(input$images$datapath[1], tempImage18, overwrite = TRUE)
+  #   tempImage19 <- file.path(temp_dir, input$images$name[2])
+  #   file.copy(input$images$datapath[2], tempImage19, overwrite = TRUE)
+  #   tempImage20 <- file.path(temp_dir, input$images$name[3])
+  #   file.copy(input$images$datapath[3], tempImage20, overwrite = TRUE)
+  #   tempDataPath <- file.path(temp_dir, "stats_period.rds")
+  #   saveRDS(stats_period, file = tempDataPath)
+  # 
+  #   
+  #   # Set up parameters to pass to Rmd document
+  #   report_params <- list(md_input = input$md_input, 
+  #                         # image1 = b64_strings[1],
+  #                         # image2 = b64_strings[2],
+  #                         # image3 = b64_strings[3],
+  #                         image1 = input$images$name[1],
+  #                         image2 = input$images$name[2],
+  #                         image3 = input$images$name[3], 
+  #                         data_path = tempDataPath)
+  #   
+  #   output_filename <- "TidesMatchReportTemplate.pdf"
+  #   
+  #   log_output(paste0(log_output(), "Staging complete. Invoking quarto::quarto_render()...\n"))
+  #   
+  #   tryCatch({
+  #     # Run using the official R wrapper library
+  #     quarto::quarto_render(
+  #       input          = tempReport,
+  #       execute_params = report_params,
+  #       output_format  = "typst",
+  #       output_file    = output_filename
+  #     )
+  #     
+  #     # Check if compilation succeeded
+  #     compiled_pdf <- file.path(temp_dir, output_filename)
+  #     if (file.exists(compiled_pdf)) {
+  #       log_output(paste0(log_output(), "\n🎉 SUCCESS! Quarto generated the PDF file in the cloud scratch space."))
+  #     } else {
+  #       log_output(paste0(log_output(), "\n⚠️ Quarto finished without an R error, but no PDF was found at: ", compiled_pdf))
+  #     }
+  #     
+  #   }, error = function(e) {
+  #     # If quarto_render crashes, capture the exact message trace
+  #     error_summary <- paste0(
+  #       "\n❌ QUARTO COMPILATION CRASHED!\n",
+  #       "Error Message:\n", e$message
+  #     )
+  #     log_output(paste0(log_output(), error_summary))
+  #   })
+  # }) %>% bindEvent(input$run_diagnostic)
+  # 
+  # # Display log on your application layout
+  # output$quarto_screen_log <- renderText({
+  #   log_output()
+  # })
   
 }
 
