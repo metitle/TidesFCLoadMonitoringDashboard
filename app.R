@@ -5295,34 +5295,56 @@ md_distance_team_total %>%
     on.exit(removeModal(), add = TRUE)
     
     temp_dir <- tempdir()
+    temp_dir <- tempdir()
     tempReport <- file.path(temp_dir, 'TidesMatchReportTemplate.qmd')
-    
-    # Stage project assets into the scratch space
-    file.copy(here::here('QuartoReport', 'TidesMatchReportTemplate.qmd'), tempReport, overwrite = TRUE)
-    file.copy(here::here('QuartoReport', 'header.typ'), file.path(temp_dir, 'header.typ'), overwrite = TRUE)
-    file.copy(here::here('QuartoReport', '_brand.yml'), file.path(temp_dir, '_brand.yml'), overwrite = TRUE)
-    
-    # Map parameters and static images
-    static_images <- c("Halifax.png", "Montreal.png", "Ottawa.png", "Toronto.png", 
-                       "Calgary.png", "Vancouver.png", "Portsmouth.png", "Everton.png", 
-                       "West Ham.png", "AUS.png", "vs.png", "TidesFCImage5.jpg", 
-                       "TidesFCImage6.jpg", "TidesFCImage7.jpg")
-    for(img in static_images) {
-      if(file.exists(img)) file.copy(img, file.path(temp_dir, img), overwrite = TRUE)
-    }
-    
-    file.copy(input$images$datapath, file.path(temp_dir, input$images$name), overwrite = TRUE)
-    
+    file.copy(here('QuartoReport', 'TidesMatchReportTemplate.qmd'), tempReport, overwrite = TRUE)
+    tempStyle <- file.path(temp_dir, 'header.typ')
+    file.copy(here('QuartoReport', 'header.typ'), tempStyle, overwrite = TRUE)
+    tempBrand <- file.path(temp_dir, '_brand.yml')
+    file.copy(here('QuartoReport', '_brand.yml'), tempBrand, overwrite = TRUE)
+    tempImage1 <- file.path(temp_dir, "Halifax.png")
+    file.copy("Halifax.png", tempImage1, overwrite = TRUE)
+    tempImage2 <- file.path(temp_dir, "Montreal.png")
+    file.copy("Montreal.png", tempImage2, overwrite = TRUE)
+    tempImage3 <- file.path(temp_dir, "Ottawa.png")
+    file.copy("Ottawa.png", tempImage3, overwrite = TRUE)
+    tempImage4 <- file.path(temp_dir, "Toronto.png")
+    file.copy("Toronto.png", tempImage4, overwrite = TRUE)
+    tempImage5 <- file.path(temp_dir, "Calgary.png")
+    file.copy("Calgary.png", tempImage5, overwrite = TRUE)
+    tempImage6 <- file.path(temp_dir, "Vancouver.png")
+    file.copy("Vancouver.png", tempImage6, overwrite = TRUE)
+    tempImage7 <- file.path(temp_dir, "Portsmouth.png")
+    file.copy("Portsmouth.png", tempImage7, overwrite = TRUE)
+    tempImage8 <- file.path(temp_dir, "Everton.png")
+    file.copy("Everton.png", tempImage8, overwrite = TRUE)
+    tempImage9 <- file.path(temp_dir, "West Ham.png")
+    file.copy("West Ham.png", tempImage9, overwrite = TRUE)
+    tempImage10 <- file.path(temp_dir, "AUS.png")
+    file.copy("AUS.png", tempImage10, overwrite = TRUE)
+    tempImage11 <- file.path(temp_dir, "vs.png")
+    file.copy("vs.png", tempImage11, overwrite = TRUE)
+    tempImage15 <- file.path(temp_dir, "TidesFCImage5.jpg")
+    file.copy("TidesFCImage5.jpg", tempImage15, overwrite = TRUE)
+    tempImage16 <- file.path(temp_dir, "TidesFCImage6.jpg")
+    file.copy("TidesFCImage6.jpg", tempImage16, overwrite = TRUE)
+    tempImage17 <- file.path(temp_dir, "TidesFCImage7.jpg")
+    file.copy("TidesFCImage7.jpg", tempImage17, overwrite = TRUE)
+    tempImage18 <- file.path(temp_dir, input$images$name[1])
+    file.copy(input$images$datapath[1], tempImage18, overwrite = TRUE)
+    tempImage19 <- file.path(temp_dir, input$images$name[2])
+    file.copy(input$images$datapath[2], tempImage19, overwrite = TRUE)
+    tempImage20 <- file.path(temp_dir, input$images$name[3])
+    file.copy(input$images$datapath[3], tempImage20, overwrite = TRUE)
     tempDataPath <- file.path(temp_dir, "stats_period.rds")
     saveRDS(stats_period, file = tempDataPath)
-    
-    report_params <- list(
-      md_input  = input$md_input, 
-      image1    = input$images$name,
-      image2    = input$images$name,
-      image3    = input$images$name, 
-      data_path = tempDataPath
-    )
+   
+    # Set up parameters to pass to Rmd document
+    report_params <- list(md_input = input$md_input, 
+                          image1 = input$images$name[1],
+                          image2 = input$images$name[2],
+                          image3 = input$images$name[3], 
+                          data_path = tempDataPath)
     
     tryCatch({
       # Run the verified render command
