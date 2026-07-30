@@ -45,9 +45,13 @@ ui <- uiOutput("page_content") # Placeholder for either login or dashboard UI
 server <- function(input, output, session) {
   
   
-  
+
   
   googledrive::drive_auth(path=gargle::secret_decrypt_json(here::here(".secrets", "halifaxtidesdashboard-serviceaccount-encrypted.json"), "googledrive_token"))
+  
+  googledrive::drive_download(googledrive::as_id(Sys.getenv("load_plan_file_id")), path="Loading Plan.csv", overwrite=T)
+  
+  load_plan <- read_csv("Loading Plan.csv", show_col_types =F) 
   
   googledrive::drive_download(googledrive::as_id(Sys.getenv("rpe_file_id")), path="XPS RPE.csv", overwrite=T)
   googledrive::drive_download(googledrive::as_id(Sys.getenv("wellness_file_id")), path="XPS Wellness.csv", overwrite=T)
@@ -228,13 +232,13 @@ server <- function(input, output, session) {
   googledrive::drive_download(googledrive::as_id(Sys.getenv("activities_file_id")), path="Catapult Activities.csv", overwrite=T)
   
   stats_activity_db <- read_csv("Catapult Stats By Activity.csv", show_col_types =F) %>% 
-    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x,tzone="")))
+    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x,tzone="UTC")))
   
   stats_period_db <- read_csv("Catapult Stats By Period.csv", show_col_types =F) %>% 
-    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x,tzone="")))
+    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x,tzone="UTC")))
   
   activities_db <- read_csv("Catapult Activities.csv", show_col_types =F) %>% 
-    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x,tzone="")))
+    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x,tzone="UTC")))
   
   
   #Check for new data
@@ -267,18 +271,15 @@ server <- function(input, output, session) {
     req_headers(accept= "application/json") %>% 
     req_perform() %>% 
     resp_body_json(flatten = T, simplifyDataFrame=T) %>% 
-    mutate(start_time = as.POSIXct(start_time),
-           end_time = as.POSIXct(end_time),
-           date_modified = as.POSIXct(modified_at))%>% 
+    mutate(start_time = as.POSIXct(start_time, tz = "UTC"),
+           end_time = as.POSIXct(end_time, tz = "UTC"),
+           date_modified = as.POSIXct(modified_at, tz = "UTC")) %>% 
     select(id, name, date_modified, start_time, end_time, tag_list) %>%
     rename(activity_id=id, activity_name=name) %>% 
     unnest(tag_list) %>% 
     rename(tag_id=id) %>% 
     dplyr::filter(tag_type_name == "DayCode") 
-  # %>% 
-  #   mutate(start_time=if_else(start_time < as.Date("2025-01-01"),as.POSIXct("2025-02-11 09:00:00"), start_time),
-  #          end_time=if_else(end_time < as.Date("2025-01-01"),as.POSIXct("2025-02-11 11:35:09"), end_time))
-  
+
   
   date_from <- max(activities_db$date_modified)
   
@@ -340,8 +341,8 @@ server <- function(input, output, session) {
       req_perform() %>% 
       resp_body_json(flatten = T, simplifyDataFrame=T) %>% 
       mutate(date = as.Date(date, "%d/%m/%Y"),
-             start_time = as.POSIXct(start_time),
-             end_time = as.POSIXct(end_time)) %>%
+             start_time = as.POSIXct(start_time, tz = "UTC"),
+             end_time = as.POSIXct(end_time, tz = "UTC")) %>%
       left_join(activities %>% select(c(activity_id, date_modified, tag_name)), by=join_by(activity_id), relationship="many-to-many")
     
     
@@ -356,8 +357,8 @@ server <- function(input, output, session) {
       req_perform() %>% 
       resp_body_json(flatten = T, simplifyDataFrame=T) %>% 
       mutate(date = as.Date(date, "%d/%m/%Y"),
-             start_time = as.POSIXct(start_time),
-             end_time = as.POSIXct(end_time)) %>%
+             start_time = as.POSIXct(start_time, tz = "UTC"),
+             end_time = as.POSIXct(end_time, tz = "UTC")) %>%
       left_join(activities %>% select(c(activity_id, date_modified, tag_name)), by=join_by(activity_id), relationship="many-to-many")
     
     
@@ -384,6 +385,14 @@ server <- function(input, output, session) {
     
   }
   
+  stats_activity_db_localtime <- stats_activity_db %>% 
+    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x, tzone="")),
+           date=as.Date(start_time))
+  
+  stats_period_db_localtime <- stats_period_db %>% 
+    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x, tzone="")),
+           date=as.Date(start_time))
+  
   metrics <- data.frame(
     athlete_name = athletes_catapult %>% pull(athlete_name),
     bench_time=0, field_time=0, total_distance=0, meterage_per_minute=0, velocity_band5_total_distance=0,
@@ -401,18 +410,18 @@ server <- function(input, output, session) {
     median_time_to_feet=0, average_time_to_feet=0, average_time_to_feeet_left=0, average_time_to_feeet_right=0, average_time_to_feet_centre=0,
     explosive_efforts=0, total_jumps=0, ima_accels=0, ima_decels=0)
   
-  # metrics <- stats_activity_db %>% 
-  #   mutate(across(where(is.numeric),~replace(.x,1:nrow(stats_activity_db),0))) %>% 
+  # metrics <- stats_activity_db_localtime %>% 
+  #   mutate(across(where(is.numeric),~replace(.x,1:nrow(stats_activity_db_localtime),0))) %>% 
   #   select(athlete_name | where(is.numeric)) %>% 
   #   distinct
   
 
   dates <- data.frame(athlete_name = athletes_catapult$athlete_name) %>% 
     group_by(athlete_name) %>% 
-    reframe(date =seq.Date(min(stats_activity_db$date), if_else(max(stats_activity_db$date)>=Sys.Date(), max(stats_activity_db$date),Sys.Date()), by='days')) %>% 
+    reframe(date =seq.Date(min(stats_activity_db_localtime$date), if_else(max(stats_activity_db_localtime$date)>=Sys.Date(), max(stats_activity_db_localtime$date),Sys.Date()), by='days')) %>% 
     left_join(metrics, by=join_by(athlete_name)) %>% 
     mutate(name_date = paste0(athlete_name, date)) %>% 
-    filter(!(name_date %in% paste0(stats_activity_db$athlete_name,stats_activity_db$date))) %>% 
+    filter(!(name_date %in% paste0(stats_activity_db_localtime$athlete_name,stats_activity_db_localtime$date))) %>% 
     select(!name_date)
   
 
@@ -444,7 +453,7 @@ server <- function(input, output, session) {
     return(ewma)
   }
   
-  stats <- stats_activity_db %>% 
+  stats <- stats_activity_db_localtime %>% 
     full_join(dates) %>%
     left_join(RPE_soccer %>% rename(rpe=daily_rpe), by = join_by(athlete_name,date)) %>%
     left_join(wellness_total %>% rename(wellness=total_percent), by = join_by(athlete_name,date)) %>% 
@@ -504,9 +513,9 @@ server <- function(input, output, session) {
       zscore_7_28_wellness = (al_wellness - cl_wellness)/cl_sd_wellness
     ) %>%
     ungroup %>% 
-    mutate(tag_name=if_else(is.na(tag_name), "OFF",tag_name))
+    mutate(tag_name=if_else(is.na(tag_name) & date != Sys.Date(), "OFF",tag_name))
   
-  stats_period <- stats_period_db %>% 
+  stats_period <- stats_period_db_localtime %>% 
     full_join(dates) %>%
     # left_join(RPE_soccer %>% rename(rpe=daily_rpe), by = join_by(athlete_name,date)) %>%
     # left_join(wellness_total %>% rename(wellness=total_percent), by = join_by(athlete_name,date)) %>% 
@@ -522,7 +531,7 @@ server <- function(input, output, session) {
       # rpe=replace_na(rpe,0),
           accel_decel_efforts = accel_efforts+decel_efforts,
            max_vel_kph = max_vel*3.6,
-           tag_name=if_else(is.na(tag_name), "OFF",tag_name)) %>%
+           tag_name=if_else(is.na(tag_name) & date != Sys.Date(), "OFF",tag_name)) %>%
     arrange(athlete_name,date) 
   
   
@@ -1527,8 +1536,8 @@ server <- function(input, output, session) {
     shiny::validate(need(!is.null(input$athlete8), "Select one or more players"))
     
     md_distance_per_half <- stats_period %>% 
-      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
-      # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
+      # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
       select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>% 
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
              period_name=str_remove(period_name, "\\d{1,2}\\.\\s")) %>% 
@@ -1588,8 +1597,8 @@ server <- function(input, output, session) {
   md_distance_by_player <- reactive({
 
     stats_period %>%
-    dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
-    # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+    dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
+    # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
     select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>%
     mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
            period_name=str_remove(period_name, "\\d{1,2}\\.\\s")) %>%
@@ -1606,8 +1615,8 @@ server <- function(input, output, session) {
     shiny::validate(need(!is.null(input$athlete8), "Select one or more players"))
     
     # md_distance_by_player <- stats_period %>% 
-    #   dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
-    #   # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+    #   dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
+    #   # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
     #   select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>% 
     #   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
     #          period_name=str_remove(period_name, "\\d{1,2}\\.\\s")) %>% 
@@ -1776,8 +1785,8 @@ server <- function(input, output, session) {
   md_distance_team_total <- reactive({
     
     stats_period %>%
-      dplyr::filter(athlete_name %in% input$athlete8 & tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name == input$md_input) %>% pull(date) %>% unique) & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
-      # dplyr::filter(tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name ==  "24th May 2026 - MD 5 vs Calgary (A)") %>% pull(date) %>% unique) & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+      dplyr::filter(athlete_name %in% input$athlete8 & tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name == input$md_input) %>% pull(date) %>% unique) & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
+      # dplyr::filter(tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name ==  "24th May 2026 - MD 5 vs Calgary (A)") %>% pull(date) %>% unique) & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
       select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>%
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>%
       group_by(activity_name, date) %>%
@@ -2169,8 +2178,8 @@ md_distance_team_total %>%
   md_distance_15min <- reactive({
     
     stats_period %>%
-      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
-      # dplyr::filter(activity_name == "12th April 2026 - MD vs Portsmouth (A)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
+      # dplyr::filter(activity_name == "12th April 2026 - MD vs Portsmouth (A)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
       select(activity_name, date, athlete_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>%
       group_by(activity_name, date, period_name, start_time) %>%
@@ -2187,8 +2196,8 @@ md_distance_team_total %>%
   md_distance_15min_by_position <- reactive({
     
     stats_period %>%
-      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
-      # dplyr::filter(activity_name == "12th April 2026 - MD vs Portsmouth (A)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
+      # dplyr::filter(activity_name == "12th April 2026 - MD vs Portsmouth (A)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
       select(activity_name, date, athlete_name, position_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
              position_name = if_else(str_detect(position_name, "Back"), "Defender", position_name), 
@@ -4511,13 +4520,13 @@ md_distance_team_total %>%
     
     
     match_day_summary <- stats_period %>% 
-      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
       # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & period_name %in% c("2. First Half", "3. Second Half")) %>%
       select(activity_name, position_name, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph) %>% 
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
       pivot_wider(names_from = period_name, names_glue = "{period_name}_{.value}", values_from = c(field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph)) %>% 
       mutate(Sub = if_else(is.na(`2. First Half_field_time`) | `2. First Half_field_time` < (10*60), T, F)) %>% 
-      pivot_longer(cols=contains(". "), names_to = c("period_name", ".value"), names_pattern = "(\\d{1,2}\\. [[:alpha:]]{5,6} Half)_(.*)") %>% 
+      pivot_longer(cols=contains(". "), names_to = c("period_name", ".value"), names_pattern = "(\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half)_(.*)") %>% 
       group_by(activity_name, athlete_name, position_name, Sub) %>% 
       summarize(across(where(is.numeric) & !max_vel_kph, ~sum(.x,na.rm=T)), max_vel_kph = max(max_vel_kph, na.rm=T)) %>% 
       ungroup %>% 

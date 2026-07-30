@@ -138,12 +138,12 @@ md_year: '`r md_year`'
 ```{r}
 
 match_day_summary <- stats_period %>% 
-  dplyr::filter(activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+  dplyr::filter(activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
   select(activity_name, position_name, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph) %>% 
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
   pivot_wider(names_from = period_name, names_glue = "{period_name}_{.value}", values_from = c(field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph)) %>% 
   mutate(Sub = if_else(is.na(`2. First Half_field_time`) | `2. First Half_field_time` < (10*60), T, F)) %>% 
-  pivot_longer(cols=contains(". "), names_to = c("period_name", ".value"), names_pattern = "(\\d{1,2}\\. [[:alpha:]]{5,6} Half)_(.*)") %>% 
+  pivot_longer(cols=contains(". "), names_to = c("period_name", ".value"), names_pattern = "(\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half)_(.*)") %>% 
   group_by(activity_name, athlete_name, position_name, Sub) %>% 
   summarize(across(where(is.numeric) & !max_vel_kph, ~sum(.x,na.rm=T)), max_vel_kph = max(max_vel_kph, na.rm=T)) %>% 
   ungroup %>% 
@@ -233,7 +233,7 @@ match_day_summary %>%
 ```{r distance_per_half, fig.width = 9.5, fig.height = 6,dpi=600, dev.args = list(bg = "transparent")}
 
 md_distance_per_half <- stats_period %>% 
-  filter(position_name != "Goal Keeper" & activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+  filter(position_name != "Goal Keeper" & activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
   select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>% 
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
          period_name=str_remove(period_name, "\\d{1,2}\\.\\s")) %>% 
@@ -282,7 +282,7 @@ md_distance_per_half %>%
 
 ```{r}
 md_distance_by_player <- stats_period %>%
-  dplyr::filter(position_name != "Goal Keeper" & activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+  dplyr::filter(position_name != "Goal Keeper" & activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
   select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>%
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
          period_name=str_remove(period_name, "\\d{1,2}\\.\\s")) %>%
@@ -541,7 +541,7 @@ md_distance_by_player %>%
 ```{r}
 
 md_distance_team_total <- stats_period %>%
-  dplyr::filter(position_name != "Goal Keeper" & tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name == md_input) %>% pull(date) %>% unique) & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+  dplyr::filter(position_name != "Goal Keeper" & tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name == md_input) %>% pull(date) %>% unique) & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
   select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>%
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>%
   group_by(activity_name, date) %>%
@@ -825,7 +825,7 @@ md_distance_team_total %>%
 ```{r 15min_distance}
 
 md_distance_15min_temp <- stats_period %>%
-  filter(position_name != "Goal Keeper" & activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+  filter(position_name != "Goal Keeper" & activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
   select(activity_name, date, athlete_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>%
   group_by(activity_name, date, period_name, start_time) %>%
@@ -841,7 +841,7 @@ md_distance_15min_temp <- stats_period %>%
 
 
  md_distance_15min_by_position <- stats_period %>%
-      dplyr::filter(position_name != "Goal Keeper" & activity_name == md_input &  str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} Half$")) %>%
+      dplyr::filter(position_name != "Goal Keeper" & activity_name == md_input &  str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
       select(activity_name, date, athlete_name, position_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
              position_name = case_when(str_detect(position_name, "Back") | str_detect(position_name, "Defender")~ "Defender",

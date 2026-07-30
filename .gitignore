@@ -6,6 +6,18 @@
 .Renviron
 rsconnect/
 .Rprofile
-.csv
-QuartoReport/stats_period.RData
-QuartoReport/stats.RData
+Update XPS RPE GoogleDrive.R
+Catapult Activities.csv
+Catapult Stats By Activity.csv
+Catapult Stats By Period.csv
+Loading Plan.csv
+XPS Wellness.csv
+XPS RPE.csv
+Tides RPE 2026-01-01 to 2026-07-20.csv
+QuartoReport/catapult_stats.RData
+QuartoReport/loading_plan.RData
+QuartoReport/period_md_comparison.json
+QuartoReport/Halifax.png
+QuartoReport/TidesMatchReportTemplate.pdf
+QuartoReport/TidesTrainingReportTemplate.pdf
+QuartoReport/TidesTrainingReportTemplate2.pdf
