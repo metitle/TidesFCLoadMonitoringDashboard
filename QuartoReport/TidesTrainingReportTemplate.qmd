@@ -49,7 +49,7 @@ data_path_load_plan <- params$data_path_load_plan
 
 load_plan <- readRDS(data_path_load_plan)
 
-training_date <- params$training_date
+training_date <- as.Date(params$training_date)
 
 
 
@@ -171,6 +171,7 @@ max_vel <- value_box_data %>% pull(max_vel_kph)
 
 
 ```{r}
+
 distance_group_avg_stats <- stats_period %>%
   select(athlete_name | date | tag_name | position_name | period_name | field_time | total_distance | high_speed_distance | sprint_distance) %>%
       dplyr::filter(date <= training_date & date >= (training_date-days(6)) & !str_detect(period_name, fixed("wu", ignore_case=T)) & !str_detect(period_name,fixed("extra", ignore_case=T)) & !str_detect(period_name, fixed("rehab", ignore_case=T)) & !str_detect(period_name, fixed("top ups", ignore_case=T)) & !str_detect(period_name, fixed("gk", ignore_case=T)) & position_name != "Goal Keeper" & field_time > 0 & total_distance > 0) %>%
