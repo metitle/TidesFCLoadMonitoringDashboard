@@ -2627,7 +2627,9 @@ md_distance_team_total %>%
                accel_decel_efforts_remaining = accel_decel_efforts_upper - accel_decel_efforts_acute) %>%
         relocate(contains("total_distance"), contains("high_speed_distance"), contains("sprint_distance"), contains("accel_decel_efforts"), .after = athlete_name) %>%
         rename(Player = athlete_name) %>%
-        arrange(Player) 
+        left_join(athletes_catapult %>% select(athlete_name, position_name), by=join_by(Player==athlete_name)) %>% 
+        arrange(position_name, Player) %>% 
+        select(!position_name)
       
       team_avg_load <- updated_plan %>%
         summarise(across(where(is.numeric), ~mean(.x,na.rm=T))) %>% 
@@ -2765,8 +2767,10 @@ md_distance_team_total %>%
              sprint_distance_remaining = sprint_distance_upper - sprint_distance_acute,
              accel_decel_efforts_remaining = accel_decel_efforts_upper - accel_decel_efforts_acute) %>%
       relocate(contains("total_distance"), contains("high_speed_distance"), contains("sprint_distance"), contains("accel_decel_efforts"), .after = athlete_name) %>%
-      rename(Player = athlete_name) %>%
-      arrange(Player) 
+      rename(Player = athlete_name)  %>% 
+      left_join(athletes_catapult %>% select(athlete_name, position_name), by=join_by(Player==athlete_name)) %>% 
+      arrange(position_name, Player) %>% 
+      select(!position_name)
     
     
     team_avg_load <- load_plan %>%
@@ -3779,7 +3783,7 @@ md_distance_team_total %>%
     player_load_stats <- stats %>%
       select(athlete_name | date | tag_name | starts_with("zscore_7_28")) %>% 
       rename_with(~str_remove(.x,"zscore_7_28_")) %>%
-      dplyr::filter(date <= input$date_input1 & date > input$date_input1 - days(5) & athlete_name == input$athlete2)%>% 
+      dplyr::filter(date <= input$date_input1 & date > input$date_input1 - days(14) & athlete_name == input$athlete2)%>% 
       select(!c(athlete_name, high_speed_distance, sprint_distance,meterage_per_minute,max_vel_kph, accel_efforts, decel_efforts, accel_decel_efforts)) %>% 
       rename(Date=date, `MD Code` = tag_name, `Total Distance` = total_distance, `Field Time`=field_time, `Dive Count` = dive_count, `Dive Load` = total_dive_load, `Explosive Efforts` = explosive_efforts, `Avg HR` = mean_heart_rate, `Max HR` = max_heart_rate,`Daily sRPE` = rpe, Wellness=wellness) %>% 
       arrange(desc(Date))
@@ -4196,46 +4200,94 @@ md_distance_team_total %>%
       columns = list(
         date = colDef(name="Date", align = "left"), 
         `Total Wellness` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          # Get RGB matrix scaled 0-255
-          rgb_vals <- rg_ramp(value)
-          # Build hex string with 20% alpha (51 out of 255)
-          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
-          list(background = cell_color, color = "#221C35")
-          }),
-        `Total Health` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          # Get RGB matrix scaled 0-255
-          rgb_vals <- rg_ramp(value)
-          # Build hex string with 20% alpha (51 out of 255)
-          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
-          list(background = cell_color, color = "#221C35")
+          if (value >= 0 && value < 50) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 50 && value < 60) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 60 && value < 70) {
+            list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 70 && value < 80) {
+            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 80 && value <= 100) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
+        }),
+        `Total Health` = colDef(format = colFormat(percent=T, digits = 1),style = function(value) {
+          if (value >= 0 && value < 50) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 50 && value < 60) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 60 && value < 70) {
+            list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 70 && value < 80) {
+            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 80 && value <= 100) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
         }),
         `Total Mental` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          # Get RGB matrix scaled 0-255
-          rgb_vals <- rg_ramp(value)
-          # Build hex string with 20% alpha (51 out of 255)
-          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
-          list(background = cell_color, color = "#221C35")
+          if (value >= 0 && value < 50) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 50 && value < 60) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 60 && value < 70) {
+            list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 70 && value < 80) {
+            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 80 && value <= 100) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
         }),
         `Total Nutrition` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          # Get RGB matrix scaled 0-255
-          rgb_vals <- rg_ramp(value)
-          # Build hex string with 20% alpha (51 out of 255)
-          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
-          list(background = cell_color, color = "#221C35")
+          if (value >= 0 && value < 50) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 50 && value < 60) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 60 && value < 70) {
+            list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 70 && value < 80) {
+            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 80 && value <= 100) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
         }),
         `Total Physical` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          # Get RGB matrix scaled 0-255
-          rgb_vals <- rg_ramp(value)
-          # Build hex string with 20% alpha (51 out of 255)
-          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
-          list(background = cell_color, color = "#221C35")
+          if (value >= 0 && value < 50) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 50 && value < 60) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 60 && value < 70) {
+            list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 70 && value < 80) {
+            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 80 && value <= 100) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
         }),
         `Total Sleep` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          # Get RGB matrix scaled 0-255
-          rgb_vals <- rg_ramp(value)
-          # Build hex string with 20% alpha (51 out of 255)
-          cell_color <- rgb(red = rgb_vals[1], green = rgb_vals[2], blue = rgb_vals[3], alpha = 0.4*255, maxColorValue = 255)
-          list(background = cell_color, color = "#221C35")
+          if (value >= 0 && value < 50) {
+            list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 50 && value < 60) {
+            list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 60 && value < 70) {
+            list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 70 && value < 80) {
+            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else if (value >= 80 && value <= 100) {
+            list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+          } else {
+            list(background = NULL) # Default style for any missing cases
+          }
         })
       )
     )
