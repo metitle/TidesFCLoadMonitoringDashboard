@@ -4203,7 +4203,7 @@ md_distance_team_total %>%
           } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.7 && value < 0.8) {
-            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            list(background = rgb(152, 251, 152, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
@@ -4218,7 +4218,7 @@ md_distance_team_total %>%
           } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.7 && value < 0.8) {
-            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            list(background = rgb(152, 251, 152, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
@@ -4233,7 +4233,7 @@ md_distance_team_total %>%
           } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.7 && value < 0.8) {
-            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            list(background = rgb(152, 251, 152, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
@@ -4248,7 +4248,7 @@ md_distance_team_total %>%
           } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.7 && value < 0.8) {
-            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            list(background = rgb(152, 251, 152, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
@@ -4263,7 +4263,7 @@ md_distance_team_total %>%
           } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.7 && value < 0.8) {
-            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            list(background = rgb(152, 251, 152, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
@@ -4278,7 +4278,7 @@ md_distance_team_total %>%
           } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.7 && value < 0.8) {
-            list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
+            list(background = rgb(152, 251, 152, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
