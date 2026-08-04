@@ -4184,10 +4184,6 @@ md_distance_team_total %>%
     #   relocate(`Total Wellness`, .after=date) %>% 
     #   arrange(desc(date))
     
-    # Create a color palette from red to green
-    # Space = "Lab" prevents a muddy brown middle ground
-    rg_ramp <- colorRamp(c("#FF0000", "#00FF00"), space = "Lab")
-    
     reactable(
       wellness_stats,
       striped = F,
@@ -4200,90 +4196,90 @@ md_distance_team_total %>%
       columns = list(
         date = colDef(name="Date", align = "left"), 
         `Total Wellness` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          if (value >= 0 && value < 50) {
+          if (value >= 0 && value < 0.5) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 50 && value < 60) {
+          } else if (value >= 0.5 && value < 0.6) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 60 && value < 70) {
+          } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 70 && value < 80) {
+          } else if (value >= 0.7 && value < 0.8) {
             list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 80 && value <= 100) {
+          } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
           }
         }),
         `Total Health` = colDef(format = colFormat(percent=T, digits = 1),style = function(value) {
-          if (value >= 0 && value < 50) {
+          if (value >= 0 && value < 0.5) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 50 && value < 60) {
+          } else if (value >= 0.5 && value < 0.6) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 60 && value < 70) {
+          } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 70 && value < 80) {
+          } else if (value >= 0.7 && value < 0.8) {
             list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 80 && value <= 100) {
+          } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
           }
         }),
         `Total Mental` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          if (value >= 0 && value < 50) {
+          if (value >= 0 && value < 0.5) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 50 && value < 60) {
+          } else if (value >= 0.5 && value < 0.6) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 60 && value < 70) {
+          } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 70 && value < 80) {
+          } else if (value >= 0.7 && value < 0.8) {
             list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 80 && value <= 100) {
+          } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
           }
         }),
-        `Total Nutrition` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          if (value >= 0 && value < 50) {
+        `Total Nutrition` = colDef(format = colFormat(percent=T, digits = 1),style = function(value) {
+          if (value >= 0 && value < 0.5) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 50 && value < 60) {
+          } else if (value >= 0.5 && value < 0.6) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 60 && value < 70) {
+          } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 70 && value < 80) {
+          } else if (value >= 0.7 && value < 0.8) {
             list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 80 && value <= 100) {
+          } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
           }
         }),
-        `Total Physical` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          if (value >= 0 && value < 50) {
+        `Total Physical` = colDef(format = colFormat(percent=T, digits = 1),style = function(value) {
+          if (value >= 0 && value < 0.5) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 50 && value < 60) {
+          } else if (value >= 0.5 && value < 0.6) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 60 && value < 70) {
+          } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 70 && value < 80) {
+          } else if (value >= 0.7 && value < 0.8) {
             list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 80 && value <= 100) {
+          } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
           }
         }),
         `Total Sleep` = colDef(format = colFormat(percent=T, digits = 1), style = function(value) {
-          if (value >= 0 && value < 50) {
+          if (value >= 0 && value < 0.5) {
             list(background = rgb(255, 0, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 50 && value < 60) {
+          } else if (value >= 0.5 && value < 0.6) {
             list(background = rgb(255, 165, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 60 && value < 70) {
+          } else if (value >= 0.6 && value < 0.7) {
             list(background = rgb(255, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 70 && value < 80) {
+          } else if (value >= 0.7 && value < 0.8) {
             list(background = rgb(144, 238, 144, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
-          } else if (value >= 80 && value <= 100) {
+          } else if (value >= 0.8 && value <= 1) {
             list(background = rgb(0, 255, 0, alpha=(0.5*255), maxColorValue = 255), color = "#221C35")
           } else {
             list(background = NULL) # Default style for any missing cases
