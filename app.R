@@ -51,7 +51,7 @@ server <- function(input, output, session) {
   
   googledrive::drive_download(googledrive::as_id(Sys.getenv("load_plan_file_id")), path="Loading Plan.csv", overwrite=T)
   
-  load_plan <- read_csv("Loading Plan.csv", show_col_types =F) 
+  loading_plan <- read_csv("Loading Plan.csv", show_col_types =F) 
   
   googledrive::drive_download(googledrive::as_id(Sys.getenv("rpe_file_id")), path="XPS RPE.csv", overwrite=T)
   googledrive::drive_download(googledrive::as_id(Sys.getenv("wellness_file_id")), path="XPS Wellness.csv", overwrite=T)
@@ -888,7 +888,10 @@ server <- function(input, output, session) {
       nav_spacer(),
       nav_panel(title="Daily Report", 
                 layout_sidebar(      
-                  sidebar = sidebar(athlete6, date_input5, bg = "#E5E1E6"),
+                  sidebar = sidebar(athlete6, date_input5, 
+                                    actionButton("build_pdf2", "Generate Report", icon = icon("file-lines"), class = "btn-primary"),
+                                    uiOutput("download_wrapper2"),
+                                    bg = "#E5E1E6"),
                   layout_column_wrap(
                       width=1/6,
                       heights_equal = "row",
@@ -5308,13 +5311,12 @@ md_distance_team_total %>%
   
   # Step 1: Compile the PDF securely inside a standard action observer
   observe({
-    req(input$images)
+    req(input$images, input$md_input)
     
     # Pop up a loading notification so the user knows it's working
     showModal(modalDialog("Compiling PDF Report... Please wait.", footer = NULL))
     on.exit(removeModal(), add = TRUE)
     
-    temp_dir <- tempdir()
     temp_dir <- tempdir()
     tempReport <- file.path(temp_dir, 'TidesMatchReportTemplate.qmd')
     file.copy(here('QuartoReport', 'TidesMatchReportTemplate.qmd'), tempReport, overwrite = TRUE)
@@ -5411,6 +5413,84 @@ md_distance_team_total %>%
     }
   )
  
+  
+  # Step 1: Compile the PDF securely inside a standard action observer
+  observe({
+    
+    req(input$date_input5)
+    
+    # Pop up a loading notification so the user knows it's working
+    showModal(modalDialog("Compiling PDF Report... Please wait.", footer = NULL))
+    on.exit(removeModal(), add = TRUE)
+    
+    temp_dir <- tempdir()
+    tempReport <- file.path(temp_dir, 'TidesTrainingReportTemplate.qmd')
+    file.copy(here('QuartoReport', 'TidesTrainingReportTemplate.qmd'), tempReport, overwrite = TRUE)
+    tempBrand <- file.path(temp_dir, '_brand.yml')
+    file.copy(here('QuartoReport', '_brand.yml'), tempBrand, overwrite = TRUE)
+    tempImage1 <- file.path(temp_dir, "Halifax.png")
+    file.copy("Halifax.png", tempImage1, overwrite = TRUE)
+    tempDataPathStatsPeriod <- file.path(temp_dir, "stats_period.rds")
+    saveRDS(stats_period, file = tempDataPathStatsPeriod)
+    tempDataPathStats <- file.path(temp_dir, "stats.rds")
+    saveRDS(stats, file = tempDataPathStats)
+    tempDataPathLoadPlan <- file.path(temp_dir, "loading_plan.rds")
+    saveRDS(loading_plan, file = tempDataPathLoadPlan)
+    
+    # Set up parameters to pass to Rmd document
+    report_params <- list(training_date = input$date_input5,
+                          data_path_stats = tempDataPathStats,
+                          data_path_stats_period = tempDataPathStatsPeriod,
+                          data_path_load_plan = tempDataPathLoadPlan)
+    
+    tryCatch({
+      # Run the verified render command
+      quarto::quarto_render(
+        input          = tempReport,
+        execute_params = report_params,
+        output_format  = "typst",
+        output_file    = "TidesTrainingReportTemplate.pdf"
+      )
+      
+      # Remove the loading screen and show success
+      removeModal()
+      showNotification("PDF Successfully Generated!", type = "message", duration = 5)
+      
+      # 🌟 CRITICAL: Render the actual download button now that the file exists!
+      output$download_wrapper2 <- renderUI({
+        downloadButton("execute_download2", "Download PDF", class = "btn-success")
+      })
+      
+    }, error = function(e) {
+      removeModal()
+      showModal(modalDialog(title = "Compilation Error", pre(e$message), easyClose = TRUE))
+    })
+  }) %>% bindEvent(input$build_pdf2)
+  
+  # Step 2: Purely stream the pre-built file to the local Downloads folder
+  output$execute_download2 <- downloadHandler(
+    filename = function() {
+      
+      paste0("Tides Training Report ", 
+             stats %>% 
+               filter(date == input$date_input5) %>% 
+               drop_na(activity_name) %>% 
+               pull(activity_name) %>% 
+               unique, 
+             ".pdf")
+    },
+    contentType = "application/pdf",
+    content = function(file) {
+      # Point directly to the file that was already created in Step 1
+      compiled_pdf <- file.path(tempdir(), "TidesTrainingReportTemplate.pdf")
+      
+      if (file.exists(compiled_pdf)) {
+        file.copy(compiled_pdf, file, overwrite = TRUE)
+      } else {
+        showNotification("File lost in server scratch space. Please compile again.", type = "error")
+      }
+    }
+  )
   
 }
 
