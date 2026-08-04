@@ -222,6 +222,8 @@ server <- function(input, output, session) {
     mutate(daily_rpe = sum(session_rpe, na.rm=T)) %>%
     ungroup
   
+  # Download catapult data from database
+  
   catapult_url <- "https://connect-us.catapultsports.com"
   
   
@@ -230,15 +232,16 @@ server <- function(input, output, session) {
   googledrive::drive_download(googledrive::as_id(Sys.getenv("stats_period_file_id")), path="Catapult Stats By Period.csv", overwrite=T)
   googledrive::drive_download(googledrive::as_id(Sys.getenv("stats_activity_file_id")), path="Catapult Stats By Activity.csv", overwrite=T)
   googledrive::drive_download(googledrive::as_id(Sys.getenv("activities_file_id")), path="Catapult Activities.csv", overwrite=T)
-  
+ 
   stats_activity_db <- read_csv("Catapult Stats By Activity.csv", show_col_types =F) %>% 
-    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x,tzone="UTC")))
+    mutate(modified_at = with_tz(modified_at,tzone="UTC"))
   
   stats_period_db <- read_csv("Catapult Stats By Period.csv", show_col_types =F) %>% 
-    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x,tzone="UTC")))
+    mutate(modified_at = with_tz(modified_at,tzone="UTC"))
   
-  activities_db <- read_csv("Catapult Activities.csv", show_col_types =F) %>% 
-    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x,tzone="UTC")))
+  activities_db <- read_csv("Catapult Activities.csv", show_col_types =F)  %>% 
+    mutate(modified_at = with_tz(modified_at,tzone="UTC"))
+  
   
   
   #Check for new data
@@ -271,23 +274,21 @@ server <- function(input, output, session) {
     req_headers(accept= "application/json") %>% 
     req_perform() %>% 
     resp_body_json(flatten = T, simplifyDataFrame=T) %>% 
-    mutate(start_time = as.POSIXct(start_time, tz = "UTC"),
-           end_time = as.POSIXct(end_time, tz = "UTC"),
-           date_modified = as.POSIXct(modified_at, tz = "UTC")) %>% 
-    select(id, name, date_modified, start_time, end_time, tag_list) %>%
+    mutate(modified_at = as.POSIXct(modified_at, tz="UTC")) %>% 
+    select(id, name, modified_at, start_time, end_time, tag_list) %>%
     rename(activity_id=id, activity_name=name) %>% 
     unnest(tag_list) %>% 
     rename(tag_id=id) %>% 
-    dplyr::filter(tag_type_name == "DayCode") 
+    dplyr::filter(tag_type_name == "DayCode")
 
   
-  date_from <- max(activities_db$date_modified)
+  date_from <- max(activities_db$modified_at)
   
   
-  if (max(activities$date_modified) > date_from) {
+  if (max(activities$modified_at) > date_from) {
     
     athletes_filter <- athletes_catapult$id
-    activities_filter <- activities %>% dplyr::filter(date_modified > date_from) %>% pull(activity_id)
+    activities_filter <- activities %>% dplyr::filter(modified_at > date_from) %>% pull(activity_id)
     
     filter_df <- data.frame(name = c(rep("athlete_id",length(athletes_filter)), rep("activity_id", length(activities_filter))),
                             comparison = c(rep("=",length(athletes_filter)),rep("=",length(activities_filter))),
@@ -340,10 +341,7 @@ server <- function(input, output, session) {
                          group_by = groupby_activity)) %>% 
       req_perform() %>% 
       resp_body_json(flatten = T, simplifyDataFrame=T) %>% 
-      mutate(date = as.Date(date, "%d/%m/%Y"),
-             start_time = as.POSIXct(start_time, tz = "UTC"),
-             end_time = as.POSIXct(end_time, tz = "UTC")) %>%
-      left_join(activities %>% select(c(activity_id, date_modified, tag_name)), by=join_by(activity_id), relationship="many-to-many")
+      left_join(activities %>% select(c(activity_id, modified_at, tag_name)), by=join_by(activity_id), relationship="many-to-many")
     
     
     stats_period_new <- request(catapult_url) %>% 
@@ -356,10 +354,7 @@ server <- function(input, output, session) {
                          group_by = groupby_period)) %>% 
       req_perform() %>% 
       resp_body_json(flatten = T, simplifyDataFrame=T) %>% 
-      mutate(date = as.Date(date, "%d/%m/%Y"),
-             start_time = as.POSIXct(start_time, tz = "UTC"),
-             end_time = as.POSIXct(end_time, tz = "UTC")) %>%
-      left_join(activities %>% select(c(activity_id, date_modified, tag_name)), by=join_by(activity_id), relationship="many-to-many")
+      left_join(activities %>% select(c(activity_id, modified_at, tag_name)), by=join_by(activity_id), relationship="many-to-many")
     
     
     stats_activity_temp <- stats_activity_db %>% 
@@ -386,12 +381,12 @@ server <- function(input, output, session) {
   }
   
   stats_activity_db_localtime <- stats_activity_db %>% 
-    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x, tzone="")),
-           date=as.Date(start_time))
+    mutate(across(c(start_time, end_time), ~ as.POSIXct(.x, tz="")),
+           date= as.Date(date, "%d/%m/%Y"))
   
   stats_period_db_localtime <- stats_period_db %>% 
-    mutate(across(c(date_modified, start_time, end_time), ~ with_tz(.x, tzone="")),
-           date=as.Date(start_time))
+    mutate(across(c(start_time, end_time), ~ with_tz(.x, tzone="")),
+           date= as.Date(date, "%d/%m/%Y"))
   
   metrics <- data.frame(
     athlete_name = athletes_catapult %>% pull(athlete_name),
@@ -5361,15 +5356,18 @@ md_distance_team_total %>%
     file.copy(input$images$datapath[2], tempImage19, overwrite = TRUE)
     tempImage20 <- file.path(temp_dir, input$images$name[3])
     file.copy(input$images$datapath[3], tempImage20, overwrite = TRUE)
-    tempDataPath <- file.path(temp_dir, "stats_period.rds")
-    saveRDS(stats_period, file = tempDataPath)
-   
+    tempDataPathStatsPeriod <- file.path(temp_dir, "stats_period.rds")
+    saveRDS(stats_period, file = tempDataPathStatsPeriod)
+    tempDataPathStats <- file.path(temp_dir, "stats.rds")
+    saveRDS(stats, file = tempDataPathStats)
+    
     # Set up parameters to pass to Rmd document
     report_params <- list(md_input = input$md_input, 
                           image1 = input$images$name[1],
                           image2 = input$images$name[2],
                           image3 = input$images$name[3], 
-                          data_path = tempDataPath)
+                          data_path_stats = tempDataPathStats,
+                          data_path_stats_period = tempDataPathStatsPeriod)
     
     tryCatch({
       # Run the verified render command
