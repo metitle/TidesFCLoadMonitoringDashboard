@@ -126,26 +126,26 @@ session_load_plan <- load_plan %>% filter(Date == training_date)
 ))
 
 
-#let valuebox(title, value, color: rgb("0073e6")) = {
-  block(
-    fill: color.lighten(80%),
-    stroke: 0.5pt + color,
-    inset: 12pt,
-    radius: 4pt,
-    width: 100%,
-    [
-      #set text(fill: color.darken(20%), weight: "bold", size: 9pt)
-      #upper(title)
-      #v(-4pt)
-      #set text(fill: rgb("#221C35"), weight: "bold", size: 12pt)
-      #value
-    ]
-  )
-}
+// #let valuebox(title, value, color: rgb("0073e6")) = {
+//  block(
+//    fill: color.lighten(80%),
+//    stroke: 0.5pt + color,
+//    inset: 12pt,
+//    radius: 4pt,
+//    width: 100%,
+//    [
+//      #set text(fill: color.darken(20%), weight: "bold", size: 9pt)
+//      #upper(title)
+//      #v(-4pt)
+//      #set text(fill: rgb("#221C35"), weight: "bold", size: 12pt)
+//      #value
+//    ]
+//  )
+// }
 
 ```
 
-```{r}
+```{r, eval=F}
 value_box_data <- stats_period %>%
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
   dplyr::filter(position_name != "Goal Keeper" & date == training_date) %>%
@@ -689,62 +689,6 @@ guides(fill = guide_legend(ncol = 2, byrow = F))
 
   
 ```
-
-
-```{r, eval=F}
-
-# #let bar-indicator(raw, percentage, label: none, color: rgb("#00B0B9")) = { 
-#   let max-val = calc.max(percentage, 100) 
-#   let val = calc.max(percentage, 0) 
-#   let raw-val = raw 
-#   let bar-color = color 
-#   
-#   box( 
-#     stroke: 0.5pt + rgb("e5e5e5"), 
-#     inset: (top: 7pt, left: 8pt, right: 8pt, bottom: 10pt), 
-#     radius: 4pt, 
-#     fill: rgb("fafafa"), 
-#     width: 100%, 
-#     [ 
-#       #grid( 
-#         columns: (auto, 1fr, auto), 
-#         column-gutter: 4pt, 
-#         text(weight: "bold", size: 7.5pt, fill: rgb("2c3e50"))[#label], 
-#         align(left + horizon)[#text(size: 6.5pt, weight: "medium", fill: rgb("#64748b"))[(#raw-val)]],
-#         align(right + horizon)[#text(size: 7.5pt, weight: "bold", fill: rgb("#1e293b"))[#str(val)%]] 
-#       ) 
-#       #v(2pt) 
-#       #align(left)[ 
-#         #block(
-#           width: 100%, 
-#           height: 4.5pt, 
-#           { 
-#           // 1. Gray Background Track 
-#           place(top + left, rect(width: 100%, height: 4.5pt, fill: rgb("#e2e8f0"), radius: 2.2pt)) 
-#           
-#           // 2. Overlapping Progress Strip 
-#           if val > 0 { 
-#             let fill-width = calc.min((val / max-val) * 100, 100) 
-#             place(top + left, rect(width: fill-width * 1%, height: 4.5pt, fill: bar-color, radius: 2.2pt)) 
-#             } 
-#           
-#           // 3. Conditional 100% Line Marker & Text Label 
-#           if percentage > 100 { 
-#             let marker-pos = (100 / max-val) * 100
-#             // Vertical marker line intersecting the bar 
-#             place(top + left, dx: marker-pos * 1% - 1.2pt, dy: -1.2pt, rect(width: 1.2pt, height: 7pt, fill: rgb("#1e293b"), radius: 0.5pt))
-#             // Small text indicator overlaid below 
-#             place(top + left, dx: marker-pos * 1% - 8pt, dy: 7.5pt, text(size: 5.5pt, fill: rgb("#1e293b"), weight: "bold", "100%")) 
-#             } 
-#           } 
-#         ) 
-#       ] 
-#     ] 
-#   ) 
-# }
-
-```
-
 
 
 

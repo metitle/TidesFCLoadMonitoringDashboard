@@ -8,7 +8,8 @@ format:
     fig-dpi: 600
 params:
   md_input:
-  data_path: 
+  data_path_stats: 
+  data_path_stats_period: 
   image1:
   image2:
   image3:
@@ -28,9 +29,9 @@ library(tinytable)
 ```
 
 ```{r, eval=F}
-load("stats_period.RData")
-md_input <- "13th June 2026 - MD 7 vs Calgary (H)"
-md_date <- stats_period %>% filter(activity_name==md_input) %>% mutate(date = paste0(weekdays(date), ', ', format(date, '%B %d, %Y'))) %>% pull(date) %>% unique
+load("catapult_stats.RData")
+md_input <- "25th July 2026 - MD 13 vs Vancouver (A)"
+md_date <- stats %>% filter(activity_name==md_input) %>% mutate(date = paste0(weekdays(date), ', ', format(date, '%B %d, %Y'))) %>% pull(date) %>% unique
 md_num <- str_extract(md_input, '(?<=MD\\s)\\d{1}')
 md_year <- str_extract(md_date, '\\d{4}')
 image1 <- "TidesFCImage5.jpg"
@@ -46,12 +47,25 @@ team_logo <- case_when(str_detect(md_input, "Montreal") ~ "Montreal.png",
                        str_detect(md_input, "Everton") ~ "Everton.png",
                        str_detect(md_input, "West Ham") ~ "West Ham.png",
                        str_detect(md_input, "AUS") ~ "AUS.png")
+
+match_duration <- stats_period %>% 
+  dplyr::filter(activity_name == md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+  group_by(athlete_name) %>% 
+  summarize(field_time = sum(field_time, na.rm=T)) %>% 
+  ungroup %>% 
+  summarize(field_time = floor(max(field_time)/60/30)*30) %>% 
+  pull(field_time)
+
 ```
 
 ```{r}
-data_path <- params$data_path
+data_path_stats_period <- params$data_path_stats_period
 
-stats_period <- readRDS(data_path)
+stats_period <- readRDS(data_path_stats_period)
+
+data_path_stats <- params$data_path_stats
+
+stats <- readRDS(data_path_stats)
 
 md_input <- params$md_input
 
@@ -71,7 +85,7 @@ if (is.null(image3)) {
   image3 <- 'TidesFCImage7.jpg'
 }
 
-md_date <- stats_period %>% filter(activity_name==md_input) %>% mutate(date = paste0(weekdays(date), ', ', format(date, '%B %d, %Y'))) %>% pull(date) %>% unique
+md_date <- stats %>% filter(activity_name==md_input) %>% mutate(date = paste0(weekdays(date), ', ', format(date, '%B %d, %Y'))) %>% pull(date) %>% unique
 md_num <- str_extract(md_input, '(?<=MD\\s)\\d{1,2}')
 md_year <- str_extract(md_date, '\\d{4}')
 
@@ -84,6 +98,15 @@ team_logo <- case_when(str_detect(md_input, "Montreal") ~ "Montreal.png",
                        str_detect(md_input, "Everton") ~ "Everton.png",
                        str_detect(md_input, "West Ham") ~ "West Ham.png",
                        str_detect(md_input, "AUS") ~ "AUS.png")
+
+match_duration <- stats_period %>% 
+  dplyr::filter(activity_name == md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+  group_by(athlete_name) %>% 
+  summarize(field_time = sum(field_time, na.rm=T)) %>% 
+  ungroup %>% 
+  summarize(field_time = floor(max(field_time)/60/30)*30) %>% 
+  pull(field_time)
+
 ```
 
 ---
@@ -138,7 +161,7 @@ md_year: '`r md_year`'
 ```{r}
 
 match_day_summary <- stats_period %>% 
-  dplyr::filter(activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
+  dplyr::filter(activity_name == md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
   select(activity_name, position_name, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph) %>% 
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
   pivot_wider(names_from = period_name, names_glue = "{period_name}_{.value}", values_from = c(field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph)) %>% 
@@ -233,28 +256,29 @@ match_day_summary %>%
 ```{r distance_per_half, fig.width = 9.5, fig.height = 6,dpi=600, dev.args = list(bg = "transparent")}
 
 md_distance_per_half <- stats_period %>% 
-  filter(position_name != "Goal Keeper" & activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-  select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>% 
+  filter(position_name != "Goal Keeper" & activity_name == md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+  select(activity_name, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>% 
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
          period_name=str_remove(period_name, "\\d{1,2}\\.\\s")) %>% 
-  group_by(activity_name, date, athlete_name, period_name) %>% 
+  group_by(activity_name, athlete_name, period_name) %>% 
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
   ungroup %>% 
-  group_by(activity_name, date, period_name) %>% 
+  group_by(activity_name, period_name) %>% 
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
   ungroup %>%
   mutate(across(c(high_speed_distance, sprint_distance), ~.x*20)) %>% 
   pivot_longer(cols=contains("distance"), names_to = "Type", values_to = "Distance") %>% 
   mutate(Type=factor(Type, levels=c("total_distance", "high_speed_distance", "sprint_distance")), 
-         Distance_labels = if_else(Type != "total_distance", round(Distance/20), round(Distance)))
+         Distance_labels = if_else(Type != "total_distance", round(Distance/20), round(Distance)),
+         period_name = factor(period_name, levels=c("First Half", "Second Half", "First Extra", "Second Extra")))
 
 md_distance_per_half %>%
   ggplot(aes(x=period_name, y=Distance))+
   geom_col(aes(fill=Type), position=position_dodge2(width=0.9,preserve = "single")) +
-    geom_text(aes(group =Type, label =Distance_labels),size=3.5, vjust = 2, color="white", position=position_dodge2(width=0.9,preserve = "single")) +
+    geom_text(aes(group =Type, label =Distance_labels),size=3.5, vjust = -0.5, color="white", position=position_dodge2(width=0.9,preserve = "single")) +
   labs(x=NULL, y ="Total Distance (m)",fill=NULL)+
   theme_bw()+
-  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), sec.axis = sec_axis(~./20, name="HSR / Sprint Distance (m)"))+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1)), sec.axis = sec_axis(~./20, name="HSR / Sprint Distance (m)"))+
   scale_fill_manual(values=c("#00B0B9","#572C5F","#B2C9D4"),labels = c("Total Distance", "HSR Distance", "Sprint Distance"))+ 
   theme(legend.position = "bottom",legend.direction = "horizontal",panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
@@ -282,14 +306,15 @@ md_distance_per_half %>%
 
 ```{r}
 md_distance_by_player <- stats_period %>%
-  dplyr::filter(position_name != "Goal Keeper" & activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-  select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>%
+  dplyr::filter(position_name != "Goal Keeper" & activity_name == md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+  select(activity_name,athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>%
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
          period_name=str_remove(period_name, "\\d{1,2}\\.\\s")) %>%
-  group_by(activity_name, date, athlete_name, period_name) %>%
+  group_by(activity_name, athlete_name, period_name) %>%
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>%
   ungroup %>% 
-  mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min"))
+  mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min"),
+         period_name = factor(period_name, levels=c("First Half", "Second Half", "First Extra", "Second Extra")))
 
 
 ```
@@ -299,13 +324,14 @@ md_distance_by_player <- stats_period %>%
 ```{r md_by_player_total_distance,  fig.width=9.5,fig.height=2.8, dpi = 600, dev.args = list(bg = "transparent")}
 
 md_distance_by_player %>% 
-  ggplot(aes(x = str_extract(athlete_name,"(?<=\\s)[[:graph:]]+$"), y = total_distance, fill = period_name, label=round(total_distance)))+
+  ggplot(aes(x = str_extract(athlete_name,"(?<=\\s)[[:graph:]]+$"), y = total_distance, fill = period_name, label=if_else(total_distance < 500, "", as.character(round(total_distance))))) +
   geom_col(position = position_stack(reverse = TRUE))+
-  geom_text(position = position_stack(vjust = 0.5,reverse = TRUE),color="white", size=3,check_overlap=T)+
+  geom_text(aes(color=period_name),position = position_stack(vjust = 0.5,reverse = TRUE), size=3,show.legend = F)+
    labs(x=NULL, y ="Total Distance (m)",fill=NULL)+
    theme_bw()+ 
   scale_y_continuous(expand = expansion(mult = c(0, 0.05)))+
-    scale_fill_manual(values=c("#572C5F","#00B0B9"))+
+    scale_fill_manual(values=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"))+
+      scale_color_manual(values=c("white","white","#221C35","#221C35"))+
   theme(legend.position = "bottom",legend.direction = "horizontal",panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
@@ -339,11 +365,11 @@ md_distance_by_player %>%
 md_distance_by_player %>% 
   ggplot(aes(x = str_extract(athlete_name,"(?<=\\s)[[:graph:]]+$"), y = total_distance_per_min))+
   geom_col(aes(fill = period_name),position=position_dodge2(width=0.9,preserve = "single")) +
-    geom_text(aes(group =period_name,label=round(total_distance_per_min)),size=3, vjust = -0.5, color="white", position=position_dodge2(width=0.9,preserve = "single")) +
+    geom_text(aes(group =period_name,label=round(total_distance_per_min)),size=3, hjust = -0.1, color="white", angle = 90, position=position_dodge2(width=0.9,preserve = "single")) +
    labs(x=NULL, y ="Total Distance per Min (m/min)",fill=NULL)+
    theme_bw()+ 
-  scale_y_continuous(expand = expansion(mult = c(0, 0.12)))+
-    scale_fill_manual(values=c("#572C5F","#00B0B9"))+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.2)))+
+    scale_fill_manual(values=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"))+
   theme(legend.position = "bottom",legend.direction = "horizontal",panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
@@ -379,14 +405,15 @@ md_distance_by_player %>%
 ```{r md_by_player_hsr_distance,  fig.width=9.5,fig.height=2.8, dpi = 600, dev.args = list(bg = "transparent")}
 
 md_distance_by_player %>% 
-  ggplot(aes(x = str_extract(athlete_name,"(?<=\\s)[[:graph:]]+$"), y = high_speed_distance, fill = period_name, label=round(high_speed_distance)))+
+  ggplot(aes(x = str_extract(athlete_name,"(?<=\\s)[[:graph:]]+$"), y = high_speed_distance, fill = period_name, label=if_else(high_speed_distance < 20, "", as.character(round(high_speed_distance))))) +
   geom_col(position = position_stack(reverse = TRUE))+
       # geom_text_repel(position = position_stack(vjust = 0.5),segment.colour = NA, direction = "y", size=3,seed=42,color="white") +
-  geom_text(position = position_stack(vjust = 0.5, reverse = TRUE),color="white", size=3,check_overlap=T)+
+  geom_text(aes(color=period_name),position = position_stack(vjust = 0.5, reverse = TRUE), size=3,show.legend = F)+
    labs(x=NULL, y ="HSR Distance (m)",fill=NULL)+
    theme_bw()+ 
   scale_y_continuous(expand = expansion(mult = c(0, 0.05)))+
-    scale_fill_manual(values=c("#572C5F","#00B0B9"))+
+    scale_fill_manual(values=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"))+
+        scale_color_manual(values=c("white","white","#221C35","#221C35"))+
   theme(legend.position = "bottom",legend.direction = "horizontal",panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
@@ -419,11 +446,11 @@ md_distance_by_player %>%
 md_distance_by_player %>% 
   ggplot(aes(x = str_extract(athlete_name,"(?<=\\s)[[:graph:]]+$"), y = high_speed_distance_per_min))+
   geom_col(aes(fill = period_name),position=position_dodge2(width=0.9,preserve = "single")) +
-    geom_text(aes(group =period_name,label=round(high_speed_distance_per_min,2)),size=3, vjust = -0.5, color="white", position=position_dodge2(width=0.9,preserve = "single")) +
+    geom_text(aes(group =period_name,label=round(high_speed_distance_per_min,2)),size=3, hjust = -0.1, color="white",angle = 90, position=position_dodge2(width=0.9,preserve = "single")) +
    labs(x=NULL, y ="HSR Distance per Min (m/min)",fill=NULL)+
    theme_bw()+ 
-  scale_y_continuous(expand = expansion(mult = c(0, 0.12)))+
-    scale_fill_manual(values=c("#572C5F","#00B0B9"))+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.2)))+
+    scale_fill_manual(values=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"))+
   theme(legend.position = "bottom",legend.direction = "horizontal",panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
@@ -458,15 +485,16 @@ md_distance_by_player %>%
 ```{r md_by_player_sprint_distance,  fig.width=9.5,fig.height=2.8, dpi = 600, dev.args = list(bg = "transparent")}
 
 md_distance_by_player %>% 
-  ggplot(aes(x = str_extract(athlete_name,"(?<=\\s)[[:graph:]]+$"), y = sprint_distance, fill = period_name, label=round(sprint_distance)))+
+  ggplot(aes(x = str_extract(athlete_name,"(?<=\\s)[[:graph:]]+$"), y = sprint_distance, fill = period_name, label=if_else(sprint_distance < 10, "", as.character(round(sprint_distance))))) +
   geom_col(position = position_stack(reverse = TRUE))+
   # geom_bar_text(position = "stack", grow=T, reflow = T,contrast=T, colour="white") +
   # geom_text_repel(position = position_stack(vjust = 0.5),segment.colour = NA, direction = "y", size=3,seed=42,color="white") +
-  geom_text(position = position_stack(vjust = 0.5, reverse = TRUE),color="white", size=3,check_overlap=T)+
+  geom_text(aes(color=period_name), position = position_stack(vjust = 0.5, reverse = TRUE), size=3,show.legend = F)+
   labs(x=NULL, y ="Sprint Distance (m)",fill=NULL)+
   theme_bw()+ 
   scale_y_continuous(expand = expansion(mult = c(0, 0.05)))+
-    scale_fill_manual(values=c("#572C5F","#00B0B9"))+
+        scale_color_manual(values=c("white","white","#221C35","#221C35"))+
+    scale_fill_manual(values=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"))+
       # scale_color_manual(values=c("#00B0B9","#572C5F"))+
   theme(legend.position = "bottom",legend.direction = "horizontal", panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
@@ -498,11 +526,11 @@ md_distance_by_player %>%
 md_distance_by_player %>% 
   ggplot(aes(x = str_extract(athlete_name,"(?<=\\s)[[:graph:]]+$"), y = sprint_distance_per_min))+
   geom_col(aes(fill = period_name),position=position_dodge2(width=0.9,preserve = "single")) +
-    geom_text(aes(group =period_name,label=round(sprint_distance_per_min,2)),size=3, vjust = -0.5, color="white", position=position_dodge2(width=0.9,preserve = "single")) +
+    geom_text(aes(group =period_name,label=round(sprint_distance_per_min,2)),size=3, hjust = -0.1,color="white",angle = 90, position=position_dodge2(width=0.9,preserve = "single")) +
    labs(x=NULL, y ="Sprint Distance per Min (m/min)",fill=NULL)+
    theme_bw()+ 
-  scale_y_continuous(expand = expansion(mult = c(0, 0.12)))+
-    scale_fill_manual(values=c("#572C5F","#00B0B9"))+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.2)))+
+    scale_fill_manual(values=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"))+
   theme(legend.position = "bottom",legend.direction = "horizontal",panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
@@ -541,13 +569,17 @@ md_distance_by_player %>%
 ```{r}
 
 md_distance_team_total <- stats_period %>%
-  dplyr::filter(position_name != "Goal Keeper" & tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name == md_input) %>% pull(date) %>% unique) & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
+  dplyr::filter(position_name != "Goal Keeper" & tag_name == "MD" & date >= as.Date("2026-04-01") & date <= stats_period %>% filter(activity_name == md_input) %>% pull(date) %>% unique & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
   select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>%
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>%
-  group_by(activity_name, date) %>%
-  summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>%
+  group_by(activity_name) %>%
+  mutate(across(where(is.numeric), ~sum(.x[!str_detect(period_name,"Extra")],na.rm=T), .names="{.col}_Regular"),
+         across(where(is.numeric) & !contains("_Regular"), ~sum(.x,na.rm=T), .names="{.col}_Extra")) %>%
   ungroup %>% 
-  mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min"),
+  select(activity_name | date | contains("_Regular") | contains("_Extra")) %>%
+  unique %>% 
+  mutate(across(contains("_Regular") & !contains("field_time"), ~.x/(field_time_Regular/60), .names="{.col}_per_min"),
+         across(contains("_Extra") & !contains("field_time"), ~.x/(field_time_Extra/60), .names="{.col}_per_min"),
          logo = case_when(str_detect(activity_name, "Montreal") ~"Montreal.png",
                        str_detect(activity_name, "Ottawa") ~ "Ottawa.png",
                        str_detect(activity_name, "Toronto") ~ "Toronto.png",
@@ -557,20 +589,26 @@ md_distance_team_total <- stats_period %>%
                        str_detect(activity_name, "Everton") ~ "Everton.png",
                        str_detect(activity_name, "West Ham") ~ "West Ham.png",
                        str_detect(activity_name, "AUS") ~ "AUS.png")) %>% 
+  rename_with(~str_replace(.x, "_Extra_per_min", "_per_min_Extra")) %>% 
+  rename_with(~str_replace(.x, "_Regular_per_min", "_per_min_Regular")) %>% 
+  pivot_longer(cols=contains("_Regular") | contains("_Extra"),cols_vary = "slowest", names_to = c(".value", "time"), names_pattern = "(.*)_([[:alpha:]]{5,7})$") %>% 
+  distinct(field_time, .keep_all = TRUE) %>% 
   arrange(date) %>% 
-  mutate(date=factor(date, levels = unique(date), labels = format(date, "%b %d")),
-         Group="group"
+  mutate(date=factor(date, levels = date, labels = format(date, "%b %d")),
+         time=factor(time, levels = c("Regular", "Extra"), labels = c("Regular Time", "Extra Time"))
          # ,
-         # logo=paste0("<img src='", logo,  "' height='30' />")
+         # Group="group"
          )
 
 md_distance_desc <- md_distance_team_total %>% 
+  filter(time != "Extra") %>% 
   mutate(across(where(is.numeric), ~mean(.x), .names="{.col}_mean"), 
          across(where(is.numeric) & !contains("_mean"), ~sd(.x), .names="{.col}_sd")) %>% 
   select(contains("mean") | contains("sd")) %>% 
   unique
 
 ```
+
 
 ```{r md_comparison_total_distance,  fig.width=9.5,fig.height=3, dpi = 600, dev.args = list(bg = "transparent")}
 
@@ -580,12 +618,14 @@ md_distance_team_total %>%
   geom_hline(yintercept=md_distance_desc$total_distance_mean, color="#00B0B9", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$total_distance_mean-2*md_distance_desc$total_distance_sd, color="red", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$total_distance_mean+2*md_distance_desc$total_distance_sd, color="red", linetype="dashed") +
-  geom_line(aes(group=Group), color="white")+
+  geom_line(aes(group=time, color=time))+
   geom_image(aes(image=logo),by="width", size=0.1) + 
-  geom_text(aes(label=round(total_distance)), vjust=-2, color="white") + 
-  labs(x=NULL, y ="Total Distance (m)",fill=NULL)+
+  geom_text(aes(label=round(total_distance), color=time),vjust=-1.5,size=3,show.legend = F) + 
+  scale_color_manual(values=c("white", "gold"))+
+  labs(x=NULL, y ="Total Distance (m)",fill=NULL, color=NULL)+
   theme_bw()+
-  theme(panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
+  theme(legend.position = "bottom", legend.direction = "horizontal",
+        panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
     legend.background = element_rect(fill = "transparent", colour = NA),
@@ -621,12 +661,14 @@ md_distance_team_total %>%
   geom_hline(yintercept=md_distance_desc$total_distance_per_min_mean, color="#00B0B9", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$total_distance_per_min_mean-2*md_distance_desc$total_distance_per_min_sd, color="red", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$total_distance_per_min_mean+2*md_distance_desc$total_distance_per_min_sd, color="red", linetype="dashed") +
-  geom_line(aes(group=Group), color="white")+
+    geom_line(aes(group=time, color=time))+
   geom_image(aes(image=logo),by="width", size=0.1) + 
-  geom_text(aes(label=round(total_distance_per_min)), vjust=-2, color="white") + 
-  labs(x=NULL, y ="Total Distance per Min (m/min)",fill=NULL)+
+  geom_text(aes(label=round(total_distance_per_min), color=time), vjust=-1.5,size=3.5, show.legend = F) + 
+    scale_color_manual(values=c("white", "gold"))+
+  labs(x=NULL, y ="Total Distance per Min (m/min)",fill=NULL, color=NULL)+
   theme_bw()+
-  theme(panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
+  theme(legend.position = "bottom", legend.direction = "horizontal",
+        panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
     legend.background = element_rect(fill = "transparent", colour = NA),
@@ -663,12 +705,15 @@ md_distance_team_total %>%
   geom_hline(yintercept=md_distance_desc$high_speed_distance_mean, color="#00B0B9", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$high_speed_distance_mean-2*md_distance_desc$high_speed_distance_sd, color="red", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$high_speed_distance_mean+2*md_distance_desc$high_speed_distance_sd, color="red", linetype="dashed") +
-  geom_line(aes(group=Group), color="white")+
+    geom_line(aes(group=time, color=time))+
   geom_image(aes(image=logo),by="width", size=0.1) + 
-  geom_text(aes(label=round(high_speed_distance)), vjust=-2, color="white") + 
-  labs(x=NULL, y ="HSR Distance (m)",fill=NULL)+
+  geom_text(aes(label=round(high_speed_distance), color=time), vjust=-1.5,size=3.5, show.legend = F) + 
+    scale_color_manual(values=c("white", "gold"))+
+
+  labs(x=NULL, y ="HSR Distance (m)",fill=NULL, color=NULL)+
   theme_bw()+
-  theme(panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
+  theme(legend.position = "bottom", legend.direction = "horizontal",
+        panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
     legend.background = element_rect(fill = "transparent", colour = NA),
@@ -701,12 +746,15 @@ md_distance_team_total %>%
   geom_hline(yintercept=md_distance_desc$high_speed_distance_per_min_mean, color="#00B0B9", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$high_speed_distance_per_min_mean-2*md_distance_desc$high_speed_distance_per_min_sd, color="red", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$high_speed_distance_per_min_mean+2*md_distance_desc$high_speed_distance_per_min_sd, color="red", linetype="dashed") +
-  geom_line(aes(group=Group), color="white")+
+  geom_line(aes(group=time, color=time))+
   geom_image(aes(image=logo),by="width", size=0.1) + 
-  geom_text(aes(label=round(high_speed_distance_per_min,2)), vjust=-2, color="white") + 
-  labs(x=NULL, y ="HSR Distance per Min (m/min)",fill=NULL)+
+  geom_text(aes(label=round(high_speed_distance_per_min,2), color=time), vjust=-1.5,size=3.5, show.legend = F) + 
+    scale_color_manual(values=c("white", "gold"))+
+
+  labs(x=NULL, y ="HSR Distance per Min (m/min)",fill=NULL, color=NULL)+
   theme_bw()+
-  theme(panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
+  theme(legend.position = "bottom", legend.direction = "horizontal",
+        panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
     legend.background = element_rect(fill = "transparent", colour = NA),
@@ -743,12 +791,15 @@ md_distance_team_total %>%
   geom_hline(yintercept=md_distance_desc$sprint_distance_mean, color="#00B0B9", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$sprint_distance_mean-2*md_distance_desc$sprint_distance_sd, color="red", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$sprint_distance_mean+2*md_distance_desc$sprint_distance_sd, color="red", linetype="dashed") +
-  geom_line(aes(group=Group), color="white")+
+        geom_line(aes(group=time, color=time))+
   geom_image(aes(image=logo),by="width", size=0.1) + 
-  geom_text(aes(label=round(sprint_distance)), vjust=-2, color="white") +
-  labs(x=NULL, y ="Sprint Distance (m)",fill=NULL)+
+  geom_text(aes(label=round(sprint_distance), color=time), vjust=-1.5,size=3.5, show.legend = F) + 
+    scale_color_manual(values=c("white", "gold"))+
+
+  labs(x=NULL, y ="Sprint Distance (m)",fill=NULL, color=NULL)+
   theme_bw()+
-  theme(panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
+  theme(legend.position = "bottom", legend.direction = "horizontal",
+    panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill = "transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
     legend.background = element_rect(fill = "transparent", colour = NA),
@@ -781,12 +832,16 @@ md_distance_team_total %>%
    geom_hline(yintercept=md_distance_desc$sprint_distance_per_min_mean, color="#00B0B9", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$sprint_distance_per_min_mean-2*md_distance_desc$sprint_distance_per_min_sd, color="red", linetype="dashed") +
   geom_hline(yintercept=md_distance_desc$sprint_distance_per_min_mean+2*md_distance_desc$sprint_distance_per_min_sd, color="red", linetype="dashed") +
-  geom_line(aes(group=Group), color="white")+
+  geom_line(aes(group=time, color=time))+
   geom_image(aes(image=logo),by="width", size=0.1) + 
-  geom_text(aes(label=round(sprint_distance_per_min,2)), vjust=-2, color="white") + 
-  labs(x=NULL, y ="Sprint Distance per Min (m/min)",fill=NULL)+
+  geom_text(aes(label=round(sprint_distance_per_min,2), color=time), vjust=-1.5,size=3.5, show.legend = F) + 
+    scale_color_manual(values=c("white", "gold"))+
+
+  labs(x=NULL, y ="Sprint Distance per Min (m/min)",fill=NULL, color=NULL)+
   theme_bw()+
-  theme(panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
+  theme(
+    legend.position = "bottom", legend.direction = "horizontal",
+    panel.grid.major.x=element_blank(), panel.grid.minor.x=element_blank(),
     panel.background = element_rect(fill ="transparent", colour = NA),
     plot.background = element_rect(fill = "transparent", colour = NA),
     legend.background = element_rect(fill = "transparent", colour = NA),
@@ -825,42 +880,43 @@ md_distance_team_total %>%
 ```{r 15min_distance}
 
 md_distance_15min_temp <- stats_period %>%
-  filter(position_name != "Goal Keeper" & activity_name == md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-  select(activity_name, date, athlete_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
+  filter(position_name != "Goal Keeper" & activity_name == md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+  select(activity_name, athlete_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>%
-  group_by(activity_name, date, period_name, start_time) %>%
+  group_by(activity_name, period_name, start_time) %>%
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>%
   ungroup %>% 
   mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min")) %>% 
   arrange(start_time) %>% 
   mutate(
-    # period_name = paste(str_remove(period_name, "\\d{1,2}\\.\\s"), (row_number()-1)*(90/n()), "-", row_number()*(90/n()), "min"),
-    period=paste0((row_number()-1)*(90/n()), "-", row_number()*(90/n()), "min"),
+    # period_name = paste(str_remove(period_name, "\\d{1,2}\\.\\s"), (row_number()-1)*(match_duration/n()), "-", row_number()*(match_duration/n()), "min"),
+    period=paste0((row_number()-1)*(match_duration/n()), "-", row_number()*(match_duration/n()), "min"),
     position_name="All", 
     across(contains("distance")& !contains("per_min"), ~.x/10))
 
 
  md_distance_15min_by_position <- stats_period %>%
-      dplyr::filter(position_name != "Goal Keeper" & activity_name == md_input &  str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-      select(activity_name, date, athlete_name, position_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
+      dplyr::filter(position_name != "Goal Keeper" & activity_name == md_input &  (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+      select(activity_name, athlete_name, position_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
              position_name = case_when(str_detect(position_name, "Back") | str_detect(position_name, "Defender")~ "Defender",
                               str_detect(position_name, "Midfielder")~ "Midfielder",
                               str_detect(position_name, "Winger") | str_detect(position_name, "Striker")~ "Attacker",
                               .default=position_name)) %>%
-      group_by(activity_name, date, period_name, start_time, position_name) %>%
+      group_by(activity_name, period_name, start_time, position_name) %>%
       summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>%
       ungroup %>% 
       mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min")) %>% 
       arrange(start_time) %>% 
       group_by(position_name) %>% 
       mutate(
-        # period_name = paste(str_remove(period_name, "\\d{1,2}\\.\\s"), (row_number()-1)*(90/n()), "-", row_number()*(90/n()), "min"),
-        period=paste0((row_number()-1)*(90/n()), "-", row_number()*(90/n()), "min"),
+        # period_name = paste(str_remove(period_name, "\\d{1,2}\\.\\s"), (row_number()-1)*(match_duration/n()), "-", row_number()*(match_duration/n()), "min"),
+        period=paste0((row_number()-1)*(match_duration/n()), "-", row_number()*(match_duration/n()), "min"),
     across(contains("distance") & !contains("per_min"), ~if_else(position_name == "Defender",.x/4,.x/3))) %>% 
-      ungroup 
+      ungroup
  
-md_distance_15min <- rbind(md_distance_15min_temp, md_distance_15min_by_position) 
+md_distance_15min <- rbind(md_distance_15min_temp, md_distance_15min_by_position) %>%
+  mutate(period = factor(period, levels = c("0-15min","15-30min", "30-45min", "45-60min", "60-75min", "75-90min", "90-105min", "105-120min")))
 
  
 ```
