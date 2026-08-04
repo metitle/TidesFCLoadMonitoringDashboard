@@ -212,7 +212,7 @@ ggplot_progress_bar <- function(x, data_column, bar_fill = "#00B0B9", bar_outlin
     geom_col(aes(x = max_val, y = 1), fill = "transparent", linewidth =1, color = bar_outline, width = 0.2) +
     #Foreground bar 
     geom_col(aes(x = scaled, y = 1), fill = bar_fill, linewidth =1,color = bar_outline, width = 0.2) +
-    geom_text(aes(x = max_val/2, y = 1, label = val), color=text_color, hjust = "middle",fontface="bold", size = 14) +
+    geom_text(aes(x = max_val/2, y = 1, label = val), color=text_color, hjust = "middle",fontface="bold", size = 16) +
     scale_x_continuous(expand = c(0.05, 0.05)) +
     scale_y_discrete(expand = c(0.01,0.01)) +
     theme_void()
