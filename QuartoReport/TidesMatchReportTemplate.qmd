@@ -30,7 +30,7 @@ library(tinytable)
 
 ```{r, eval=F}
 load("catapult_stats.RData")
-md_input <- "25th July 2026 - MD 13 vs Vancouver (A)"
+md_input <- "3rd August 2026 - MD 14 vs Ottawa (H)"
 md_date <- stats %>% filter(activity_name==md_input) %>% mutate(date = paste0(weekdays(date), ', ', format(date, '%B %d, %Y'))) %>% pull(date) %>% unique
 md_num <- str_extract(md_input, '(?<=MD\\s)\\d{1}')
 md_year <- str_extract(md_date, '\\d{4}')
@@ -166,7 +166,7 @@ match_day_summary <- stats_period %>%
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
   pivot_wider(names_from = period_name, names_glue = "{period_name}_{.value}", values_from = c(field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph)) %>% 
   mutate(Sub = if_else(is.na(`2. First Half_field_time`) | `2. First Half_field_time` < (10*60), T, F)) %>% 
-  pivot_longer(cols=contains(". "), names_to = c("period_name", ".value"), names_pattern = "(\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half)_(.*)") %>% 
+  pivot_longer(cols=contains(". "), names_to = c("period_name", ".value"), names_pattern = "(\\d{1,2}\\. [[:alpha:]]{5,6} [[:alpha:]]{4,5})_(.*)") %>% 
   group_by(activity_name, athlete_name, position_name, Sub) %>% 
   summarize(across(where(is.numeric) & !max_vel_kph, ~sum(.x,na.rm=T)), max_vel_kph = max(max_vel_kph, na.rm=T)) %>% 
   ungroup %>% 
@@ -212,7 +212,7 @@ ggplot_progress_bar <- function(x, data_column, bar_fill = "#00B0B9", bar_outlin
     geom_col(aes(x = max_val, y = 1), fill = "transparent", linewidth =1, color = bar_outline, width = 0.2) +
     #Foreground bar 
     geom_col(aes(x = scaled, y = 1), fill = bar_fill, linewidth =1,color = bar_outline, width = 0.2) +
-    geom_text(aes(x = max_val/2, y = 1, label = val), color=text_color, hjust = "middle",fontface="bold", size = 16) +
+    geom_text(aes(x = max_val/2, y = 1, label = val), color=text_color, hjust = "middle",fontface="bold", size = 14) +
     scale_x_continuous(expand = c(0.05, 0.05)) +
     scale_y_discrete(expand = c(0.01,0.01)) +
     theme_void()
