@@ -595,10 +595,7 @@ md_distance_team_total <- stats_period %>%
   distinct(field_time, .keep_all = TRUE) %>% 
   arrange(date) %>% 
   mutate(date=factor(date, levels = date, labels = format(date, "%b %d")),
-         time=factor(time, levels = c("Regular", "Extra"), labels = c("Regular Time", "Extra Time"))
-         # ,
-         # Group="group"
-         )
+         time=factor(time, levels = c("Regular", "Extra"), labels = c("Regular Time", "Extra Time")))
 
 md_distance_desc <- md_distance_team_total %>% 
   filter(time != "Extra") %>% 
@@ -889,7 +886,6 @@ md_distance_15min_temp <- stats_period %>%
   mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min")) %>% 
   arrange(start_time) %>% 
   mutate(
-    # period_name = paste(str_remove(period_name, "\\d{1,2}\\.\\s"), (row_number()-1)*(match_duration/n()), "-", row_number()*(match_duration/n()), "min"),
     period=paste0((row_number()-1)*(match_duration/n()), "-", row_number()*(match_duration/n()), "min"),
     position_name="All", 
     across(contains("distance")& !contains("per_min"), ~.x/10))
@@ -910,7 +906,6 @@ md_distance_15min_temp <- stats_period %>%
       arrange(start_time) %>% 
       group_by(position_name) %>% 
       mutate(
-        # period_name = paste(str_remove(period_name, "\\d{1,2}\\.\\s"), (row_number()-1)*(match_duration/n()), "-", row_number()*(match_duration/n()), "min"),
         period=paste0((row_number()-1)*(match_duration/n()), "-", row_number()*(match_duration/n()), "min"),
     across(contains("distance") & !contains("per_min"), ~if_else(position_name == "Defender",.x/4,.x/3))) %>% 
       ungroup

@@ -1534,17 +1534,18 @@ server <- function(input, output, session) {
     shiny::validate(need(!is.null(input$athlete8), "Select one or more players"))
     
     md_distance_per_half <- stats_period %>% 
-      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-      # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-      select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>% 
+      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+      # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+      select(activity_name,athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>% 
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
              period_name=str_remove(period_name, "\\d{1,2}\\.\\s")) %>% 
-      group_by(activity_name, date, athlete_name, period_name) %>% 
+      group_by(activity_name, athlete_name, period_name) %>% 
       summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
       ungroup %>% 
-      group_by(activity_name, date, period_name) %>% 
+      group_by(activity_name, period_name) %>% 
       summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
-      ungroup 
+      ungroup %>% 
+      mutate(period_name = factor(period_name, levels=c("First Half", "Second Half", "First Extra", "Second Extra")))
     
     md_distance_per_half %>% 
       plot_ly() %>%
@@ -1595,15 +1596,16 @@ server <- function(input, output, session) {
   md_distance_by_player <- reactive({
 
     stats_period %>%
-    dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-    # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-    select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>%
+    dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+    # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+    select(activity_name, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>%
     mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
            period_name=str_remove(period_name, "\\d{1,2}\\.\\s")) %>%
-    group_by(activity_name, date, athlete_name, period_name) %>%
+    group_by(activity_name, athlete_name, period_name) %>%
     summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>%
     ungroup %>% 
-    mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min"))
+    mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min"),
+           period_name = factor(period_name, levels=c("First Half", "Second Half", "First Extra", "Second Extra")))
 
   })
   
@@ -1628,7 +1630,7 @@ server <- function(input, output, session) {
     md_distance_by_player %>% 
       plot_ly() %>%
       add_trace(x = ~str_extract(athlete_name,"(?<=\\s).+$"), y = ~total_distance, customdata=~paste0(activity_name,"\n<b>Period:</b> ", period_name),
-                type = "bar", color=~period_name, colors=c("#00B0B9","#572C5F"),
+                type = "bar", color=~period_name, colors=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>Total Distance (m):</b> %{y:.1f}",
@@ -1655,7 +1657,7 @@ server <- function(input, output, session) {
     md_distance_by_player %>% 
       plot_ly() %>%
       add_trace(x = ~str_extract(athlete_name,"(?<=\\s).+$"), y = ~high_speed_distance, customdata=~paste0(activity_name,"\n<b>Period:</b> ", period_name),
-                type = "bar", color=~period_name, colors=c("#00B0B9","#572C5F"),
+                type = "bar", color=~period_name, colors=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>HSR Distance (m):</b> %{y:.1f}",
@@ -1682,7 +1684,7 @@ server <- function(input, output, session) {
     md_distance_by_player %>% 
       plot_ly() %>%
       add_trace(x = ~str_extract(athlete_name,"(?<=\\s).+$"), y = ~sprint_distance, customdata=~paste0(activity_name,"\n<b>Period:</b> ", period_name),
-                type = "bar", color=~period_name, colors=c("#00B0B9","#572C5F"),
+                type = "bar", color=~period_name, colors=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>Sprint Distance (m):</b> %{y:.1f}",
@@ -1710,7 +1712,7 @@ server <- function(input, output, session) {
     md_distance_by_player %>% 
       plot_ly() %>%
       add_trace(x = ~str_extract(athlete_name,"(?<=\\s).+$"), y = ~total_distance_per_min, customdata=~paste0(activity_name,"\n<b>Period:</b> ", period_name),
-                type = "bar", color=~period_name, colors=c("#00B0B9","#572C5F"),
+                type = "bar", color=~period_name, colors=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>Total Distance Per Min (m/min):</b> %{y:.1f}",
@@ -1737,7 +1739,7 @@ server <- function(input, output, session) {
     md_distance_by_player %>% 
       plot_ly() %>%
       add_trace(x = ~str_extract(athlete_name,"(?<=\\s).+$"), y = ~high_speed_distance_per_min, customdata=~paste0(activity_name,"\n<b>Period:</b> ", period_name),
-                type = "bar", color=~period_name, colors=c("#00B0B9","#572C5F"),
+                type = "bar", color=~period_name, colors=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>HSR Distance Per Min (m/min):</b> %{y:.1f}",
@@ -1764,7 +1766,7 @@ server <- function(input, output, session) {
     md_distance_by_player %>% 
       plot_ly() %>%
       add_trace(x = ~str_extract(athlete_name,"(?<=\\s).+$"), y = ~sprint_distance_per_min, customdata=~paste0(activity_name,"\n<b>Period:</b> ", period_name),
-                type = "bar", color=~period_name, colors=c("#00B0B9","#572C5F"),
+                type = "bar", color=~period_name, colors=c("#572C5F","#00B0B9","#B2C9D4","#E5E1E6"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>Sprint Distance Per Min (m/min):</b> %{y:.1f}",
@@ -1783,14 +1785,18 @@ server <- function(input, output, session) {
   md_distance_team_total <- reactive({
     
     stats_period %>%
-      dplyr::filter(athlete_name %in% input$athlete8 & tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name == input$md_input) %>% pull(date) %>% unique) & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-      # dplyr::filter(tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name ==  "24th May 2026 - MD 5 vs Calgary (A)") %>% pull(date) %>% unique) & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
+      dplyr::filter(athlete_name %in% input$athlete8 & tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name == input$md_input) %>% pull(date) %>% unique) & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+      # dplyr::filter(tag_name == "MD" & date >= as.Date("2026-04-01") & date <= (stats_period %>% filter(activity_name ==  "24th May 2026 - MD 5 vs Calgary (A)") %>% pull(date) %>% unique) & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
       select(activity_name, date, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance) %>%
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>%
-      group_by(activity_name, date) %>%
-      summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>%
+      group_by(activity_name) %>%
+      mutate(across(where(is.numeric), ~sum(.x[!str_detect(period_name,"Extra")],na.rm=T), .names="{.col}_Regular"),
+             across(where(is.numeric) & !contains("_Regular"), ~sum(.x,na.rm=T), .names="{.col}_Extra")) %>%
       ungroup %>% 
-      mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min"),
+      select(activity_name | date | contains("_Regular") | contains("_Extra")) %>%
+      unique %>% 
+      mutate(across(contains("_Regular") & !contains("field_time"), ~.x/(field_time_Regular/60), .names="{.col}_per_min"),
+             across(contains("_Extra") & !contains("field_time"), ~.x/(field_time_Extra/60), .names="{.col}_per_min"),
              logo = case_when(str_detect(activity_name, "Halifax") ~ "https://upload.wikimedia.org/wikipedia/en/thumb/3/37/Halifax_Tides_FC.svg/1280px-Halifax_Tides_FC.svg.png",
                                str_detect(activity_name, "Montreal") ~ "https://upload.wikimedia.org/wikipedia/en/thumb/3/38/Montreal_Roses_FC.svg/1280px-Montreal_Roses_FC.svg.png",
                                  str_detect(activity_name, "Ottawa") ~ "https://upload.wikimedia.org/wikipedia/en/thumb/f/f2/Ottawa_Rapid_FC.svg/1280px-Ottawa_Rapid_FC.svg.png",
@@ -1801,14 +1807,19 @@ server <- function(input, output, session) {
                                  str_detect(activity_name, "Everton") ~ "https://upload.wikimedia.org/wikipedia/en/thumb/7/7c/Everton_FC_logo.svg/1280px-Everton_FC_logo.svg.png",
                                 str_detect(activity_name, "West Ham") ~ "https://upload.wikimedia.org/wikipedia/en/thumb/c/c2/West_Ham_United_FC_logo.svg/1280px-West_Ham_United_FC_logo.svg.png",
                               str_detect(activity_name, "AUS") ~ "https://upload.wikimedia.org/wikipedia/en/thumb/0/0b/Atlantic_University_Sport_Logo.svg/1280px-Atlantic_University_Sport_Logo.svg.png")) %>% 
+      rename_with(~str_replace(.x, "_Extra_per_min", "_per_min_Extra")) %>% 
+      rename_with(~str_replace(.x, "_Regular_per_min", "_per_min_Regular")) %>% 
+      pivot_longer(cols=contains("_Regular") | contains("_Extra"),cols_vary = "slowest", names_to = c(".value", "time"), names_pattern = "(.*)_([[:alpha:]]{5,7})$") %>% 
+      distinct(field_time, .keep_all = TRUE) %>% 
       arrange(date) %>% 
-      mutate(date=as.character(date))
-  
+      mutate(date=as.character(date),
+             time=factor(time, levels = c("Regular", "Extra"), labels = c("Regular Time", "Extra Time")))
     })
   
   md_distance_desc <- reactive({
     
     md_distance_team_total() %>% 
+      filter(time != "Extra") %>% 
       mutate(across(where(is.numeric), ~mean(.x), .names="{.col}_mean"), 
              across(where(is.numeric), ~sd(.x), .names="{.col}_sd")) %>% 
       select(contains("mean") | contains("sd")) %>% 
@@ -1853,14 +1864,15 @@ server <- function(input, output, session) {
     
 md_distance_team_total %>% 
       plot_ly() %>%
-      add_trace(x = ~as.character(date), y = ~total_distance, customdata=~activity_name,
-                type = "scatter", mode = 'lines', line=list(color="#572C5F"),
+      add_trace(x = ~as.character(date), y = ~total_distance,  customdata=~paste0(activity_name,"<br><b>", time, "</b>"),
+                type = "scatter", mode = 'lines', color=~time,colors=c("#572C5F","#00B0B9"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>Total Distance (m):</b> %{y:.1f}",
                   "<extra></extra>"))%>% 
       config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
       layout(
+        legend = list(orientation = 'h',xanchor = "center", x = 0.5,y = -0.15),
         xaxis = list(range = c(-0.5,range_x-1.5), showline=TRUE,showgrid = FALSE,showticklabels = FALSE,title=""),
         yaxis = list(showline=TRUE,showgrid = FALSE, title="Total Distance (m)"),        
         plot_bgcolor  = rgb(0,0,0,0),
@@ -1912,14 +1924,15 @@ md_distance_team_total %>%
     
     md_distance_team_total %>% 
       plot_ly() %>%
-      add_trace(x = ~as.character(date), y = ~high_speed_distance, customdata=~activity_name,
-                type = "scatter", mode = 'lines', line=list(color="#572C5F"),
+      add_trace(x = ~as.character(date), y = ~high_speed_distance,  customdata=~paste0(activity_name,"<br><b>", time, "</b>"),
+                type = "scatter", mode = 'lines', color=~time,colors=c("#572C5F","#00B0B9"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>HSR Distance (m):</b> %{y:.1f}",
                   "<extra></extra>"))%>% 
       config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
       layout(
+        legend = list(orientation = 'h',xanchor = "center", x = 0.5,y = -0.15),
         xaxis = list(range = c(-0.5,range_x-1.5), showline=TRUE,showgrid = FALSE,showticklabels = FALSE,title=""),
         yaxis = list(showline=TRUE,showgrid = FALSE, title="HSR Distance (m)"),        
         plot_bgcolor  = rgb(0,0,0,0),
@@ -1971,14 +1984,15 @@ md_distance_team_total %>%
     
     md_distance_team_total %>% 
       plot_ly() %>%
-      add_trace(x = ~as.character(date), y = ~sprint_distance, customdata=~activity_name,
-                type = "scatter", mode = 'lines', line=list(color="#572C5F"),
+      add_trace(x = ~as.character(date), y = ~sprint_distance,  customdata=~paste0(activity_name,"<br><b>", time, "</b>"),
+                type = "scatter", mode = 'lines', color=~time,colors=c("#572C5F","#00B0B9"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>Sprint Distance (m):</b> %{y:.1f}",
                   "<extra></extra>"))%>% 
       config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
       layout(
+        legend = list(orientation = 'h',xanchor = "center", x = 0.5,y = -0.15),
         xaxis = list(range = c(-0.5,range_x-1.5), showline=TRUE,showgrid = FALSE,showticklabels = FALSE,title=""),
         yaxis = list(showline=TRUE,showgrid = FALSE, title="Sprint Distance (m)"),        
         plot_bgcolor  = rgb(0,0,0,0),
@@ -2032,14 +2046,15 @@ md_distance_team_total %>%
     
     md_distance_team_total %>% 
       plot_ly() %>%
-      add_trace(x = ~as.character(date), y = ~total_distance_per_min, customdata=~activity_name,
-                type = "scatter", mode = 'lines', line=list(color="#572C5F"),
+      add_trace(x = ~as.character(date), y = ~total_distance_per_min,  customdata=~paste0(activity_name,"<br><b>", time, "</b>"),
+                type = "scatter", mode = 'lines', color=~time,colors=c("#572C5F","#00B0B9"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>Total Distance Per Min (m/min):</b> %{y:.1f}",
                   "<extra></extra>"))%>% 
       config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
       layout(
+        legend = list(orientation = 'h',xanchor = "center", x = 0.5,y = -0.15),
         xaxis = list(range = c(-0.5,range_x-1.5), showline=TRUE,showgrid = FALSE,showticklabels = FALSE,title=""),
         yaxis = list(showline=TRUE,showgrid = FALSE, title="Total Distance Per Min (m/min)"),        
         plot_bgcolor  = rgb(0,0,0,0),
@@ -2091,14 +2106,15 @@ md_distance_team_total %>%
     
     md_distance_team_total %>% 
       plot_ly() %>%
-      add_trace(x = ~as.character(date), y = ~high_speed_distance_per_min, customdata=~activity_name,
-                type = "scatter", mode = 'lines', line=list(color="#572C5F"),
+      add_trace(x = ~as.character(date), y = ~high_speed_distance_per_min, customdata=~paste0(activity_name,"<br><b>", time, "</b>"),
+                type = "scatter", mode = 'lines', color=~time,colors=c("#572C5F","#00B0B9"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>HSR Distance Per min (m/min):</b> %{y:.1f}",
                   "<extra></extra>"))%>% 
       config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
       layout(
+        legend = list(orientation = 'h',xanchor = "center", x = 0.5,y = -0.15),
         xaxis = list(range = c(-0.5,range_x-1.5), showline=TRUE,showgrid = FALSE,showticklabels = FALSE,title=""),
         yaxis = list(showline=TRUE,showgrid = FALSE, title="HSR Distance Per Min (m/min)"),        
         plot_bgcolor  = rgb(0,0,0,0),
@@ -2151,14 +2167,15 @@ md_distance_team_total %>%
     
     md_distance_team_total %>% 
       plot_ly() %>%
-      add_trace(x = ~as.character(date), y = ~sprint_distance_per_min, customdata=~activity_name,
-                type = "scatter", mode = 'lines', line=list(color="#572C5F"),
+      add_trace(x = ~as.character(date), y = ~sprint_distance_per_min, customdata=~paste0(activity_name,"<br><b>", time, "</b>"),
+                type = "scatter", mode = 'lines', color=~time,colors=c("#572C5F","#00B0B9"),
                 hovertemplate = paste0(
                   "<b>Match:</b> %{customdata}<br>",
                   "<b>Sprint Distance Per Min (m/min):</b> %{y:.1f}",
                   "<extra></extra>"))%>% 
       config(displaylogo = FALSE, scrollZoom = FALSE, displayModeBar = FALSE) %>%
       layout(
+        legend = list(orientation = 'h',xanchor = "center", x = 0.5,y = -0.15),
         xaxis = list(range = c(-0.5,range_x-1.5), showline=TRUE,showgrid = FALSE,showticklabels = FALSE,title=""),
         yaxis = list(showline=TRUE,showgrid = FALSE, title="Sprint Distance Per Min (m/min)"),        
         plot_bgcolor  = rgb(0,0,0,0),
@@ -2173,44 +2190,54 @@ md_distance_team_total %>%
     
   })
   
+  match_duration <- reactive({
+    
+    stats_period %>% 
+      dplyr::filter(activity_name == input$md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+      group_by(athlete_name) %>% 
+      summarize(field_time = sum(field_time, na.rm=T)) %>% 
+      ungroup %>% 
+      summarize(field_time = floor(max(field_time)/60/30)*30) %>% 
+      pull(field_time)
+    
+  })
+  
   md_distance_15min <- reactive({
     
     stats_period %>%
-      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-      # dplyr::filter(activity_name == "12th April 2026 - MD vs Portsmouth (A)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-      select(activity_name, date, athlete_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
+      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+      # dplyr::filter(activity_name == "12th April 2026 - MD vs Portsmouth (A)" & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+      select(activity_name, athlete_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>%
-      group_by(activity_name, date, period_name, start_time) %>%
+      group_by(activity_name, period_name, start_time) %>%
       summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>%
       ungroup %>% 
       mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min")) %>% 
       arrange(start_time) %>% 
-      mutate(
-        # period_name = paste(str_remove(period_name, "\\d{1,2}\\.\\s"), (row_number()-1)*(90/n()), "-", row_number()*(90/n()), "min"),
-             period=paste0((row_number()-1)*(90/n()), "-", row_number()*(90/n()), "min"))
+      mutate(period=paste0((row_number()-1)*(match_duration()/n()), "-", row_number()*(match_duration()/n()), "min"),
+             period = factor(period, levels = c("0-15min","15-30min", "30-45min", "45-60min", "60-75min", "75-90min", "90-105min", "105-120min")))
     
   })
   
   md_distance_15min_by_position <- reactive({
     
     stats_period %>%
-      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-      # dplyr::filter(activity_name == "12th April 2026 - MD vs Portsmouth (A)" & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-      select(activity_name, date, athlete_name, position_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
+      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+      # dplyr::filter(activity_name == "12th April 2026 - MD vs Portsmouth (A)" & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+      select(activity_name, athlete_name, position_name, period_name,start_time, field_time, total_distance, high_speed_distance, sprint_distance) %>%
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
              position_name = if_else(str_detect(position_name, "Back"), "Defender", position_name), 
              position_name = if_else(str_detect(position_name, "Midfielder"), "Midfielder", position_name),
              position_name = if_else(str_detect(position_name, "Winger") | str_detect(position_name, "Striker") , "Attacker", position_name)) %>%
-      group_by(activity_name, date, period_name, start_time, position_name) %>%
+      group_by(activity_name, period_name, start_time, position_name) %>%
       summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>%
       ungroup %>% 
       mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min")) %>% 
       arrange(start_time) %>% 
       group_by(position_name) %>% 
-      mutate(
-        # period_name = paste(str_remove(period_name, "\\d{1,2}\\.\\s"), (row_number()-1)*(90/n()), "-", row_number()*(90/n()), "min"),
-        period=paste0((row_number()-1)*(90/n()), "-", row_number()*(90/n()), "min")) %>% 
-      ungroup 
+      mutate(period = paste0((row_number()-1)*(match_duration()/n()), "-", row_number()*(match_duration()/n()), "min")) %>% 
+      ungroup %>% 
+      mutate(period = factor(period, levels = c("0-15min","15-30min", "30-45min", "45-60min", "60-75min", "75-90min", "90-105min", "105-120min")))
     
   })
   
@@ -4566,13 +4593,13 @@ md_distance_team_total %>%
     
     
     match_day_summary <- stats_period %>% 
-      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$")) %>%
-      # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & period_name %in% c("2. First Half", "3. Second Half")) %>%
+      dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
+      # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
       select(activity_name, position_name, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph) %>% 
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
       pivot_wider(names_from = period_name, names_glue = "{period_name}_{.value}", values_from = c(field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph)) %>% 
       mutate(Sub = if_else(is.na(`2. First Half_field_time`) | `2. First Half_field_time` < (10*60), T, F)) %>% 
-      pivot_longer(cols=contains(". "), names_to = c("period_name", ".value"), names_pattern = "(\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half)_(.*)") %>% 
+      pivot_longer(cols=contains(". "), names_to = c("period_name", ".value"), names_pattern = "(\\d{1,2}\\. [[:alpha:]]{5,6} [[:alpha:]]{4,5})_(.*)") %>% 
       group_by(activity_name, athlete_name, position_name, Sub) %>% 
       summarize(across(where(is.numeric) & !max_vel_kph, ~sum(.x,na.rm=T)), max_vel_kph = max(max_vel_kph, na.rm=T)) %>% 
       ungroup %>% 
