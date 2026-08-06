@@ -286,7 +286,7 @@ period_volume_intensity <- stats_period %>%
   group_by(period_name) %>% 
   mutate(athlete_count=n()) %>% 
   ungroup %>% 
-  mutate(start_time= format(start_time, format = "%I:%M %p"),
+  mutate(start_time= format(as.POSIXct(start_time), format = "%I:%M %p"),
          hs_distance = high_speed_distance+sprint_distance) %>% 
   relocate(hs_distance, .after=total_distance) %>% 
   mutate(across(where(is.numeric) & !field_time & !athlete_count, ~.x/(field_time/60), .names="{.col}_per_min")) %>%
