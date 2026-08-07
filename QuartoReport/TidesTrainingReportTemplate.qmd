@@ -666,7 +666,7 @@ guides(fill = guide_legend(ncol = 2, byrow = F))
         row-gutter: 10pt,   // Perfectly replicates the previous vertical spacer
         
         align(left)[
-          #text(weight: "bold", size: 9pt, fill: rgb("#1e293b"))[Planned vs Actual Load (Excluding Warm Up)]
+          #text(weight: "bold", size: 9pt, fill: rgb("#1e293b"))[Planned vs Actual Load (excluding warm-up)]
         ],
         
         // The image now stretches to 100% of the remaining box layout window without mixed length math
@@ -749,12 +749,12 @@ guides(fill = guide_legend(ncol = 2, byrow = F))
                 columns: (1fr, 1fr),
                 column-gutter: 0pt,
                 row-gutter: 6pt, 
-//                align(left + horizon)[#text(weight: "bold", size: 7pt, fill: //rgb("#1e293b"))[Start:]],
-//                align(left + horizon)[#text(size: 7pt, fill: //rgb("#1e293b"))[#entry.start_time]],
-                align(left + horizon)[#text(weight: "bold", size: 7pt, fill: rgb("#1e293b"))[Duration:]],
-                align(left + horizon)[#text(size: 7pt, fill: rgb("#1e293b"))[#entry.field_time]],
-                align(left + horizon)[#text(weight: "bold", size: 7pt, fill: rgb("#1e293b"))[Athletes:]],
-                align(left + horizon)[#text(size: 7pt, fill: rgb("#1e293b"))[#entry.athlete_count]]
+//                align(left + horizon)[#text(weight: "bold", size: 7.5pt, fill: //rgb("#1e293b"))[Start:]],
+//                align(left + horizon)[#text(size: 7.5pt, fill: //rgb("#1e293b"))[#entry.start_time]],
+                align(left + horizon)[#text(weight: "bold", size: 8pt, fill: rgb("#1e293b"))[Duration:]],
+                align(left + horizon)[#text(size: 8pt, fill: rgb("#1e293b"))[#entry.field_time]],
+                align(left + horizon)[#text(weight: "bold", size: 8pt, fill: rgb("#1e293b"))[Athletes:]],
+                align(left + horizon)[#text(size: 8pt, fill: rgb("#1e293b"))[#entry.athlete_count]]
               )
             ],
             progressive-gauge(calc.round(entry.volume * 100), label: "Volume", color: rgb("#00B0B9")),
