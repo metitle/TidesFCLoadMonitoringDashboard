@@ -285,7 +285,7 @@ period_volume_intensity <- stats_period %>%
   group_by(period_name) %>% 
   mutate(athlete_count=n()) %>% 
   ungroup %>% 
-  mutate(start_time= format(as.POSIXct(start_time), format = "%I:%M %p"),
+  mutate(start_time= format(start_time, format = "%I:%M %p"),
          hs_distance = high_speed_distance+sprint_distance) %>% 
   relocate(hs_distance, .after=total_distance) %>% 
   mutate(across(where(is.numeric) & !field_time & !athlete_count, ~.x/(field_time/60), .names="{.col}_per_min")) %>%
@@ -749,8 +749,8 @@ guides(fill = guide_legend(ncol = 2, byrow = F))
                 columns: (1fr, 1fr),
                 column-gutter: 0pt,
                 row-gutter: 6pt, 
-                align(left + horizon)[#text(weight: "bold", size: 7pt, fill: rgb("#1e293b"))[Start:]],
-                align(left + horizon)[#text(size: 7pt, fill: rgb("#1e293b"))[#entry.start_time]],
+//                align(left + horizon)[#text(weight: "bold", size: 7pt, fill: //rgb("#1e293b"))[Start:]],
+//                align(left + horizon)[#text(size: 7pt, fill: //rgb("#1e293b"))[#entry.start_time]],
                 align(left + horizon)[#text(weight: "bold", size: 7pt, fill: rgb("#1e293b"))[Duration:]],
                 align(left + horizon)[#text(size: 7pt, fill: rgb("#1e293b"))[#entry.field_time]],
                 align(left + horizon)[#text(weight: "bold", size: 7pt, fill: rgb("#1e293b"))[Athletes:]],
