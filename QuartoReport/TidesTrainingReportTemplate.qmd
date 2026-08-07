@@ -261,8 +261,7 @@ session_volume_intensity <- stats_period %>%
   ungroup %>% 
   mutate(across(where(is.numeric) & !field_time, ~.x/(field_time/60), .names="{.col}_per_min")) %>%
   select(!field_time) %>% 
-  summarize(across(where(is.numeric), ~mean(.x, na.rm=T)))%>% 
-  ungroup
+  summarize(across(where(is.numeric), ~mean(.x, na.rm=T)))
 
 
 md_comparison_metrics <- session_volume_intensity/md_benchmarks
@@ -323,10 +322,24 @@ jsonlite::write_json(period_md_comparison, "period_md_comparison.json", auto_unb
 
 ```{r}
 
+
+actual_load <- stats_period %>% 
+  # Filter session of interest
+  # Exclude period names that include Warmup, WU, Extra, Rehab, Top ups, or GK
+  # Exclude GKs
+  # Exclude entries with field_time and total_distance equal to 0.
+  filter(date==training_date & !str_detect(period_name,fixed("warmup", ignore_case=T)) & !str_detect(period_name,fixed("wu", ignore_case=T)) & !str_detect(period_name,fixed("extra", ignore_case=T)) & !str_detect(period_name, fixed("rehab", ignore_case=T)) & !str_detect(period_name, fixed("top ups", ignore_case=T)) & !str_detect(period_name, fixed("gk", ignore_case=T)) & position_name != "Goal Keeper" & field_time > 0 & total_distance > 0) %>% 
+  select(athlete_name, total_distance, high_speed_distance, sprint_distance) %>%
+  group_by(athlete_name) %>% 
+  summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
+  ungroup %>% 
+  summarize(across(where(is.numeric), ~mean(.x, na.rm=T)))
+
+
 planned_vs_actual <- data.frame(
   load_type = c(rep("Planned",3),rep("Actual",3)),
   dist_type = rep(c("Total Distance", "HSR Distance", "Sprint Distance"),2),
-  distance = c(session_load_plan$TD, session_load_plan$HSR*20, session_load_plan$SD*20, session_volume_intensity$total_distance, session_volume_intensity$high_speed_distance*20, session_volume_intensity$sprint_distance*20)) %>% 
+  distance = c(session_load_plan$TD, session_load_plan$HSR*20, session_load_plan$SD*20, actual_load$total_distance, actual_load$high_speed_distance*20, actual_load$sprint_distance*20)) %>% 
   mutate(dist_type=factor(dist_type, levels=c("Total Distance", "HSR Distance", "Sprint Distance")),
          load_type=factor(load_type, levels=c("Planned", "Actual")),
          distance_labels = if_else(dist_type != "Total Distance", round(distance/20), round(distance)))
@@ -653,7 +666,7 @@ guides(fill = guide_legend(ncol = 2, byrow = F))
         row-gutter: 10pt,   // Perfectly replicates the previous vertical spacer
         
         align(left)[
-          #text(weight: "bold", size: 9pt, fill: rgb("#1e293b"))[Planned vs Actual Load]
+          #text(weight: "bold", size: 9pt, fill: rgb("#1e293b"))[Planned vs Actual Load (Excluding Warm Up)]
         ],
         
         // The image now stretches to 100% of the remaining box layout window without mixed length math
