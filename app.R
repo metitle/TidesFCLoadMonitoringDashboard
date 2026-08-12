@@ -422,7 +422,7 @@ server <- function(input, output, session) {
 
   
   columns <- c("field_time", "total_distance", "high_speed_distance", "sprint_distance", "meterage_per_minute", 
-               "accel_efforts", "decel_efforts","accel_decel_efforts", "max_vel_kph","max_heart_rate", "mean_heart_rate", 
+               "accel_efforts", "decel_efforts","accel_decel_efforts", "max_vel","max_heart_rate", "mean_heart_rate", 
                "total_dive_load", "dive_count", "explosive_efforts", "wellness", "rpe")
   
   BETA <- function(n) {
@@ -461,9 +461,8 @@ server <- function(input, output, session) {
     # mutate(total_dive_impact = sum(c_across(contains("total_impact_dive_load")))) %>% 
     # ungroup %>% 
     mutate(rpe=replace_na(rpe,0),
-           accel_decel_efforts = accel_efforts+decel_efforts,
-           max_vel_kph = max_vel*3.6
-    ) %>%
+           accel_decel_efforts = accel_efforts+decel_efforts    
+           ) %>%
     arrange(athlete_name,date) %>% 
     group_by(athlete_name) %>%
     mutate(
@@ -477,7 +476,7 @@ server <- function(input, output, session) {
       acwr_ewma_sprint_distance = al_ewma_sprint_distance/cl_ewma_sprint_distance,
       acwr_ewma_field_time = al_ewma_field_time/cl_ewma_field_time,
       acwr_ewma_meterage_per_minute = al_ewma_meterage_per_minute/cl_ewma_meterage_per_minute,
-      acwr_ewma_max_vel_kph = al_ewma_max_vel_kph/cl_ewma_max_vel_kph,
+      acwr_ewma_max_vel = al_ewma_max_vel/cl_ewma_max_vel,
       acwr_ewma_accel_efforts = al_ewma_accel_efforts/cl_ewma_accel_efforts,
       acwr_ewma_decel_efforts = al_ewma_decel_efforts/cl_ewma_decel_efforts,
       acwr_ewma_accel_decel_efforts = al_ewma_accel_decel_efforts/cl_ewma_accel_decel_efforts,
@@ -494,7 +493,7 @@ server <- function(input, output, session) {
       zscore_7_28_sprint_distance = (al_sprint_distance - cl_sprint_distance)/cl_sd_sprint_distance,
       zscore_7_28_field_time = (al_field_time - cl_field_time)/cl_sd_field_time,
       zscore_7_28_meterage_per_minute = (al_meterage_per_minute - cl_meterage_per_minute)/cl_sd_meterage_per_minute,
-      zscore_7_28_max_vel_kph = (al_max_vel_kph - cl_max_vel_kph)/cl_sd_max_vel_kph,
+      zscore_7_28_max_vel = (al_max_vel - cl_max_vel)/cl_sd_max_vel,
       zscore_7_28_accel_efforts = (al_accel_efforts - cl_accel_efforts)/cl_sd_accel_efforts,
       zscore_7_28_decel_efforts = (al_decel_efforts - cl_decel_efforts)/cl_sd_decel_efforts,
       zscore_7_28_accel_decel_efforts = (al_accel_decel_efforts - cl_accel_decel_efforts)/cl_sd_accel_decel_efforts,
@@ -525,7 +524,6 @@ server <- function(input, output, session) {
     mutate(
       # rpe=replace_na(rpe,0),
           accel_decel_efforts = accel_efforts+decel_efforts,
-           max_vel_kph = max_vel*3.6,
            tag_name=if_else(is.na(tag_name) & date != Sys.Date(), "OFF",tag_name)) %>%
     arrange(athlete_name,date) 
   
@@ -741,7 +739,7 @@ server <- function(input, output, session) {
   ext_load_param <- selectInput(
     "ext_load_param", "External Workload Parameter",
     c("Total Distance" = "external_load_total_distance", "High Speed Distance" = "external_load_high_speed_distance", "Sprint Distance" = "external_load_sprint_distance", 
-      "Field Time" = "external_load_field_time", "Meterage per Minute" = "external_load_meterage_per_minute", "Max Velocity" = "external_load_max_vel_kph", 
+      "Field Time" = "external_load_field_time", "Meterage per Minute" = "external_load_meterage_per_minute", "Max Velocity" = "external_load_max_vel", 
       "Accel Efforts" = "external_load_accel_efforts", "Decel Efforts" = "external_load_decel_efforts","Accel + Decel Efforts" = "external_load_accel_decel_efforts",
       "Dive Count" = "external_load_dive_count", "Total Dive Load" = "external_load_total_dive_load", "Explosive Efforts" = "external_load_explosive_efforts"),
     selected = "Total Distance")
@@ -749,7 +747,7 @@ server <- function(input, output, session) {
   workload_param <- selectInput(
     "workload_param", "Workload Parameter",
     c("Total Distance" = "workload_total_distance", "High Speed Distance" = "workload_high_speed_distance", "Sprint Distance" = "workload_sprint_distance", 
-      "Field Time" = "workload_field_time", "Meterage per Minute" = "workload_meterage_per_minute", "Max Velocity" = "workload_max_vel_kph", 
+      "Field Time" = "workload_field_time", "Meterage per Minute" = "workload_meterage_per_minute", "Max Velocity" = "workload_max_vel", 
       "Accel Efforts" = "workload_accel_efforts", "Decel Efforts" = "workload_decel_efforts","Accel + Decel Efforts" = "workload_accel_decel_efforts",
       "Dive Count" = "workload_dive_count", "Total Dive Load" = "workload_total_dive_load", "Explosive Efforts" = "workload_explosive_efforts",
       "Avg HR"="workload_mean_heart_rate", "Max HR"="workload_max_heart_rate","RPE" = "workload_rpe"),
@@ -758,7 +756,7 @@ server <- function(input, output, session) {
   acwr_param <- selectInput(
     "acwr_param", "Workload Parameter",
     c("Total Distance" = "total_distance", "High Speed Distance" = "high_speed_distance", "Sprint Distance" = "sprint_distance", 
-      "Field Time" = "field_time", "Meterage per Minute" = "meterage_per_minute", "Max Velocity" = "max_vel_kph",
+      "Field Time" = "field_time", "Meterage per Minute" = "meterage_per_minute", "Max Velocity" = "max_vel",
       "Accel Efforts" = "accel_efforts", "Decel Efforts" = "decel_efforts", "Accel + Decel Efforts" = "accel_decel_efforts", 
       "Avg HR"="mean_heart_rate", "Max HR"="max_heart_rate", 
       "Dive Count" = "dive_count", "Total Dive Load" = "total_dive_load", "Explosive Efforts" = "explosive_efforts"),
@@ -767,7 +765,7 @@ server <- function(input, output, session) {
   acwr_param2 <- selectInput(
     "acwr_param2", "Workload Parameter",
     c("Total Distance" = "total_distance", "High Speed Distance" = "high_speed_distance", "Sprint Distance" = "sprint_distance", 
-      "Field Time" = "field_time", "Meterage per Minute" = "meterage_per_minute", "Max Velocity" = "max_vel_kph",
+      "Field Time" = "field_time", "Meterage per Minute" = "meterage_per_minute", "Max Velocity" = "max_vel",
       "Accel Efforts" = "accel_efforts", "Decel Efforts" = "decel_efforts", "Accel + Decel Efforts" = "accel_decel_efforts", 
       "Avg HR"="mean_heart_rate", "Max HR"="max_heart_rate", 
       "Dive Count" = "dive_count", "Total Dive Load" = "total_dive_load", "Explosive Efforts" = "explosive_efforts"),
@@ -850,7 +848,7 @@ server <- function(input, output, session) {
   #       inputId="ext_load_param", 
   #       label = "External Workload Parameter",
   #       choices = c("Total Distance" = "external_load_total_distance", "High Speed Distance" = "external_load_high_speed_distance", "Sprint Distance" = "external_load_sprint_distance", 
-  #         "Field Time" = "external_load_field_time", "Meterage per Minute" = "external_load_meterage_per_minute", "Max Velocity" = "external_load_max_vel_kph", 
+  #         "Field Time" = "external_load_field_time", "Meterage per Minute" = "external_load_meterage_per_minute", "Max Velocity" = "external_load_max_vel", 
   #         "Accel Efforts" = "external_load_accel_efforts", "Decel Efforts" = "external_load_decel_efforts","Accel + Decel Efforts" = "external_load_accel_decel_efforts"),
   #       selected = "Total Distance")
   #     
@@ -858,7 +856,7 @@ server <- function(input, output, session) {
   #       inputId="workload_param", 
   #       label = "Workload Parameter",
   #       choices = c("Total Distance" = "workload_total_distance", "High Speed Distance" = "workload_high_speed_distance", "Sprint Distance" = "workload_sprint_distance", 
-  #         "Field Time" = "workload_field_time", "Meterage per Minute" = "workload_meterage_per_minute", "Max Velocity" = "workload_max_vel_kph", 
+  #         "Field Time" = "workload_field_time", "Meterage per Minute" = "workload_meterage_per_minute", "Max Velocity" = "workload_max_vel", 
   #         "Accel Efforts" = "workload_accel_efforts", "Decel Efforts" = "workload_decel_efforts","Accel + Decel Efforts" = "workload_accel_decel_efforts",
   #         "Avg HR"="workload_mean_heart_rate", "Max HR"="workload_max_heart_rate","RPE" = "workload_rpe"),
   #       selected = "Total Distance")
@@ -2439,8 +2437,8 @@ md_distance_team_total %>%
     shiny::validate(need(!is.null(input$athlete1), "Select one or more players"))
     
     player_load_stats <- stats %>%
-      select(athlete_name | date | tag_name | field_time | total_distance | high_speed_distance | sprint_distance | accel_efforts | decel_efforts | accel_decel_efforts | meterage_per_minute | max_vel_kph | mean_heart_rate | max_heart_rate | dive_count | total_dive_load | explosive_efforts | ((starts_with("acwr_ewma") | starts_with("cl_ewma") | starts_with("al_ewma")) & !contains("wellness") & !contains("rpe") & !contains("RSI"))) %>% 
-      rename_with(~ paste0("daily_", .x), .cols = field_time | total_distance | high_speed_distance | sprint_distance | accel_efforts | decel_efforts | accel_decel_efforts | meterage_per_minute | max_vel_kph |  mean_heart_rate | max_heart_rate | dive_count | total_dive_load | explosive_efforts) %>% 
+      select(athlete_name | date | tag_name | field_time | total_distance | high_speed_distance | sprint_distance | accel_efforts | decel_efforts | accel_decel_efforts | meterage_per_minute | max_vel | mean_heart_rate | max_heart_rate | dive_count | total_dive_load | explosive_efforts | ((starts_with("acwr_ewma") | starts_with("cl_ewma") | starts_with("al_ewma")) & !contains("wellness") & !contains("rpe") & !contains("RSI"))) %>% 
+      rename_with(~ paste0("daily_", .x), .cols = field_time | total_distance | high_speed_distance | sprint_distance | accel_efforts | decel_efforts | accel_decel_efforts | meterage_per_minute | max_vel |  mean_heart_rate | max_heart_rate | dive_count | total_dive_load | explosive_efforts) %>% 
       pivot_longer(cols = starts_with("daily") | starts_with("al_ewma") | starts_with("acwr_ewma") | starts_with("cl_ewma"), names_to = c(".value", "param"), names_pattern = "(daily|al_ewma|cl_ewma|acwr_ewma)_(.*)") %>% 
       dplyr::filter(athlete_name %in% input$athlete1 & date >= input$date_range1[1] & date <= input$date_range1[2] & param == input$acwr_param) %>%
       # dplyr::filter(athlete_name %in% c("Sydney Kennedy") & date >= (Sys.Date()-weeks(4)) & date <= Sys.Date() & param == "total_distance") %>%
@@ -2497,7 +2495,7 @@ md_distance_team_total %>%
                                                                     input$acwr_param == "decel_efforts" ~"Decel Efforts", 
                                                                     input$acwr_param == "accel_decel_efforts" ~"Accel + Decel Efforts", 
                                                                     input$acwr_param == "meterage_per_minute"~"Meterage per Minute (m/min)", 
-                                                                    input$acwr_param == "max_vel_kph"~"Max Velocity (km/h)", 
+                                                                    input$acwr_param == "max_vel"~"Max Velocity (km/h)", 
                                                                     input$acwr_param == "max_heart_rate"~"Max HR (bpm)", 
                                                                     input$acwr_param == "mean_heart_rate"~"Avg HR (bpm)", 
                                                                     input$acwr_param == "dive_count"~"Dive Count", 
@@ -3811,7 +3809,7 @@ md_distance_team_total %>%
       select(athlete_name | date | tag_name | starts_with("zscore_7_28")) %>% 
       rename_with(~str_remove(.x,"zscore_7_28_")) %>%
       dplyr::filter(date <= input$date_input1 & date > input$date_input1 - days(14) & athlete_name == input$athlete2)%>% 
-      select(!c(athlete_name, high_speed_distance, sprint_distance,meterage_per_minute,max_vel_kph, accel_efforts, decel_efforts, accel_decel_efforts)) %>% 
+      select(!c(athlete_name, high_speed_distance, sprint_distance,meterage_per_minute,max_vel, accel_efforts, decel_efforts, accel_decel_efforts)) %>% 
       rename(Date=date, `MD Code` = tag_name, `Total Distance` = total_distance, `Field Time`=field_time, `Dive Count` = dive_count, `Dive Load` = total_dive_load, `Explosive Efforts` = explosive_efforts, `Avg HR` = mean_heart_rate, `Max HR` = max_heart_rate,`Daily sRPE` = rpe, Wellness=wellness) %>% 
       arrange(desc(Date))
     
@@ -3933,7 +3931,7 @@ md_distance_team_total %>%
         rename_with(~str_remove(.x,"zscore_7_28_")) %>%
         dplyr::filter(date <= input$date_input1 & date > input$date_input1 - days(5) & athlete_name == input$athlete2)%>% 
         select(!c(athlete_name, dive_count, total_dive_load,explosive_efforts)) %>% 
-        rename(Date=date, `MD Code` = tag_name, `Total Distance` = total_distance, `HSR Distance` = high_speed_distance, `Sprint Distance` = sprint_distance, `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Accel+Decel Efforts`=accel_decel_efforts, `Avg Speed` = meterage_per_minute, `Max Speed` = max_vel_kph, `Avg HR` = mean_heart_rate, `Max HR` = max_heart_rate, `Field Time`=field_time, `Daily sRPE` = rpe, Wellness=wellness) %>% 
+        rename(Date=date, `MD Code` = tag_name, `Total Distance` = total_distance, `HSR Distance` = high_speed_distance, `Sprint Distance` = sprint_distance, `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Accel+Decel Efforts`=accel_decel_efforts, `Avg Speed` = meterage_per_minute, `Max Speed` = max_vel, `Avg HR` = mean_heart_rate, `Max HR` = max_heart_rate, `Field Time`=field_time, `Daily sRPE` = rpe, Wellness=wellness) %>% 
         arrange(desc(Date))
    
       reactable(
@@ -4358,12 +4356,12 @@ md_distance_team_total %>%
       #   athlete_name %in% c("Sydney Kennedy", "Saorla Miller", "Karima Lemire", "Rylee Foster") &
       #   date == Sys.Date()-days(4)
       # ) %>%
-      select(position_name, athlete_name,total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,meterage_per_minute,max_vel_kph, percentage_max_velocity, field_time) %>% 
+      select(position_name, athlete_name,total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,meterage_per_minute,max_vel, percentage_max_velocity, field_time) %>% 
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
              field_time=field_time/60,
              percentage_max_velocity=percentage_max_velocity/100
              ) %>% 
-      rename(Position=position_name, Player = athlete_name, `Total Distance (m)` = total_distance, `HSR Distance (m)` = high_speed_distance, `Sprint Distance (m)` = sprint_distance, `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Avg Speed (m/min)` = meterage_per_minute, `Max Speed (km/h)` = max_vel_kph, `Max Speed (%Max)` = percentage_max_velocity, `Field Time (min)`=field_time) %>% 
+      rename(Position=position_name, Player = athlete_name, `Total Distance (m)` = total_distance, `HSR Distance (m)` = high_speed_distance, `Sprint Distance (m)` = sprint_distance, `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Avg Speed (m/min)` = meterage_per_minute, `Max Speed (km/h)` = max_vel, `Max Speed (%Max)` = percentage_max_velocity, `Field Time (min)`=field_time) %>% 
       drop_na(Position)
     
     
@@ -4421,12 +4419,12 @@ md_distance_team_total %>%
       dplyr::filter(athlete_name %in% input$athlete7 & date == input$date_input6 & period_name %in% input$period_input) %>%
       # dplyr::filter(athlete_name %in% c("Sydney Kennedy", "Saorla Miller", "Karima Lemire", "Rylee Foster") &
       #  date == Sys.Date()-days(1) & period_name %in% c("2. First Half", "3. Second Half")) %>%
-      select(position_name, athlete_name, period_name, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,meterage_per_minute,max_vel_kph, percentage_max_velocity, field_time) %>% 
+      select(position_name, athlete_name, period_name, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,meterage_per_minute,max_vel, percentage_max_velocity, field_time) %>% 
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
              field_time=field_time/60,
              percentage_max_velocity= percentage_max_velocity/100) %>% 
       rename(Player = athlete_name, Position = position_name, Period = period_name,`Total Distance (m)` = total_distance, `HSR Distance (m)` = high_speed_distance, `Sprint Distance (m)` = sprint_distance, 
-             `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Avg Speed (m/min)` = meterage_per_minute, `Max Speed (km/h)` = max_vel_kph, `Max Speed (%Max)` = percentage_max_velocity, `Field Time (min)` = field_time) %>% 
+             `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Avg Speed (m/min)` = meterage_per_minute, `Max Speed (km/h)` = max_vel, `Max Speed (%Max)` = percentage_max_velocity, `Field Time (min)` = field_time) %>% 
       drop_na(Period)
   
   
@@ -4595,20 +4593,20 @@ md_distance_team_total %>%
     match_day_summary <- stats_period %>% 
       dplyr::filter(athlete_name %in% input$athlete8 & activity_name == input$md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
       # dplyr::filter(activity_name == "18th May 2026 - MD 4  vs Vancouver (H)" & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
-      select(activity_name, position_name, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph) %>% 
+      select(activity_name, position_name, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel) %>% 
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
-      pivot_wider(names_from = period_name, names_glue = "{period_name}_{.value}", values_from = c(field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph)) %>% 
+      pivot_wider(names_from = period_name, names_glue = "{period_name}_{.value}", values_from = c(field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel)) %>% 
       mutate(Sub = if_else(is.na(`2. First Half_field_time`) | `2. First Half_field_time` < (10*60), T, F)) %>% 
       pivot_longer(cols=contains(". "), names_to = c("period_name", ".value"), names_pattern = "(\\d{1,2}\\. [[:alpha:]]{5,6} [[:alpha:]]{4,5})_(.*)") %>% 
       group_by(activity_name, athlete_name, position_name, Sub) %>% 
-      summarize(across(where(is.numeric) & !max_vel_kph, ~sum(.x,na.rm=T)), max_vel_kph = max(max_vel_kph, na.rm=T)) %>% 
+      summarize(across(where(is.numeric) & !max_vel, ~sum(.x,na.rm=T)), max_vel = max(max_vel, na.rm=T)) %>% 
       ungroup %>% 
       mutate(`% of HSR + Sprint Distance` = ((high_speed_distance+sprint_distance)/total_distance),
              field_time=field_time/60) %>% 
-      relocate(`% of HSR + Sprint Distance`, .before=max_vel_kph) %>% 
+      relocate(`% of HSR + Sprint Distance`, .before=max_vel) %>% 
       relocate(field_time, .before=total_distance) %>% 
       rename(Match = activity_name, Player = athlete_name, Position = position_name,`Total Distance (m)` = total_distance, `HSR Distance (m)` = high_speed_distance, `Sprint Distance (m)` = sprint_distance, 
-             `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Max Speed (km/h)` = max_vel_kph, `Field Time (min)` = field_time) %>% 
+             `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Max Speed (km/h)` = max_vel, `Field Time (min)` = field_time) %>% 
       arrange(Sub, Position) 
     
     
@@ -4683,9 +4681,9 @@ md_distance_team_total %>%
   #   
   #   player_summary <- stats %>% 
   #     dplyr::filter(date == input$date_input3 & position_name != "Goal Keeper") %>%
-  #     select(athlete_name,total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,meterage_per_minute,max_vel_kph, field_time) %>% 
+  #     select(athlete_name,total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,meterage_per_minute,max_vel, field_time) %>% 
   #     mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
-  #     rename(Name = athlete_name, `Total Distance (m)` = total_distance, `High Speed Distance (m)` = high_speed_distance, `Sprint Distance (m)` = sprint_distance, `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Avg Speed (m/min)` = meterage_per_minute, `Max Speed (km/h)` = max_vel_kph, `Field Time (h:m:s)`=field_time) 
+  #     rename(Name = athlete_name, `Total Distance (m)` = total_distance, `High Speed Distance (m)` = high_speed_distance, `Sprint Distance (m)` = sprint_distance, `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Avg Speed (m/min)` = meterage_per_minute, `Max Speed (km/h)` = max_vel, `Field Time (h:m:s)`=field_time) 
   #   
   #   player_avg <- player_summary  %>%
   #     summarize(across(where(is.numeric), ~mean(.x, na.rm=T))) %>%
@@ -5042,10 +5040,10 @@ md_distance_team_total %>%
     
     max_vel <- stats %>%
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
-      select(athlete_name, date, max_vel_kph) %>% 
+      select(athlete_name, date, max_vel) %>% 
       dplyr::filter(athlete_name %in% input$athlete6 & date == input$date_input5) %>%
-      summarize(max_vel_kph=mean(max_vel_kph,na.rm=T)) %>% 
-      pull(max_vel_kph)
+      summarize(max_vel=mean(max_vel,na.rm=T)) %>% 
+      pull(max_vel)
     
     value_box(title="Max Velocity (km/h)",
               value = round(max_vel,1), 
@@ -5157,13 +5155,13 @@ md_distance_team_total %>%
     
     max_vel <- stats_period %>%
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
-      select(athlete_name, date, period_name, max_vel_kph) %>% 
+      select(athlete_name, date, period_name, max_vel) %>% 
       dplyr::filter(athlete_name %in% input$athlete7 & date == input$date_input6 & period_name %in% input$period_input) %>%
       group_by(athlete_name) %>%
-      summarize(max_vel_kph=max(max_vel_kph,na.rm=T)) %>% 
+      summarize(max_vel=max(max_vel,na.rm=T)) %>% 
       ungroup %>% 
-      summarize(max_vel_kph=mean(max_vel_kph,na.rm=T)) %>% 
-      pull(max_vel_kph)
+      summarize(max_vel=mean(max_vel,na.rm=T)) %>% 
+      pull(max_vel)
     
     value_box(title="Max Velocity (km/h)",
               value = round(max_vel,1), 

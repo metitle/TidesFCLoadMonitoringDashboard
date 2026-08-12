@@ -162,21 +162,21 @@ md_year: '`r md_year`'
 
 match_day_summary <- stats_period %>% 
   dplyr::filter(activity_name == md_input & (str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Half$") | str_detect(period_name, "^\\d{1,2}\\. [[:alpha:]]{5,6} (?i)Extra$"))) %>%
-  select(activity_name, position_name, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph) %>% 
+  select(activity_name, position_name, athlete_name, period_name, field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel) %>% 
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
-  pivot_wider(names_from = period_name, names_glue = "{period_name}_{.value}", values_from = c(field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel_kph)) %>% 
+  pivot_wider(names_from = period_name, names_glue = "{period_name}_{.value}", values_from = c(field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,max_vel)) %>% 
   mutate(Sub = if_else(is.na(`2. First Half_field_time`) | `2. First Half_field_time` < (10*60), T, F)) %>% 
   pivot_longer(cols=contains(". "), names_to = c("period_name", ".value"), names_pattern = "(\\d{1,2}\\. [[:alpha:]]{5,6} [[:alpha:]]{4,5})_(.*)") %>% 
   group_by(activity_name, athlete_name, position_name, Sub) %>% 
-  summarize(across(where(is.numeric) & !max_vel_kph, ~sum(.x,na.rm=T)), max_vel_kph = max(max_vel_kph, na.rm=T)) %>% 
+  summarize(across(where(is.numeric) & !max_vel, ~sum(.x,na.rm=T)), max_vel = max(max_vel, na.rm=T)) %>% 
   ungroup %>% 
   mutate(`%HSR+Sprint Distance` = ((high_speed_distance+sprint_distance)/total_distance),
          field_time=field_time/60) %>% 
-  relocate(`%HSR+Sprint Distance`, .before=max_vel_kph) %>% 
-  relocate(Sub, .after=max_vel_kph) %>% 
+  relocate(`%HSR+Sprint Distance`, .before=max_vel) %>% 
+  relocate(Sub, .after=max_vel) %>% 
   relocate(field_time, .before=total_distance) %>% 
   rename(Match = activity_name, Player = athlete_name, Position = position_name,`Total Distance (m)` = total_distance, `HSR Distance (m)` = high_speed_distance, `Sprint Distance (m)` = sprint_distance, 
-         `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Max Speed (kph)` = max_vel_kph, `Time (min)` = field_time) %>% 
+         `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Max Speed (kph)` = max_vel, `Time (min)` = field_time) %>% 
   mutate(Position = case_when(str_detect(Position, "Keeper")~ "Keeper",
                               str_detect(Position, "Back") | str_detect(Position, "Defender")~ "Defender",
                               str_detect(Position, "Midfielder")~ "Midfielder",

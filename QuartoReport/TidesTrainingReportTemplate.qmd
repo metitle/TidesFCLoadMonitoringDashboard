@@ -150,7 +150,7 @@ value_box_data <- stats_period %>%
   mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x))) %>% 
   dplyr::filter(position_name != "Goal Keeper" & date == training_date) %>%
   group_by(athlete_name) %>%
-  summarize(across(where(is.numeric) & !max_vel_kph, ~sum(.x, na.rm=T)), max_vel_kph=max(max_vel_kph,na.rm=T)) %>% 
+  summarize(across(where(is.numeric) & !max_vel, ~sum(.x, na.rm=T)), max_vel=max(max_vel,na.rm=T)) %>% 
   ungroup %>% 
   summarize(across(where(is.numeric), ~mean(.x, na.rm=T)))
 
@@ -164,7 +164,7 @@ accel_efforts <- value_box_data %>% pull(accel_efforts)
 
 decel_efforts <- value_box_data %>% pull(decel_efforts)
 
-max_vel <- value_box_data %>% pull(max_vel_kph)
+max_vel <- value_box_data %>% pull(max_vel)
 
 ```
 
@@ -800,17 +800,17 @@ guides(fill = guide_legend(ncol = 2, byrow = F))
 
 player_daily_summary <- stats_period %>% 
       dplyr::filter(position_name != "Goal Keeper" & date == training_date) %>%
-      select(position_name, athlete_name, period_name, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,meterage_per_minute,max_vel_kph, percentage_max_velocity, field_time) %>% 
+      select(position_name, athlete_name, period_name, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts,meterage_per_minute,max_vel, percentage_max_velocity, field_time) %>% 
       mutate(across(where(is.numeric), ~if_else(field_time == 0 & total_distance == 0, NA_real_, .x)),
              field_time=field_time/60,
              percentage_max_velocity=percentage_max_velocity/100
              ) %>% 
   group_by(athlete_name, position_name) %>% 
-  summarize(across(where(is.numeric) & !max_vel_kph & !percentage_max_velocity, ~sum(.x,na.rm=T)), 
-            across(max_vel_kph | percentage_max_velocity, ~ max(.x, na.rm=T))) %>% 
+  summarize(across(where(is.numeric) & !max_vel & !percentage_max_velocity, ~sum(.x,na.rm=T)), 
+            across(max_vel | percentage_max_velocity, ~ max(.x, na.rm=T))) %>% 
   ungroup %>% 
   mutate(meterage_per_minute= total_distance/field_time) %>% 
-  rename(Position=position_name, Player = athlete_name, `Total Distance (m)` = total_distance, `HSR Distance (m)` = high_speed_distance, `Sprint Distance (m)` = sprint_distance, `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Avg Speed (m/min)` = meterage_per_minute, `Max Speed (km/h)` = max_vel_kph, `Max Speed (%max)` = percentage_max_velocity) %>% 
+  rename(Position=position_name, Player = athlete_name, `Total Distance (m)` = total_distance, `HSR Distance (m)` = high_speed_distance, `Sprint Distance (m)` = sprint_distance, `Accel Efforts` = accel_efforts, `Decel Efforts`=decel_efforts, `Avg Speed (m/min)` = meterage_per_minute, `Max Speed (km/h)` = max_vel, `Max Speed (%max)` = percentage_max_velocity) %>% 
   mutate(
     `Max Speed (%max)` = scales::percent(`Max Speed (%max)`, accuracy =0.1),
     across(where(is.numeric) & ! `Max Speed (km/h)`, round), 
