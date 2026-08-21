@@ -330,7 +330,12 @@ actual_load <- stats_period %>%
   # Exclude entries with field_time and total_distance equal to 0.
   filter(date==training_date & !str_detect(period_name,fixed("warmup", ignore_case=T)) & !str_detect(period_name,fixed("wu", ignore_case=T)) & !str_detect(period_name,fixed("extra", ignore_case=T)) & !str_detect(period_name, fixed("rehab", ignore_case=T)) & !str_detect(period_name, fixed("top ups", ignore_case=T)) & !str_detect(period_name, fixed("gk", ignore_case=T)) & position_name != "Goal Keeper" & field_time > 0 & total_distance > 0) %>% 
   select(athlete_name, total_distance, high_speed_distance, sprint_distance) %>%
-  group_by(athlete_name) %>% 
+  group_by(athlete_name) %>%
+  mutate(period_n = n()) %>% 
+  ungroup %>% 
+  filter(period_n == max(period_n,na.rm=T)) %>% 
+  select(!period_n) %>%
+  group_by(athlete_name) %>%
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
   ungroup %>% 
   summarize(across(where(is.numeric), ~mean(.x, na.rm=T)))
