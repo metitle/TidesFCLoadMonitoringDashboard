@@ -267,14 +267,14 @@ session_volume_intensity <- stats_period %>%
   # Exclude GKs
   # Exclude entries with field_time and total_distance equal to 0.
   filter(date==training_date & !str_detect(period_name,fixed("wu", ignore_case=T)) & !str_detect(period_name,fixed("extra", ignore_case=T)) & !str_detect(period_name, fixed("rehab", ignore_case=T)) & !str_detect(period_name, fixed("top ups", ignore_case=T)) & !str_detect(period_name, fixed("gk", ignore_case=T)) & position_name != "Goal Keeper" & field_time > 0 & total_distance > 0) %>% 
-  select(athlete_name, field_time, total_distance, high_speed_distance, sprint_distance,accel_efforts, decel_efforts, accel_decel_efforts) %>% 
+  select(athlete_name, tag_name, field_time, total_distance, high_speed_distance, sprint_distance,accel_efforts, decel_efforts, accel_decel_efforts) %>% 
   mutate(hs_distance = high_speed_distance+sprint_distance) %>% 
   relocate(hs_distance, .after=total_distance) %>% 
   group_by(athlete_name) %>%
   mutate(period_n = n()) %>% 
   ungroup %>% 
   filter((tag_name == "MD" & period_n >= 2) | period_n == max(period_n,na.rm=T)) %>% 
-  select(!period_n) %>%
+  select(!period_n & !tag_name) %>%
   group_by(athlete_name) %>% 
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
   ungroup %>% 
@@ -348,12 +348,12 @@ actual_load <- stats_period %>%
   # Exclude GKs
   # Exclude entries with field_time and total_distance equal to 0.
   filter(date==training_date & !str_detect(period_name,fixed("warmup", ignore_case=T)) & !str_detect(period_name,fixed("wu", ignore_case=T)) & !str_detect(period_name,fixed("extra", ignore_case=T)) & !str_detect(period_name, fixed("rehab", ignore_case=T)) & !str_detect(period_name, fixed("top ups", ignore_case=T)) & !str_detect(period_name, fixed("gk", ignore_case=T)) & position_name != "Goal Keeper" & field_time > 0 & total_distance > 0) %>% 
-  select(athlete_name, total_distance, high_speed_distance, sprint_distance) %>%
+  select(athlete_name, tag_name, total_distance, high_speed_distance, sprint_distance) %>%
   group_by(athlete_name) %>%
   mutate(period_n = n()) %>% 
   ungroup %>% 
   filter((tag_name == "MD" & period_n >= 2) | period_n == max(period_n,na.rm=T)) %>% 
-  select(!period_n) %>%
+  select(!period_n & ! tag_name) %>%
   group_by(athlete_name) %>%
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
   ungroup %>% 
