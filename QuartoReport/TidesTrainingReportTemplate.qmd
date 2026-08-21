@@ -176,6 +176,13 @@ distance_group_avg_stats <- stats_period %>%
   select(athlete_name | date | tag_name | position_name | period_name | field_time | total_distance | high_speed_distance | sprint_distance) %>%
       dplyr::filter(date <= training_date & date >= (training_date-days(6)) & !str_detect(period_name, fixed("wu", ignore_case=T)) & !str_detect(period_name,fixed("extra", ignore_case=T)) & !str_detect(period_name, fixed("rehab", ignore_case=T)) & !str_detect(period_name, fixed("top ups", ignore_case=T)) & !str_detect(period_name, fixed("gk", ignore_case=T)) & position_name != "Goal Keeper" & field_time > 0 & total_distance > 0) %>%
     group_by(date, tag_name, athlete_name) %>%
+    mutate(period_n = n()) %>% 
+    ungroup %>% 
+    group_by(date) %>% 
+    filter(period_n == max(period_n,na.rm=T)) %>% 
+    ungroup %>% 
+    select(!period_n) %>%
+    group_by(date, tag_name, athlete_name) %>%
     summarize(across(where(is.numeric),  ~sum(.x, na.rm=T))) %>%
     ungroup %>%
     group_by(date,tag_name) %>%
@@ -256,6 +263,11 @@ session_volume_intensity <- stats_period %>%
   select(athlete_name, field_time, total_distance, high_speed_distance, sprint_distance,accel_efforts, decel_efforts, accel_decel_efforts) %>% 
   mutate(hs_distance = high_speed_distance+sprint_distance) %>% 
   relocate(hs_distance, .after=total_distance) %>% 
+  group_by(athlete_name) %>%
+  mutate(period_n = n()) %>% 
+  ungroup %>% 
+  filter(period_n == max(period_n,na.rm=T)) %>% 
+  select(!period_n) %>%
   group_by(athlete_name) %>% 
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
   ungroup %>% 
