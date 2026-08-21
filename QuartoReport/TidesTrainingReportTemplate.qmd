@@ -179,7 +179,7 @@ distance_group_avg_stats <- stats_period %>%
     mutate(period_n = n()) %>% 
     ungroup %>% 
     group_by(date) %>% 
-    filter(period_n == max(period_n,na.rm=T)) %>% 
+    filter((tag_name == "MD" & period_n >= 2) | period_n == max(period_n,na.rm=T)) %>% 
     ungroup %>% 
     select(!period_n) %>%
     group_by(date, tag_name, athlete_name) %>%
@@ -244,6 +244,13 @@ md_benchmarks <- stats_period %>%
   select(athlete_name, date, field_time, total_distance, high_speed_distance, sprint_distance, accel_efforts, decel_efforts, accel_decel_efforts) %>% 
   mutate(hs_distance = high_speed_distance+sprint_distance) %>% 
   relocate(hs_distance, .after=total_distance) %>% 
+  group_by(date, athlete_name) %>%
+  mutate(period_n = n()) %>% 
+  ungroup %>% 
+  group_by(date) %>% 
+  filter(period_n >= 2) %>% 
+  ungroup %>% 
+  select(!period_n) %>%
   group_by(date, athlete_name) %>% 
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
   ungroup %>% 
@@ -266,7 +273,7 @@ session_volume_intensity <- stats_period %>%
   group_by(athlete_name) %>%
   mutate(period_n = n()) %>% 
   ungroup %>% 
-  filter(period_n == max(period_n,na.rm=T)) %>% 
+  filter((tag_name == "MD" & period_n >= 2) | period_n == max(period_n,na.rm=T)) %>% 
   select(!period_n) %>%
   group_by(athlete_name) %>% 
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
@@ -345,7 +352,7 @@ actual_load <- stats_period %>%
   group_by(athlete_name) %>%
   mutate(period_n = n()) %>% 
   ungroup %>% 
-  filter(period_n == max(period_n,na.rm=T)) %>% 
+  filter((tag_name == "MD" & period_n >= 2) | period_n == max(period_n,na.rm=T)) %>% 
   select(!period_n) %>%
   group_by(athlete_name) %>%
   summarize(across(where(is.numeric), ~sum(.x,na.rm=T))) %>% 
