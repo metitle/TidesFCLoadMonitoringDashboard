@@ -70,13 +70,15 @@ server <- function(input, output, session) {
     }
   }
   
+  
   replace_empty_char_rpe <- function(x) {
     if (length(x) == 0) {
-      tibble(id =NA_character_, localTime = "1970-01-01T00:00", name = NA_character_,rpe =NA_real_,minutes =NA_real_)
+      tibble(id =NA_character_, localTime = "1970-01-01T00:00", name = NA_character_,rpe =NA_real_,minutes =NA_real_, formName = "RPE", sessionName = NA_character_, sessionType = NA_real_)
     } else {
       x
     }
   }
+  
   
   
   call_xps <- "https://www4.sidelinesports.com"
