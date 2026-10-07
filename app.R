@@ -44,9 +44,7 @@ ui <- uiOutput("page_content") # Placeholder for either login or dashboard UI
 
 server <- function(input, output, session) {
   
-  
 
-  
   googledrive::drive_auth(path=gargle::secret_decrypt_json(here::here(".secrets", "halifaxtidesdashboard-serviceaccount-encrypted.json"), "googledrive_token"))
   
   googledrive::drive_download(googledrive::as_id(Sys.getenv("load_plan_file_id")), path="Loading Plan.csv", overwrite=T)
@@ -304,34 +302,57 @@ server <- function(input, output, session) {
     groupby_period <- c("athlete", "period")
     
     params_activity <- c("athlete_name", "day_name", "team_name", "date", "start_time", "end_time","activity_id", "activity_name","position_name",
-                         "bench_time", "field_time", "total_distance", "meterage_per_minute","velocity_band5_total_distance", "velocity_band6_total_distance", "velocity2_band6_total_distance",
+                         "bench_time", "field_time", "total_distance", "meterage_per_minute","velocity_band5_total_distance", "velocity_band6_total_distance", 
                          "gen2_acceleration_band7plus_total_effort_count", "gen2_acceleration_band2plus_total_effort_count", "max_vel", "percentage_max_velocity",
-                         "heart_rate_band5_average_duration_session", "heart_rate_band6_average_duration_session","heart_rate_band7_average_duration_session",
-                         "heart_rate_band8_average_duration_session", "mean_heart_rate","percentage_avg_heart_rate", "percentage_max_heart_rate","max_heart_rate", "athlete_max_hr",
-                         "total_goalkeeping_dives","total_dives_left", "total_dives_right","total_dives_centre","low_dive_load_(avg)","med_dive_load_(avg)","high_dive_load_(avg)",
-                         "diveloadleft_band1_average_count_session","diveloadright_band1_average_count_session","diveloadcentre_band1_average_count_session",
-                         "diveloadleft_band2_average_count_session","diveloadright_band2_average_count_session","diveloadcentre_band2_average_count_session",
-                         "diveloadleft_band3_average_count_session","diveloadright_band3_average_count_session","diveloadcentre_band3_average_count_session",
-                         "total_dive_load","total_dive_load_left","total_dive_load_right","total_dive_load_centre", "total_dive_load_low_intensity", "total_dive_load_med_intensity","total_dive_load_high_intensity",
-                         "total_dive_load_left_low_intensity","total_dive_load_right_low_intensity", "total_dive_load_centre_low_intensity","total_dive_load_left_med_intensity","total_dive_load_right_med_intensity", "total_dive_load_centre_med_intensity","total_dive_load_left_high_intensity","total_dive_load_right_high_intensity", "total_dive_load_centre_high_intensity",
-                         "median_time_to_feet", "average_time_to_feet", "average_time_to_feeet_left", "average_time_to_feeet_right", "average_time_to_feet_centre",
-                         "explosive_efforts", "total_jumps", "ima_accels" , "ima_decels")
+                         "heart_rate_band5_total_duration", "heart_rate_band6_total_duration","heart_rate_band7_total_duration","heart_rate_band8_total_duration", 
+                         "mean_heart_rate","percentage_avg_heart_rate", "percentage_max_heart_rate","max_heart_rate", "athlete_max_hr",
+                         "fmp_very_low_duration", "fmp_low_duration", "fmp_running_med_duration", "fmp_running_high_duration", "fmp_dynamic_med_duration", "fmp_dynamic_high_duration",
+                         "total_goalkeeping_dives",
+                         "diveloadleft_band1_total_count","diveloadright_band1_total_count","diveloadcentre_band1_total_count",
+                         "diveloadleft_band2_total_count","diveloadright_band2_total_count","diveloadcentre_band2_total_count",
+                         "diveloadleft_band3_total_count","diveloadright_band3_total_count","diveloadcentre_band3_total_count",
+                         "total_dive_load",
+                         "diveloadcentre_band1_total_pre_dive_load","diveloadcentre_band2_total_pre_dive_load","diveloadcentre_band3_total_pre_dive_load",
+                         "diveloadleft_band1_total_pre_dive_load","diveloadleft_band2_total_pre_dive_load","diveloadleft_band3_total_pre_dive_load",
+                         "diveloadright_band1_total_pre_dive_load","diveloadright_band2_total_pre_dive_load","diveloadright_band3_total_pre_dive_load",
+                         "diveloadcentre_band1_total_post_dive_load","diveloadcentre_band2_total_post_dive_load","diveloadcentre_band3_total_post_dive_load",
+                         "diveloadleft_band1_total_post_dive_load","diveloadleft_band2_total_post_dive_load","diveloadleft_band3_total_post_dive_load",
+                         "diveloadright_band1_total_post_dive_load","diveloadright_band2_total_post_dive_load","diveloadright_band3_total_post_dive_load",
+                         "diveloadcentre_band1_total_impact_dive_load","diveloadcentre_band2_total_impact_dive_load","diveloadcentre_band3_total_impact_dive_load",
+                         "diveloadleft_band1_total_impact_dive_load","diveloadleft_band2_total_impact_dive_load","diveloadleft_band3_total_impact_dive_load",
+                         "diveloadright_band1_total_impact_dive_load","diveloadright_band2_total_impact_dive_load","diveloadright_band3_total_impact_dive_load",
+                         "average_time_to_feet", "average_time_to_feeet_left", "average_time_to_feeet_right", "average_time_to_feet_centre",
+                         "timetofeetright_band1_total_count", "timetofeetright_band2_total_count","timetofeetright_band3_total_count",
+                         "timetofeetleft_band1_total_count", "timetofeetleft_band2_total_count","timetofeetleft_band3_total_count",
+                         "timetofeetcentre_band1_total_count", "timetofeetcentre_band2_total_count","timetofeetcentre_band3_total_count",
+                         "explosive_efforts", "total_jumps", "ima_band3_accel_count", "ima_band3_decel_count", "ima_band3_left_count", "ima_band3_right_count")
     
     
     params_period <- c("athlete_name", "day_name", "team_name", "date", "start_time", "end_time","activity_id", "activity_name", "period_id", "period_name","position_name",
-                       "bench_time", "field_time", "total_distance", "meterage_per_minute","velocity_band5_total_distance", "velocity_band6_total_distance", "velocity2_band6_total_distance",
+                       "bench_time", "field_time", "total_distance", "meterage_per_minute","velocity_band5_total_distance", "velocity_band6_total_distance", 
                        "gen2_acceleration_band7plus_total_effort_count", "gen2_acceleration_band2plus_total_effort_count", "max_vel", "percentage_max_velocity",
-                       "heart_rate_band5_average_duration_session","heart_rate_band6_average_duration_session", "heart_rate_band7_average_duration_session",
-                       "heart_rate_band8_average_duration_session", "mean_heart_rate","percentage_avg_heart_rate", "percentage_max_heart_rate","max_heart_rate", "athlete_max_hr",
-                       "total_goalkeeping_dives","total_dives_left", "total_dives_right","total_dives_centre","low_dive_load_(avg)","med_dive_load_(avg)","high_dive_load_(avg)",
-                       "diveloadleft_band1_average_count_session","diveloadright_band1_average_count_session","diveloadcentre_band1_average_count_session",
-                       "diveloadleft_band2_average_count_session","diveloadright_band2_average_count_session","diveloadcentre_band2_average_count_session",
-                       "diveloadleft_band3_average_count_session","diveloadright_band3_average_count_session","diveloadcentre_band3_average_count_session",
-                       "total_dive_load","total_dive_load_left","total_dive_load_right","total_dive_load_centre", "total_dive_load_low_intensity", "total_dive_load_med_intensity","total_dive_load_high_intensity",
-                       "total_dive_load_left_low_intensity","total_dive_load_right_low_intensity", "total_dive_load_centre_low_intensity","total_dive_load_left_med_intensity","total_dive_load_right_med_intensity", "total_dive_load_centre_med_intensity","total_dive_load_left_high_intensity","total_dive_load_right_high_intensity", "total_dive_load_centre_high_intensity",
-                       "median_time_to_feet", "average_time_to_feet", "average_time_to_feeet_left", "average_time_to_feeet_right", "average_time_to_feet_centre",
-                       "explosive_efforts", "total_jumps", "ima_accels" , "ima_decels")
-    
+                       "heart_rate_band5_total_duration", "heart_rate_band6_total_duration","heart_rate_band7_total_duration","heart_rate_band8_total_duration", 
+                       "mean_heart_rate","percentage_avg_heart_rate", "percentage_max_heart_rate","max_heart_rate", "athlete_max_hr",
+                       "fmp_very_low_duration", "fmp_low_duration", "fmp_running_med_duration", "fmp_running_high_duration", "fmp_dynamic_med_duration", "fmp_dynamic_high_duration",
+                       "total_goalkeeping_dives",
+                       "diveloadleft_band1_total_count","diveloadright_band1_total_count","diveloadcentre_band1_total_count",
+                       "diveloadleft_band2_total_count","diveloadright_band2_total_count","diveloadcentre_band2_total_count",
+                       "diveloadleft_band3_total_count","diveloadright_band3_total_count","diveloadcentre_band3_total_count",
+                       "total_dive_load",
+                       "diveloadcentre_band1_total_pre_dive_load","diveloadcentre_band2_total_pre_dive_load","diveloadcentre_band3_total_pre_dive_load",
+                       "diveloadleft_band1_total_pre_dive_load","diveloadleft_band2_total_pre_dive_load","diveloadleft_band3_total_pre_dive_load",
+                       "diveloadright_band1_total_pre_dive_load","diveloadright_band2_total_pre_dive_load","diveloadright_band3_total_pre_dive_load",
+                       "diveloadcentre_band1_total_post_dive_load","diveloadcentre_band2_total_post_dive_load","diveloadcentre_band3_total_post_dive_load",
+                       "diveloadleft_band1_total_post_dive_load","diveloadleft_band2_total_post_dive_load","diveloadleft_band3_total_post_dive_load",
+                       "diveloadright_band1_total_post_dive_load","diveloadright_band2_total_post_dive_load","diveloadright_band3_total_post_dive_load",
+                       "diveloadcentre_band1_total_impact_dive_load","diveloadcentre_band2_total_impact_dive_load","diveloadcentre_band3_total_impact_dive_load",
+                       "diveloadleft_band1_total_impact_dive_load","diveloadleft_band2_total_impact_dive_load","diveloadleft_band3_total_impact_dive_load",
+                       "diveloadright_band1_total_impact_dive_load","diveloadright_band2_total_impact_dive_load","diveloadright_band3_total_impact_dive_load",
+                       "average_time_to_feet", "average_time_to_feeet_left", "average_time_to_feeet_right", "average_time_to_feet_centre",
+                       "timetofeetright_band1_total_count", "timetofeetright_band2_total_count","timetofeetright_band3_total_count",
+                       "timetofeetleft_band1_total_count", "timetofeetleft_band2_total_count","timetofeetleft_band3_total_count",
+                       "timetofeetcentre_band1_total_count", "timetofeetcentre_band2_total_count","timetofeetcentre_band3_total_count",
+                       "explosive_efforts", "total_jumps", "ima_band3_accel_count", "ima_band3_decel_count", "ima_band3_left_count", "ima_band3_right_count")
     
     stats_activity_new <- request(catapult_url) %>% 
       req_url_path(path = "api/v6/stats") %>% 
@@ -393,19 +414,30 @@ server <- function(input, output, session) {
   metrics <- data.frame(
     athlete_name = athletes_catapult %>% pull(athlete_name),
     bench_time=0, field_time=0, total_distance=0, meterage_per_minute=0, velocity_band5_total_distance=0,
-    velocity_band6_total_distance=0, velocity2_band6_total_distance=0, max_vel=0, percentage_max_velocity=0,
+    velocity_band6_total_distance=0, max_vel=0, percentage_max_velocity=0,
     gen2_acceleration_band7plus_total_effort_count=0, gen2_acceleration_band2plus_total_effort_count=0,
-    heart_rate_band5_average_duration_session=0, heart_rate_band6_average_duration_session=0,heart_rate_band7_average_duration_session=0,
-    heart_rate_band8_average_duration_session=0,mean_heart_rate=0,percentage_avg_heart_rate=0,percentage_max_heart_rate=0,max_heart_rate=0,athlete_max_hr=0,
-    total_goalkeeping_dives=0,total_dives_left=0,total_dives_right=0, total_dives_centre=0,`low_dive_load_(avg)`=0, `med_dive_load_(avg)`=0, `high_dive_load_(avg)`=0,
-    diveloadleft_band1_average_count_session=0, diveloadright_band1_average_count_session=0,diveloadcentre_band1_average_count_session=0,
-    diveloadleft_band2_average_count_session=0, diveloadright_band2_average_count_session=0, diveloadcentre_band2_average_count_session=0,
-    diveloadleft_band3_average_count_session=0, diveloadright_band3_average_count_session=0, diveloadcentre_band3_average_count_session=0,
-    total_dive_load=0,total_dive_load_left=0,total_dive_load_right=0,total_dive_load_centre=0, total_dive_load_low_intensity=0, total_dive_load_med_intensity=0,total_dive_load_high_intensity=0,
-    total_dive_load_left_low_intensit=0,total_dive_load_right_low_intensity=0, total_dive_load_centre_low_intensity=0,total_dive_load_left_med_intensity=0,total_dive_load_right_med_intensity=0, 
-    total_dive_load_centre_med_intensity=0,total_dive_load_left_high_intensity=0,total_dive_load_right_high_intensity=0, total_dive_load_centre_high_intensity=0,
-    median_time_to_feet=0, average_time_to_feet=0, average_time_to_feeet_left=0, average_time_to_feeet_right=0, average_time_to_feet_centre=0,
-    explosive_efforts=0, total_jumps=0, ima_accels=0, ima_decels=0)
+    heart_rate_band5_total_duration=0, heart_rate_band6_total_duration=0,heart_rate_band7_total_duration=0,heart_rate_band8_total_duration=0,
+    mean_heart_rate=0,percentage_avg_heart_rate=0,percentage_max_heart_rate=0,max_heart_rate=0,athlete_max_hr=0,
+    fmp_very_low_duration=0, fmp_low_duration=0, fmp_running_med_duration=0, fmp_running_high_duration=0, fmp_dynamic_med_duration=0, fmp_dynamic_high_duration=0,
+    total_goalkeeping_dives=0,
+    diveloadleft_band1_total_count=0, diveloadright_band1_total_count=0,diveloadcentre_band1_total_count=0,
+    diveloadleft_band2_total_count=0, diveloadright_band2_total_count=0, diveloadcentre_band2_total_count=0,
+    diveloadleft_band3_total_count=0, diveloadright_band3_total_count=0, diveloadcentre_band3_total_count=0,
+    total_dive_load=0,
+    diveloadcentre_band1_total_pre_dive_load=0, diveloadcentre_band2_total_pre_dive_load=0, diveloadcentre_band3_total_pre_dive_load=0,
+    diveloadleft_band1_total_pre_dive_load=0, diveloadleft_band2_total_pre_dive_load=0, diveloadleft_band3_total_pre_dive_load=0,
+    diveloadright_band1_total_pre_dive_load=0, diveloadright_band2_total_pre_dive_load=0, diveloadright_band3_total_pre_dive_load=0,
+    diveloadcentre_band1_total_post_dive_load=0, diveloadcentre_band2_total_post_dive_load=0, diveloadcentre_band3_total_post_dive_load=0,
+    diveloadleft_band1_total_post_dive_load=0, diveloadleft_band2_total_post_dive_load=0, diveloadleft_band3_total_post_dive_load=0,
+    diveloadright_band1_total_post_dive_load=0, diveloadright_band2_total_post_dive_load=0, diveloadright_band3_total_post_dive_load=0,
+    diveloadcentre_band1_total_impact_dive_load=0, diveloadcentre_band2_total_impact_dive_load=0, diveloadcentre_band3_total_impact_dive_load=0,
+    diveloadleft_band1_total_impact_dive_load=0, diveloadleft_band2_total_impact_dive_load=0, diveloadleft_band3_total_impact_dive_load=0,
+    diveloadright_band1_total_impact_dive_load=0, diveloadright_band2_total_impact_dive_load=0, diveloadright_band3_total_impact_dive_load=0,
+    average_time_to_feet=0, average_time_to_feeet_left=0, average_time_to_feeet_right=0, average_time_to_feet_centre=0,
+    timetofeetright_band1_total_count=0, timetofeetright_band2_total_count=0, timetofeetright_band3_total_count=0,
+    timetofeetleft_band1_total_count=0, timetofeetleft_band2_total_count=0, timetofeetleft_band3_total_count=0,
+    timetofeetcentre_band1_total_count=0, timetofeetcentre_band2_total_count=0, timetofeetcentre_band3_total_count=0,
+    explosive_efforts=0, total_jumps=0, ima_band3_accel_count=0, ima_band3_decel_count=0, ima_band3_left_count=0, ima_band3_right_count=0)
   
   # metrics <- stats_activity_db_localtime %>% 
   #   mutate(across(where(is.numeric),~replace(.x,1:nrow(stats_activity_db_localtime),0))) %>% 
@@ -458,13 +490,66 @@ server <- function(input, output, session) {
            high_speed_distance = velocity_band5_total_distance,
            accel_efforts=gen2_acceleration_band7plus_total_effort_count,
            decel_efforts=gen2_acceleration_band2plus_total_effort_count,
-           dive_count = total_goalkeeping_dives) %>% 
-    # rowwise() %>% 
-    # mutate(total_dive_impact = sum(c_across(contains("total_impact_dive_load")))) %>% 
-    # ungroup %>% 
+           dive_count = total_goalkeeping_dives,
+           average_time_to_feet_left = average_time_to_feeet_left,
+           average_time_to_feet_right = average_time_to_feeet_right
+           ) %>% 
     mutate(rpe=replace_na(rpe,0),
-           accel_decel_efforts = accel_efforts+decel_efforts    
+           accel_decel_efforts = accel_efforts + decel_efforts,
+           dive_count_left = diveloadleft_band1_total_count + diveloadleft_band2_total_count + diveloadleft_band3_total_count,
+           dive_count_right = diveloadright_band1_total_count + diveloadright_band2_total_count + diveloadright_band3_total_count,
+           dive_count_centre = diveloadcentre_band1_total_count + diveloadcentre_band2_total_count + diveloadcentre_band3_total_count,
+           dive_count_band1 = diveloadleft_band1_total_count + diveloadright_band1_total_count + diveloadcentre_band1_total_count,
+           dive_count_band2 = diveloadleft_band2_total_count + diveloadright_band2_total_count + diveloadcentre_band2_total_count,
+           dive_count_band3 = diveloadleft_band3_total_count + diveloadright_band3_total_count + diveloadcentre_band3_total_count,
+           pre_dive_load_left = diveloadleft_band1_total_pre_dive_load + diveloadleft_band2_total_pre_dive_load + diveloadleft_band3_total_pre_dive_load,
+           pre_dive_load_right = diveloadright_band1_total_pre_dive_load + diveloadright_band2_total_pre_dive_load + diveloadright_band3_total_pre_dive_load,
+           pre_dive_load_centre = diveloadcentre_band1_total_pre_dive_load + diveloadcentre_band2_total_pre_dive_load + diveloadcentre_band3_total_pre_dive_load,
+           pre_dive_load = pre_dive_load_left + pre_dive_load_right + pre_dive_load_centre,
+           post_dive_load_left = diveloadleft_band1_total_post_dive_load + diveloadleft_band2_total_post_dive_load + diveloadleft_band3_total_post_dive_load,
+           post_dive_load_right = diveloadright_band1_total_post_dive_load + diveloadright_band2_total_post_dive_load + diveloadright_band3_total_post_dive_load,
+           post_dive_load_centre = diveloadcentre_band1_total_post_dive_load + diveloadcentre_band2_total_post_dive_load + diveloadcentre_band3_total_post_dive_load,
+           post_dive_load = post_dive_load_left + post_dive_load_right + post_dive_load_centre,
+           impact_dive_load_left = diveloadleft_band1_total_impact_dive_load + diveloadleft_band2_total_impact_dive_load + diveloadleft_band3_total_impact_dive_load,
+           impact_dive_load_right = diveloadright_band1_total_impact_dive_load + diveloadright_band2_total_impact_dive_load + diveloadright_band3_total_impact_dive_load,
+           impact_dive_load_centre = diveloadcentre_band1_total_impact_dive_load + diveloadcentre_band2_total_impact_dive_load + diveloadcentre_band3_total_impact_dive_load,
+           impact_dive_load = impact_dive_load_left + impact_dive_load_right + impact_dive_load_centre,
+           total_dive_load_left = pre_dive_load_left + post_dive_load_left + impact_dive_load_left,
+           total_dive_load_right = pre_dive_load_right + post_dive_load_right + impact_dive_load_right,
+           total_dive_load_centre = pre_dive_load_centre + post_dive_load_centre + impact_dive_load_centre,
+           timetofeet_band1_total_count = timetofeetleft_band1_total_count + timetofeetright_band1_total_count + timetofeetcentre_band1_total_count,
+           timetofeet_band2_total_count = timetofeetleft_band2_total_count + timetofeetright_band2_total_count + timetofeetcentre_band2_total_count,
+           timetofeet_band3_total_count = timetofeetleft_band3_total_count + timetofeetright_band3_total_count + timetofeetcentre_band3_total_count
            ) %>%
+    # rowwise() %>%
+    # mutate(
+    #        dive_count_left = sum(c_across(starts_with("diveloadleft") & ends_with("total_count"))),
+    #        dive_count_right = sum(c_across(starts_with("diveloadright") & ends_with("total_count"))),
+    #        dive_count_centre = sum(c_across(starts_with("diveloadcentre") & ends_with("total_count"))),
+    #        dive_count_band1 = sum(c_across(starts_with("diveload") & ends_with("band1_total_count"))),
+    #        dive_count_band2 = sum(c_across(starts_with("diveload") & ends_with("band2_total_count"))),
+    #        dive_count_band3 = sum(c_across(starts_with("diveload") & ends_with("band3_total_count"))),
+    #        pre_dive_load = sum(c_across(ends_with("total_pre_dive_load"))),
+    #        pre_dive_load_left = sum(c_across(starts_with("diveloadleft") & ends_with("total_pre_dive_load"))),
+    #        pre_dive_load_right = sum(c_across(starts_with("diveloadright") & ends_with("total_pre_dive_load"))),
+    #        pre_dive_load_centre = sum(c_across(starts_with("diveloadcentre") & ends_with("total_pre_dive_load"))),
+    #        post_dive_load = sum(c_across(ends_with("total_post_dive_load"))),
+    #        post_dive_load_left = sum(c_across(starts_with("diveloadleft") & ends_with("total_post_dive_load"))),
+    #        post_dive_load_right = sum(c_across(starts_with("diveloadright") & ends_with("total_post_dive_load"))),
+    #        post_dive_load_centre = sum(c_across(starts_with("diveloadcentre") & ends_with("total_post_dive_load"))),
+    #        impact_dive_load = sum(c_across(ends_with("total_impact_dive_load"))),
+    #        impact_dive_load_left = sum(c_across(starts_with("diveloadleft") & ends_with("total_impact_dive_load"))),
+    #        impact_dive_load_right = sum(c_across(starts_with("diveloadright") & ends_with("total_impact_dive_load"))),
+    #        impact_dive_load_centre = sum(c_across(starts_with("diveloadcentre") & ends_with("total_impact_dive_load"))),
+    #        total_dive_load_left = sum(c_across(starts_with("diveloadleft") & ends_with("dive_load"))),
+    #        total_dive_load_right = sum(c_across(starts_with("diveloadright") & ends_with("dive_load"))),
+    #        total_dive_load_centre = sum(c_across(starts_with("diveloadcentre") & ends_with("dive_load"))),
+    #        timetofeet_band1_total_count = sum(c_across(starts_with("timetofeet") & ends_with("band1_total_count"))),
+    #        timetofeet_band2_total_count = sum(c_across(starts_with("timetofeet") & ends_with("band2_total_count"))),
+    #        timetofeet_band3_total_count = sum(c_across(starts_with("timetofeet") & ends_with("band3_total_count")))
+    #        ) %>% 
+    # ungroup %>% 
+    # mutate(dive_load = pre_dive_load + post_dive_load + impact_dive_load) %>% 
     arrange(athlete_name,date) %>% 
     group_by(athlete_name) %>%
     mutate(
@@ -484,7 +569,6 @@ server <- function(input, output, session) {
       acwr_ewma_accel_decel_efforts = al_ewma_accel_decel_efforts/cl_ewma_accel_decel_efforts,
       acwr_ewma_dive_count = al_ewma_dive_count/cl_ewma_dive_count,
       acwr_ewma_total_dive_load = al_ewma_total_dive_load/cl_ewma_total_dive_load,
-      # acwr_ewma_total_dive_impact = al_ewma_total_dive_impact/cl_ewma_total_dive_impact,
       acwr_ewma_explosive_efforts = al_ewma_explosive_efforts/cl_ewma_explosive_efforts,
       acwr_ewma_max_heart_rate = al_ewma_max_heart_rate/cl_ewma_max_heart_rate,
       acwr_ewma_mean_heart_rate = al_ewma_mean_heart_rate/cl_ewma_mean_heart_rate,
@@ -501,7 +585,6 @@ server <- function(input, output, session) {
       zscore_7_28_accel_decel_efforts = (al_accel_decel_efforts - cl_accel_decel_efforts)/cl_sd_accel_decel_efforts,
       zscore_7_28_dive_count = (al_dive_count - cl_dive_count)/cl_sd_dive_count,
       zscore_7_28_total_dive_load = (al_total_dive_load - cl_total_dive_load)/cl_sd_total_dive_load,
-      # zscore_7_28_total_dive_impact = (al_total_dive_impact - cl_total_dive_impact)/cl_sd_total_dive_impact,
       zscore_7_28_explosive_efforts = (al_explosive_efforts - cl_explosive_efforts)/cl_sd_explosive_efforts,
       zscore_7_28_max_heart_rate = (al_max_heart_rate - cl_max_heart_rate)/cl_sd_max_heart_rate,
       zscore_7_28_mean_heart_rate = (al_mean_heart_rate - cl_mean_heart_rate)/cl_sd_mean_heart_rate,
@@ -511,6 +594,7 @@ server <- function(input, output, session) {
     ungroup %>% 
     mutate(tag_name=if_else(is.na(tag_name) & date != Sys.Date(), "OFF",tag_name))
   
+  
   stats_period <- stats_period_db_localtime %>% 
     full_join(dates) %>%
     # left_join(RPE_soccer %>% rename(rpe=daily_rpe), by = join_by(athlete_name,date)) %>%
@@ -519,14 +603,68 @@ server <- function(input, output, session) {
            high_speed_distance = velocity_band5_total_distance,
            accel_efforts=gen2_acceleration_band7plus_total_effort_count,
            decel_efforts=gen2_acceleration_band2plus_total_effort_count,
-           dive_count = total_goalkeeping_dives) %>% 
+           dive_count = total_goalkeeping_dives,
+           average_time_to_feet_left = average_time_to_feeet_left,
+           average_time_to_feet_right = average_time_to_feeet_right) %>% 
     # rowwise() %>% 
     # mutate(total_dive_impact = sum(c_across(contains("total_impact_dive_load")))) %>% 
     # ungroup %>% 
     mutate(
       # rpe=replace_na(rpe,0),
           accel_decel_efforts = accel_efforts+decel_efforts,
-           tag_name=if_else(is.na(tag_name) & date != Sys.Date(), "OFF",tag_name)) %>%
+          tag_name=if_else(is.na(tag_name) & date != Sys.Date(), "OFF",tag_name),
+          dive_count_left = diveloadleft_band1_total_count + diveloadleft_band2_total_count + diveloadleft_band3_total_count,
+          dive_count_right = diveloadright_band1_total_count + diveloadright_band2_total_count + diveloadright_band3_total_count,
+          dive_count_centre = diveloadcentre_band1_total_count + diveloadcentre_band2_total_count + diveloadcentre_band3_total_count,
+          dive_count_band1 = diveloadleft_band1_total_count + diveloadright_band1_total_count + diveloadcentre_band1_total_count,
+          dive_count_band2 = diveloadleft_band2_total_count + diveloadright_band2_total_count + diveloadcentre_band2_total_count,
+          dive_count_band3 = diveloadleft_band3_total_count + diveloadright_band3_total_count + diveloadcentre_band3_total_count,
+          pre_dive_load_left = diveloadleft_band1_total_pre_dive_load + diveloadleft_band2_total_pre_dive_load + diveloadleft_band3_total_pre_dive_load,
+          pre_dive_load_right = diveloadright_band1_total_pre_dive_load + diveloadright_band2_total_pre_dive_load + diveloadright_band3_total_pre_dive_load,
+          pre_dive_load_centre = diveloadcentre_band1_total_pre_dive_load + diveloadcentre_band2_total_pre_dive_load + diveloadcentre_band3_total_pre_dive_load,
+          pre_dive_load = pre_dive_load_left + pre_dive_load_right + pre_dive_load_centre,
+          post_dive_load_left = diveloadleft_band1_total_post_dive_load + diveloadleft_band2_total_post_dive_load + diveloadleft_band3_total_post_dive_load,
+          post_dive_load_right = diveloadright_band1_total_post_dive_load + diveloadright_band2_total_post_dive_load + diveloadright_band3_total_post_dive_load,
+          post_dive_load_centre = diveloadcentre_band1_total_post_dive_load + diveloadcentre_band2_total_post_dive_load + diveloadcentre_band3_total_post_dive_load,
+          post_dive_load = post_dive_load_left + post_dive_load_right + post_dive_load_centre,
+          impact_dive_load_left = diveloadleft_band1_total_impact_dive_load + diveloadleft_band2_total_impact_dive_load + diveloadleft_band3_total_impact_dive_load,
+          impact_dive_load_right = diveloadright_band1_total_impact_dive_load + diveloadright_band2_total_impact_dive_load + diveloadright_band3_total_impact_dive_load,
+          impact_dive_load_centre = diveloadcentre_band1_total_impact_dive_load + diveloadcentre_band2_total_impact_dive_load + diveloadcentre_band3_total_impact_dive_load,
+          impact_dive_load = impact_dive_load_left + impact_dive_load_right + impact_dive_load_centre,
+          total_dive_load_left = pre_dive_load_left + post_dive_load_left + impact_dive_load_left,
+          total_dive_load_right = pre_dive_load_right + post_dive_load_right + impact_dive_load_right,
+          total_dive_load_centre = pre_dive_load_centre + post_dive_load_centre + impact_dive_load_centre,
+          timetofeet_band1_total_count = timetofeetleft_band1_total_count + timetofeetright_band1_total_count + timetofeetcentre_band1_total_count,
+          timetofeet_band2_total_count = timetofeetleft_band2_total_count + timetofeetright_band2_total_count + timetofeetcentre_band2_total_count,
+          timetofeet_band3_total_count = timetofeetleft_band3_total_count + timetofeetright_band3_total_count + timetofeetcentre_band3_total_count
+          ) %>%
+    # rowwise() %>% 
+    # mutate(dive_count_left = sum(c_across(starts_with("diveloadleft") & ends_with("total_count"))),
+    #        dive_count_right = sum(c_across(starts_with("diveloadright") & ends_with("total_count"))),
+    #        dive_count_centre = sum(c_across(starts_with("diveloadcentre") & ends_with("total_count"))),
+    #        dive_count_band1 = sum(c_across(starts_with("diveload") & ends_with("band1_total_count"))),
+    #        dive_count_band2 = sum(c_across(starts_with("diveload") & ends_with("band2_total_count"))),
+    #        dive_count_band3 = sum(c_across(starts_with("diveload") & ends_with("band3_total_count"))),
+    #        pre_dive_load = sum(c_across(ends_with("total_pre_dive_load"))),
+    #        pre_dive_load_left = sum(c_across(starts_with("diveloadleft") & ends_with("total_pre_dive_load"))),
+    #        pre_dive_load_right = sum(c_across(starts_with("diveloadright") & ends_with("total_pre_dive_load"))),
+    #        pre_dive_load_centre = sum(c_across(starts_with("diveloadcentre") & ends_with("total_pre_dive_load"))),
+    #        post_dive_load = sum(c_across(ends_with("total_post_dive_load"))),
+    #        post_dive_load_left = sum(c_across(starts_with("diveloadleft") & ends_with("total_post_dive_load"))),
+    #        post_dive_load_right = sum(c_across(starts_with("diveloadright") & ends_with("total_post_dive_load"))),
+    #        post_dive_load_centre = sum(c_across(starts_with("diveloadcentre") & ends_with("total_post_dive_load"))),
+    #        impact_dive_load = sum(c_across(ends_with("total_impact_dive_load"))),
+    #        impact_dive_load_left = sum(c_across(starts_with("diveloadleft") & ends_with("total_impact_dive_load"))),
+    #        impact_dive_load_right = sum(c_across(starts_with("diveloadright") & ends_with("total_impact_dive_load"))),
+    #        impact_dive_load_centre = sum(c_across(starts_with("diveloadcentre") & ends_with("total_impact_dive_load"))),
+    #        total_dive_load_left = sum(c_across(starts_with("diveloadleft") & ends_with("dive_load"))),
+    #        total_dive_load_right = sum(c_across(starts_with("diveloadright") & ends_with("dive_load"))),
+    #        total_dive_load_centre = sum(c_across(starts_with("diveloadcentre") & ends_with("dive_load"))),
+    #        timetofeet_band1_total_count = sum(c_across(starts_with("timetofeet") & ends_with("band1_total_count"))),
+    #        timetofeet_band2_total_count = sum(c_across(starts_with("timetofeet") & ends_with("band2_total_count"))),
+    #        timetofeet_band3_total_count = sum(c_across(starts_with("timetofeet") & ends_with("band3_total_count")))
+    # ) %>% 
+    # ungroup %>% 
     arrange(athlete_name,date) 
   
   
@@ -773,6 +911,19 @@ server <- function(input, output, session) {
       "Dive Count" = "dive_count", "Total Dive Load" = "total_dive_load", "Explosive Efforts" = "explosive_efforts"),
     selected = "Total Distance")
   
+  keeper_param <- selectInput(
+    "keeper_param", "Select Metric",
+    c("Total Dives" = "dive_count", 
+      "Total Dives Left" = "dive_count_left", "Total Dives Right" = "dive_count_right", "Total Dives Centre" = "dive_count_centre", 
+      "Total Dives Low Intensity" = "dive_count_band1", "Total Dives Med Intensity" = "dive_count_band2", "Total Dives High Intensity" = "dive_count_band3", 
+      "Total Dive Load" = "total_dive_load", "Total Dive Load Left" = "total_dive_load_left", "Total Dive Load Right" = "total_dive_load_right", "Total Dive Load Centre" = "total_dive_load_centre", 
+      "Pre Dive Load"="pre_dive_load", "Impact Dive Load"="impact_dive_load", "Post Dive Load" = "post_dive_load", 
+      "Total Distance" = "total_distance", "Explosive Efforts" = "explosive_efforts", "Total Jumps"="total_jumps", 
+      "High Intensity Accel Efforts" = "ima_band3_accel_count", "High Intensity Decel Efforts" = "ima_band3_decel_count",
+      "High Intensity CoD Left Efforts" ="ima_band3_left_count", "High Intensity CoD Right Efforts"="ima_band3_right_count",
+      "Avg Time to Feet" = "average_time_to_feet","Avg Time to Feet Left" = "average_time_to_feet_left","Avg Time to Feet Right" = "average_time_to_feet_right","Avg Time to Feet Centre" = "average_time_to_feet_centre"),
+    selected = "Total Dives")
+  
   # aggregation <- selectInput(
   #   "aggregation", "Aggregation",
   #   c("Mean", "Sum", "Max", "Min"),
@@ -964,6 +1115,85 @@ server <- function(input, output, session) {
                     full_screen = TRUE,
                     card_header("Drill Summary"),
                     card_body(min_height = 200, reactableOutput("DrillSummaryTable"))
+                  )
+                )
+      ),
+      nav_panel(title="Keeper Report",
+                layout_sidebar(
+                  sidebar = sidebar(athlete9, date_input7, 
+                                    actionButton("build_pdf3", "Generate Report", icon = icon("file-lines"), class = "btn-primary"),
+                                    uiOutput("download_wrapper3"),
+                                    bg = "#E5E1E6"),
+                  layout_column_wrap(
+                    width=1/6,
+                    heights_equal = "row",
+                    # uiOutput("total_distance_keeper_valuebox"),
+                    # uiOutput("dive_count_keeper_valuebox"),
+                    # uiOutput("total_dive_keeper_load_valuebox"),
+                    # uiOutput("avg_time_to_feet_keeper_valuebox"),
+                    # uiOutput("total_jumps_keeper_valuebox"),
+                    # uiOutput("explosive_efforts_keeper_valuebox")
+                  ),
+                  layout_sidebar(
+                    sidebar = sidebar(keeper_param),
+                    layout_column_wrap(
+                      width=1/2,
+                      heights_equal = "row",
+                      card(
+                        full_screen = TRUE,
+                        card_header("Week in Review"),
+                        # card_body(min_height = 200, plotlyOutput("TotalDistanceDrillGroupAvg"))
+                      ),
+                      card(
+                        full_screen = TRUE,
+                        card_header("Drill Breakdown"),
+                        # card_body(min_height = 200, plotlyOutput("HSDistanceDrillGroupAvg"))
+                      )
+                    ),
+                    card(
+                      full_screen = TRUE,
+                      card_header("Keeper Comparison"),
+                      # card_body(min_height = 200, plotlyOutput("DistanceDrillByPlayer"))
+                    )
+                  ),
+                  layout_column_wrap(
+                    width=1/2,
+                    heights_equal = "row",
+                    card(
+                      full_screen = TRUE,
+                      card_header("Total Dives by Direction"),
+                      # card_body(min_height = 200, plotlyOutput("DrillSummaryTable"))
+                    ),
+                    card(
+                      full_screen = TRUE,
+                      card_header("Total Dives by Intensity"),
+                      # card_body(min_height = 200, plotlyOutput("DrillSummaryTable"))
+                    ),
+                    card(
+                      full_screen = TRUE,
+                      card_header("Time to Feet Count by Band"),
+                      # card_body(min_height = 200, plotlyOutput("DrillSummaryTable"))
+                    ),
+                    card(
+                      full_screen = TRUE,
+                      card_header("Avg Time to Feet by Direction"),
+                      # card_body(min_height = 200, plotlyOutput("DrillSummaryTable"))
+                    ),
+                    card(
+                      full_screen = TRUE,
+                      card_header("Dive Load Breakdown"),
+                      # card_body(min_height = 200, plotlyOutput("DrillSummaryTable"))
+                    ),
+                    card(
+                      full_screen = TRUE,
+                      card_header("IMA Efforts"),
+                      # card_body(min_height = 200, plotlyOutput("DrillSummaryTable"))
+                    )
+                  ),
+                  card(
+                    full_screen = TRUE,
+                    card_header("Keeper Summary"),
+                    # card_body(min_height = 200, reactableOutput("DrillSummaryTable"))
                   )
                 )
       ),
